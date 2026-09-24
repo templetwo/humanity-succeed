@@ -10,6 +10,7 @@
 | `wp2-anchors/` | `hs evidence anchor` for each demo bundle, made at the time of the run |
 | `PUSH_RECEIPT.md` | Public remote creation, first push, and the authority for it |
 | `wp2r1/` | Post-red-team receipts at fix commit `e6c5d7c`: `tests.txt` (195 passed), `lint.txt`, `demo/`, `anchors/` |
+| `wp2r2/` | Round-2 receipts at `c14445b`: `tests.txt` (213 passed, 0 skipped), `lint.txt`, `reverify.json` (golden digests unchanged; `wp2r1` bundles re-verified against anchors and replayed under the hardened code) |
 
 Every bundle is a `scripted_instrument` run. None is a model result.
 

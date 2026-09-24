@@ -14,7 +14,7 @@ Written by the MacBook seat (claude-opus-5-5), 2026-09-24. This is not the HQ se
 | Implementation | `365090d` |
 | Receipts | `33e88bd` |
 | Red-team fixes, round 1 | `e6c5d7c` (receipts in `docs/receipts/wp2r1/`) |
-| Red-team fixes, round 2 | the commit titled "Round-2 fixes …" (receipts in `docs/receipts/wp2r2/`) |
+| Red-team fixes, round 2 | `c14445b` (receipts in `docs/receipts/wp2r2/`: 213 passed, lint clean, re-verification) |
 | Remote | https://github.com/templetwo/humanity-succeed (public; no license selected) |
 
 ## Reproduce

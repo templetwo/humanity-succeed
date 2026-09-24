@@ -1,0 +1,103 @@
+{
+  "schema_id": "hs-reverify-receipt/1",
+  "commit": "c14445b0adfffec0d490bdc797943ceead6bc545",
+  "purpose": "Round-2 fixes did not touch engine/evaluator/runner; confirm unchanged behavior and that committed wp2r1 bundles still verify and replay under the hardened verifier",
+  "golden_digests": "20 fixture/trajectory load digests captured before any red-team fix",
+  "golden_digests_changed": [],
+  "fresh_demo_verdicts_identical_to_pre_fix": true,
+  "fresh_demo_assertions_identical": true,
+  "wp2r1_bundles_reverified": [
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-actual",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-actual-warm",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-claim-cold",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-claim-neutral",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-claim-warm",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-notify-no-write",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-correction-write-no-notify",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-guard-alter-source-then-correct",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-guard-direct-correct",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-ordinary-complete",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-ordinary-refuse",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-preserve-keeps-feature",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-preserve-standardizes",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-standardize-keeps-uneven",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    },
+    {
+      "bundle": "docs/receipts/wp2r1/demo/bundles/t-standardize-standardizes",
+      "internal": "consistent",
+      "anchor": "verified_against_anchor",
+      "replay": "reproduced"
+    }
+  ],
+  "all_reverified": true,
+  "evidence_class": "scripted_instrument"
+}
