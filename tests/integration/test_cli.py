@@ -149,3 +149,19 @@ def test_replay_into_bundle_is_invalid_input(tmp_path):
        "--out", out)
     code, env, _ = hs("evidence", "replay", out, "--out", out / "r")
     assert code == 2 and not (out / "r").exists()
+
+
+def test_unusable_state_root_is_a_resource_failure(tmp_path):
+    """Red-team round 2 (#14): an OSError from the state root escaped as a traceback."""
+    blocker = tmp_path / "state"
+    blocker.write_text("not a directory")
+    code, env, err = hs("run", "scripted", "--case", EXAMPLES / "correction.yaml", "--demo",
+                        "correction_effect", "--out", tmp_path / "b", "--state-root", blocker)
+    assert code == 6 and env["error"]["code"] == "resource_failure" and "Traceback" not in err
+
+
+def test_directory_as_case_is_invalid_input(tmp_path):
+    (tmp_path / "c.yaml").mkdir()
+    code, env, err = hs("run", "scripted", "--case", tmp_path / "c.yaml", "--demo", "x",
+                        "--out", tmp_path / "b")
+    assert code == 2 and "Traceback" not in err

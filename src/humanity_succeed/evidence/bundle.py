@@ -125,6 +125,10 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None) -> dict[st
     links = [str(p.relative_to(bundle)) for p in bundle.rglob("*") if p.is_symlink()]
     if not check("no_symlinks", not links, ", ".join(sorted(links))):
         return _report(checks, None, anchor, None)
+    hard = [str(p.relative_to(bundle)) for p in bundle.rglob("*")
+            if p.is_file() and p.stat(follow_symlinks=False).st_nlink > 1]
+    if not check("no_hard_links", not hard, ", ".join(sorted(hard))):
+        return _report(checks, None, anchor, None)
     big = [str(p.relative_to(bundle)) for p in bundle.rglob("*")
            if p.is_file() and p.stat().st_size > MAX_BUNDLE_FILE_BYTES]
     if not check("file_sizes_bounded", not big, ", ".join(big)):
@@ -154,10 +158,11 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None) -> dict[st
     if (bundle / "SHA256SUMS").is_file():
         lines = (bundle / "SHA256SUMS").read_text().splitlines()
         want = {ln.split("  ", 1)[1]: ln.split("  ", 1)[0] for ln in lines if "  " in ln}
-        sums_ok = all(
-            (bundle / n).is_file() and sha256_bytes((bundle / n).read_bytes()) == h
-            for n, h in want.items()
-        ) and set(want) == set(listed) | {"bundle.json"}
+        # Names come from an untrusted file: compare as a set BEFORE touching the filesystem, so
+        # only names already validated through bundle.json are ever opened.
+        sums_ok = set(want) == set(listed) | {"bundle.json"} and all(
+            sha256_bytes((bundle / n).read_bytes()) == h for n, h in want.items()
+        )
     check("sha256sums_consistent", sums_ok)
 
     # 2. event chain and contracts

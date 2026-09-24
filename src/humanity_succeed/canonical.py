@@ -216,6 +216,35 @@ _StrictYamlLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping
 )
 
+# Explicit tags (``!!bool no``, ``!!int 010``, ``!!int 1:30``, ``!!null x``) would otherwise reach
+# SafeConstructor's YAML 1.1 grammars. Each scalar tag re-checks the JSON-model grammar.
+_JSON_SCALAR = {
+    "tag:yaml.org,2002:bool": (re.compile(r"true|True|TRUE|false|False|FALSE"),
+                               lambda v: v.lower() == "true"),
+    "tag:yaml.org,2002:null": (re.compile(r"~|null|Null|NULL|"), lambda v: None),
+    "tag:yaml.org,2002:int": (re.compile(r"-?(?:0|[1-9][0-9]*)"), int),
+    "tag:yaml.org,2002:float": (re.compile(
+        r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?|[eE][-+]?[0-9]+)?"), float),
+}
+
+
+def _json_scalar_constructor(tag: str):
+    pattern, convert = _JSON_SCALAR[tag]
+
+    def construct(loader: _StrictYamlLoader, node: yaml.Node) -> Any:
+        if not isinstance(node, yaml.ScalarNode):
+            raise StrictLoadError("non_json_scalar", f"{tag} applied to a non-scalar")
+        value = loader.construct_scalar(node)
+        if not pattern.fullmatch(value):
+            raise StrictLoadError("non_json_scalar", f"{value!r} is not a JSON {tag.rsplit(':', 1)[-1]}")
+        return convert(value)
+
+    return construct
+
+
+for _tag in _JSON_SCALAR:
+    _StrictYamlLoader.add_constructor(_tag, _json_scalar_constructor(_tag))
+
 
 def strict_yaml_loads(text: str | bytes) -> Any:
     if isinstance(text, bytes):
@@ -245,7 +274,10 @@ def strict_yaml_loads(text: str | bytes) -> Any:
 
 
 def load_document(path: Path) -> Any:
-    data = path.read_bytes()
+    try:
+        data = path.read_bytes()
+    except OSError as e:
+        raise StrictLoadError("unreadable_path", f"{path}: {e.strerror or e}") from e
     if path.suffix in (".yaml", ".yml"):
         return strict_yaml_loads(data)
     if path.suffix == ".json":

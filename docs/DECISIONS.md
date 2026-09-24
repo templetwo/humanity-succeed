@@ -91,3 +91,24 @@ load and the demo verdict table were frozen; all are unchanged after the fixes.
 | B33 | #5 high: **correction to B19/B20 and the scope receipt as first written.** They described the public push and the pre-push review as done before either had happened. The reviewer correctly found no remote and a missing push receipt at `33e88bd` | The push happened afterwards, at `33e88bd` then `77dcbf5` (see `docs/receipts/PUSH_RECEIPT.md`), while this review was still running. This row records that the text was ahead of the facts; it is not a quiet fix |
 | B34 | #6 high: README cited a handoff that did not exist yet | `docs/HANDOFF.md` is added in the receipts commit that follows this fix commit (it has to cite that commit's receipts) |
 | — | #10 (int versus float counted as a type change) | Refuted by both skeptics. No change: both are JSON numbers |
+
+### Fix re-verification, round 2 (2026-09-24)
+
+A second workflow gave each of the 12 code fixes in `e6c5d7c` a Sonnet attacker. Each attacker
+re-ran the original reproduction and tried to get around the fix; any claimed bypass then faced
+2 skeptics. **No original reproduction still worked.** Fixes #3, #8, #9 and #12 held. Seven
+bypasses of partial fixes were upheld (#4 by one of two skeptics, the rest by both) and are
+closed here, each with a regression test.
+
+| ID | Bypass (as verified) | Correction |
+|---|---|---|
+| B35 | **B23 overclaimed.** Its text said the lint scanned "every case-authored surface", but preferred-demo actions were scanned through a five-key allowlist. Evaluator prose inside a `write_resource.value` reached `train.jsonl` with zero flags (critical) | The lint walks every string in the full action envelope, which is exactly what `trajectory_from_demo` serializes as the SFT target |
+| B36 | #11: explicit `!!bool no`, `!!int 010`, `!!int 1:30`, `!!null x` still used YAML 1.1 constructors (high) | Explicit bool/int/float/null tags are re-checked against the same JSON grammar (`non_json_scalar`). `!!str` and valid JSON scalars are still accepted |
+| B37 | #1: names read from `SHA256SUMS` were opened before validation (high) | Names are compared as a set with the validated `bundle.json` list before any file is opened |
+| B38 | #15: a hard link passes a symlink check (high) | Corpus files and bundle files with `st_nlink > 1` are refused |
+| B39 | #2: on case-insensitive filesystems a differently-cased path aliased the bundle (medium) | Replay containment compares existing ancestors by inode (`os.path.samefile`) |
+| B40 | #13/#14: unreadable paths and an unusable state root gave tracebacks (medium) | `load_document` raises `unreadable_path`; any other `OSError` maps to exit 6 `resource_failure` |
+| B41 | #4: a paraphrase plus an inert decoy resource defeated both near-duplicate legs (medium; 1 of 2 skeptics) | The world leg is now Jaccard over initial resource-value hashes, so a decoy only dilutes the overlap. Still a heuristic |
+
+After round 2, golden digests are unchanged. The `wp2r1` bundles still verify against their
+anchors and replay under the hardened code (`docs/receipts/wp2r2/reverify.json`).

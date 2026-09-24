@@ -13,14 +13,15 @@ Written by the MacBook seat (claude-opus-5-5), 2026-09-24. This is not the HQ se
 | Packet import | `7121557` (24/24 manifest files verified) |
 | Implementation | `365090d` |
 | Receipts | `33e88bd` |
-| Red-team fixes | `e6c5d7c` (receipts at `e6c5d7c` in `docs/receipts/wp2r1/`) |
+| Red-team fixes, round 1 | `e6c5d7c` (receipts in `docs/receipts/wp2r1/`) |
+| Red-team fixes, round 2 | the commit titled "Round-2 fixes …" (receipts in `docs/receipts/wp2r2/`) |
 | Remote | https://github.com/templetwo/humanity-succeed (public; no license selected) |
 
 ## Reproduce
 
 ```sh
 uv sync --locked --group dev
-uv run pytest                                  # 195 tests, all state in temp roots
+uv run pytest                                  # 213 tests, all state in temp roots
 uv run ruff check src tests scripts
 uv run python scripts/export_schemas.py --check
 uv run hs demo --out /tmp/hs-demo --state-root /tmp/hs-state   # all assertions must hold
@@ -84,9 +85,20 @@ The most serious findings:
 Golden digests captured before the fixes (every fixture and trajectory load, the demo verdict
 table, the demonstration assertions) are unchanged afterwards.
 
-**Fix re-verification.** A second workflow re-runs each original reproduction against
-`e6c5d7c` and tries to get around each fix. At the time of this commit it was still running;
-its outcome is recorded in a later commit.
+**Fix re-verification (round 2).** A second workflow gave each of the 12 code fixes a Sonnet
+attacker plus 2 skeptics for any claimed bypass. **No original reproduction still worked.**
+Fixes #3, #8, #9 and #12 held outright. Seven bypasses of partial fixes were upheld and are
+closed in round 2 (`docs/DECISIONS.md` B35–B41):
+
+- **B35 (critical).** The lint read only five text keys of each demonstration action, so evaluator
+  prose inside a `write_resource.value` still reached `train.jsonl`. B23's claim to cover every
+  surface was wrong when made. The lint now walks the whole action.
+- **B36–B41.** Explicit YAML tags; `SHA256SUMS` names; hard links; case-aliased paths;
+  `OSError` envelopes; a decoy-resource near-duplicate evasion.
+
+The round-2 changes do not touch the engine, evaluator or runner. Golden digests are unchanged,
+and the committed `wp2r1` bundles still verify against their anchors and replay under the
+hardened code. No third attack round has been run. Your red team is the next one.
 
 **B33 correction.** Rows B19/B20 and the scope receipt first described the push and the review
 as done before they happened. The review caught this, and B33 records it.

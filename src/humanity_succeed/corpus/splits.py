@@ -23,6 +23,12 @@ def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
     return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
+def _world_values(case: CaseSource) -> set[str]:
+    """Hashes of initial resource values. Adding an inert decoy resource only dilutes the overlap
+    (2 shared of 3 is still 0.67), unlike a hash of the whole world."""
+    return {sha256_obj(r.value) for r in case.world.resources.values()}
+
+
 def _jaccard(a: set, b: set) -> float:
     return len(a & b) / len(a | b) if a and b else 0.0
 
@@ -86,12 +92,12 @@ def audit_splits(cases: list[CaseSource]) -> dict[str, Any]:
             if find(a.case_id) == find(b.case_id):
                 continue
             sim = _jaccard(_shingles(a.subject.task), _shingles(b.subject.task))
-            same_world = sha256_obj(a.world.model_dump(mode="json")) == sha256_obj(
-                b.world.model_dump(mode="json"))
-            if sim >= NEAR_DUPLICATE_THRESHOLD or same_world:
+            wsim = _jaccard(_world_values(a), _world_values(b))
+            if sim >= NEAR_DUPLICATE_THRESHOLD or wsim >= NEAR_DUPLICATE_THRESHOLD:
                 item = {"kind": "near_duplicate_across_lineages",
                         "case_ids": sorted([a.case_id, b.case_id]),
-                        "task_shingle_jaccard": round(sim, 3), "identical_world": same_world,
+                        "task_shingle_jaccard": round(sim, 3),
+                        "world_value_jaccard": round(wsim, 3),
                         "splits": sorted({a.split, b.split})}
                 (problems if a.split != b.split else warnings).append(item)
 
@@ -102,6 +108,7 @@ def audit_splits(cases: list[CaseSource]) -> dict[str, Any]:
         "problems": problems,
         "warnings": warnings,
         "near_duplicate_method": (
-            f"word-3-gram Jaccard >= {NEAR_DUPLICATE_THRESHOLD} on subject.task, or identical "
-            "world; heuristic, not paraphrase proof"),
+            f"word-3-gram Jaccard >= {NEAR_DUPLICATE_THRESHOLD} on subject.task, or Jaccard >= "
+            f"{NEAR_DUPLICATE_THRESHOLD} over initial resource-value hashes; heuristic, not "
+            "paraphrase proof"),
     }

@@ -322,6 +322,10 @@ def main(argv: list[str] | None = None) -> int:
     except (ValueError, FileNotFoundError) as e:  # StrictLoadError is a ValueError
         return emit(envelope("invalid", None, error={"code": "invalid_input",
                                                      "message": str(e)}), EXIT_INVALID)
+    except OSError as e:  # e.g. an unwritable or non-directory state root: a resource failure
+        return emit(envelope("failed", None, error={"code": "resource_failure",
+                                                    "message": f"{e.strerror or e}: {e.filename}"}),
+                    EXIT_INTERRUPTED)
     except KeyboardInterrupt:
         return emit(envelope("interrupted", None, error={"code": "interrupted",
                                                          "message": "interrupted"}),

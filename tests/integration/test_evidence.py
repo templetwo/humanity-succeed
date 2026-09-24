@@ -218,3 +218,32 @@ def test_replay_refuses_output_inside_bundle(bundle):
     with pytest.raises(ValueError):
         replay_bundle(bundle, bundle / "replay")
     assert _digest(bundle) == before
+
+
+def test_sha256sums_names_are_never_opened_unless_listed(bundle, tmp_path):
+    """Red-team round 2 (#1): names in SHA256SUMS were opened before validation."""
+    outside = tmp_path / "secret.txt"
+    outside.write_text("x")
+    sums = (bundle / "SHA256SUMS").read_text()
+    (bundle / "SHA256SUMS").write_text(sums + f"{sha256_bytes(b'x')}  ../secret.txt\n")
+    rep = verify_bundle(bundle)
+    assert not next(c for c in rep["checks"] if c["check"] == "sha256sums_consistent")["passed"]
+
+
+def test_hard_link_in_bundle_fails(bundle, tmp_path):
+    import os
+
+    art = next((bundle / "artifacts").iterdir())
+    os.link(art, tmp_path / "alias")
+    rep = verify_bundle(bundle)
+    assert rep["internal"] == "failed" and rep["checks"][-1]["check"] == "no_hard_links"
+
+
+def test_replay_refuses_case_aliased_output_inside_bundle(bundle):
+    """Red-team round 2 (#2): on case-insensitive filesystems a differently-cased path is the same
+    directory; the check compares inodes, not strings."""
+    alias_dir = bundle.parent / bundle.name.upper()
+    if not alias_dir.exists():
+        pytest.skip("case-sensitive filesystem: no alias exists")
+    with pytest.raises(ValueError):
+        replay_bundle(bundle, alias_dir / "replay")

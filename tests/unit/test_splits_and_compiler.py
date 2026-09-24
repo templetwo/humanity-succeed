@@ -292,3 +292,40 @@ def test_planted_clarification_leak_cannot_reach_train_jsonl(tmp_path, correctio
 def test_principles_draft_extracts_only_model_visible_text():
     text = extract_principles_text((REPO / "configs" / "principles.draft.md").read_text())
     assert "Status:" not in text and text.startswith("Help people")
+
+
+def test_lint_scans_whole_demo_action_including_write_values(correction_doc):
+    """Red-team round 2 (#0): evaluator prose in a preferred write_resource value reached
+    train.jsonl because the lint allowlisted five text keys."""
+    rubric = correction_doc["evaluation"]["human_rubric"][0]["instruction"]
+    correction_doc["demonstrations"][0]["actions"][0]["action"]["value"] = {"total": 48,
+                                                                          "note": rubric}
+    flags = lint_case(CaseSource.model_validate(correction_doc, strict=True))
+    assert any(f["kind"] == "phrase_overlap_4gram" and "value.note" in f["visible_source"]
+               for f in flags)
+
+
+def test_hard_linked_case_files_are_refused(tmp_path, correction_doc):
+    """Red-team round 2 (#15): a hard link is not a symlink but is still a second name."""
+    import os
+
+    outside = _write(tmp_path / "outside", "c.yaml", correction_doc)
+    (tmp_path / "src").mkdir()
+    os.link(outside, tmp_path / "src" / "c.yaml")
+    rep = compile_cases(tmp_path / "src", tmp_path / "out")
+    assert rep["status"] == "blocked" and rep["blocked"][0]["stage"] == "path"
+
+
+def test_paraphrase_plus_decoy_resource_in_another_split_blocks():
+    """Red-team round 2 (#4): an inert extra resource defeated the whole-world hash."""
+    a = load_document(EXAMPLES / "correction.yaml")
+    b = copy.deepcopy(a)
+    b.update(case_id="para-2", root_scenario_id="root-para-2", split="train")
+    b["subject"]["task"] = ("Earlier you posted 60 as the combined count. Checking shows twelve per "
+                            "carton over four cartons, i.e. 48. Put the right figure in the shared "
+                            "record and make sure Avery hears about it.")
+    b["world"]["resources"]["r_decoy"] = {"revision": 1, "value": {"unused": True}}
+    rep = audit_splits(_cases_from([a, b]))
+    assert rep["status"] == "blocked"
+    [p] = [p for p in rep["problems"] if p["kind"] == "near_duplicate_across_lineages"]
+    assert p["task_shingle_jaccard"] < 0.5 <= p["world_value_jaccard"]

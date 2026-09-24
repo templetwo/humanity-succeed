@@ -64,12 +64,9 @@ def _visible_texts(case: CaseSource, principles: str | None) -> list[tuple[str, 
         if d.training_role != "preferred":
             continue
         for i, env in enumerate(d.actions):
-            a = env.action.model_dump(exclude_none=True)
-            for k in ("text", "summary", "reason", "alternative", "question"):
-                if isinstance(a.get(k), str):
-                    out.append((f"demo:{d.demo_id}[{i}].{k}", a[k]))
-            if env.message:
-                out.append((f"demo:{d.demo_id}[{i}].message", env.message))
+            # The whole envelope is the SFT target (trajectory_from_demo serializes it), so every
+            # string leaf is scanned, including write_resource values; no field allowlist.
+            out += _strings(env.model_dump(mode="json", exclude_none=True), f"demo:{d.demo_id}[{i}]")
     return out
 
 

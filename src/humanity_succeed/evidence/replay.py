@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,15 @@ from ..providers.scripted import ScriptedProvider
 from .bundle import _read_events, verify_bundle
 
 _VOLATILE = ("timestamp_utc", "prev_hash", "event_hash")
+
+
+def _inside(target: Path, bundle: Path) -> bool:
+    """True if target is the bundle or below it. Compares existing ancestors by inode, so case
+    aliases on case-insensitive filesystems (APFS, NTFS) and symlinks cannot evade the check."""
+    target = Path(os.path.abspath(target))
+    if not bundle.exists():
+        return False
+    return any(p.exists() and os.path.samefile(p, bundle) for p in (target, *target.parents))
 
 
 def _stable(e: dict[str, Any]) -> dict[str, Any]:
@@ -34,8 +44,7 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
     from ..runner.scripted import evaluate_and_record
 
     bundle = Path(bundle)
-    target = Path(out_dir).resolve()
-    if target == bundle.resolve() or target.is_relative_to(bundle.resolve()):
+    if _inside(Path(out_dir), bundle):
         raise ValueError("replay output must be outside the bundle; replay never writes into it")
     verification = verify_bundle(bundle)
     out = make_new_dir(Path(out_dir))

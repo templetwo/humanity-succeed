@@ -56,8 +56,11 @@ def load_cases(path: Path) -> tuple[list[tuple[Path, CaseSource, dict[str, Any]]
         rel = f.relative_to(path) if path.is_dir() else Path(f.name)
         base = path if path.is_dir() else path.parent
         link = any((base / q).is_symlink() for q in (rel, *rel.parents) if q != Path("."))
-        if link or not f.resolve().is_relative_to(root if path.is_dir() else root.parent):
-            errors.append({"file": str(f), "stage": "path", "error": "symlink or out-of-root file"})
+        # A hard link is a second name for a file that may also live outside the corpus.
+        hard = not link and f.is_file() and f.stat(follow_symlinks=False).st_nlink > 1
+        if link or hard or not f.resolve().is_relative_to(root if path.is_dir() else root.parent):
+            errors.append({"file": str(f), "stage": "path",
+                           "error": "symlink, hard link or out-of-root file"})
             continue
         if f.is_file():
             files.append(f)

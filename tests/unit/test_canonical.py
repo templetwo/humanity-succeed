@@ -41,7 +41,15 @@ def test_strict_json_rejects(text, code):
     ("a: 1\na: 2\n", "duplicate_key"),
     ("a: &x 1\nb: *x\n", "yaml_alias"),
     ("a: !!python/object/apply:os.system ['true']\n", "invalid_yaml"),
-    ("a: !!float .nan\n", "nonfinite_number"),
+    ("a: !!float .nan\n", "non_json_scalar"),
+    ("a: !!bool no\n", "non_json_scalar"),
+    ("a: !!bool yes\n", "non_json_scalar"),
+    ("a: !!int 010\n", "non_json_scalar"),
+    ("a: !!int 1:30\n", "non_json_scalar"),
+    ("a: !!int 1_000\n", "non_json_scalar"),
+    ("a: !!int 0x1F\n", "non_json_scalar"),
+    ("a: !!float 1:30\n", "non_json_scalar"),
+    ("a: !!null x\n", "non_json_scalar"),
     ("a: !!timestamp 2026-09-24\n", "non_json_type"),
     ("a: !!binary aGk=\n", "non_json_type"),
     ("a: !!set {x}\n", "non_json_type"),
@@ -108,3 +116,21 @@ def test_refuse_overwrite(tmp_path):
         write_new_file(f, b"2")
     with pytest.raises(FileExistsError):
         make_new_dir(tmp_path)
+
+
+def test_explicit_json_tags_still_allowed():
+    """Red-team round 2 (#11): explicit tags are held to the JSON grammar, not banned."""
+    assert strict_yaml_loads("a: !!int 12\nb: !!bool true\nc: !!float 1.5\nd: !!null ~\n"
+                             "e: !!str no\nf: !!float 3\n") == {
+        "a": 12, "b": True, "c": 1.5, "d": None, "e": "no", "f": 3.0}
+
+
+def test_unreadable_path_is_a_strict_load_error(tmp_path):
+    """Red-team round 2 (#13): a directory passed as a document raised a raw OSError."""
+    from humanity_succeed.canonical import load_document
+
+    d = tmp_path / "x.yaml"
+    d.mkdir()
+    with pytest.raises(StrictLoadError) as e:
+        load_document(d)
+    assert e.value.code == "unreadable_path"

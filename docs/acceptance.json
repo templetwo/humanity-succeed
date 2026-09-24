@@ -138,10 +138,11 @@
       "test_evidence": [
         "tests/unit/test_splits_and_compiler.py::test_lint_flags_hidden_labels_and_overlap",
         "tests/unit/test_splits_and_compiler.py::test_lint_scans_every_subject_deliverable_surface",
-        "tests/unit/test_splits_and_compiler.py::test_planted_clarification_leak_cannot_reach_train_jsonl"
+        "tests/unit/test_splits_and_compiler.py::test_planted_clarification_leak_cannot_reach_train_jsonl",
+        "tests/unit/test_splits_and_compiler.py::test_lint_scans_whole_demo_action_including_write_values"
       ],
       "verification_class": "unit",
-      "unresolved_limits": "phrase lint is not semantic proof; disposition workflow not built (red-team #0 fixed)"
+      "unresolved_limits": "phrase lint is not semantic proof; disposition workflow not built (red-team #0, round-2 B35)"
     },
     {
       "id": "WP1.6",
