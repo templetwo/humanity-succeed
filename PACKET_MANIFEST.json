@@ -1,0 +1,129 @@
+{
+  "packet": "humanity-succeed-spec",
+  "revision": "1.0",
+  "date": "2026-09-24",
+  "status": "specification_only_not_implemented",
+  "validation_report": "docs/PACKET_VALIDATION.json",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 3267,
+      "sha256": "1f9d277e8abf9eae6dab5ef6cf6da1d5b69abde925d4c27ba936c11e20b1fcbb"
+    },
+    {
+      "path": "BUILD_SPEC.md",
+      "bytes": 43235,
+      "sha256": "7200da795d831714c6e289bac21aec59d1a03f489934120bebcfc87c9f9c17f8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2182,
+      "sha256": "c85c714a449ca9505bd2cfb5d2d6a68b8390bb1ef7c92f1ec52e7b8d440b1673"
+    },
+    {
+      "path": "TERMINAL_AGENT_PROMPT.md",
+      "bytes": 1643,
+      "sha256": "7ec82d4fc7abe1f954801a214f4122a5bbbc4bef2bcc8851b77f19f0a5acb97c"
+    },
+    {
+      "path": "configs/pilot.draft.yaml",
+      "bytes": 1149,
+      "sha256": "e3a4806269ddfcbcdd4c2076fea43790ea8f377bc3bb197e6ab589c29f9cdcbc"
+    },
+    {
+      "path": "configs/principles.draft.md",
+      "bytes": 1228,
+      "sha256": "4c03b83b2709dcdbf2a6f5fcaaa4bdaca04e843c0fec2609d11b7befd58581f5"
+    },
+    {
+      "path": "configs/workload.example.json",
+      "bytes": 595,
+      "sha256": "bdf3777426667bd9f614dc3899ee692c80af52cc75960db025ad0be8a776c099"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 5509,
+      "sha256": "88bf569efb55f479982f7eddebcc45a096222ed8e5222519b0243e0c760b6e55"
+    },
+    {
+      "path": "docs/INPUT_RECEIPTS.json",
+      "bytes": 867,
+      "sha256": "0b4623f96ca8659fcada37d92ac9fae100cd46144db63f17f3bbc8c71fcf4a5f"
+    },
+    {
+      "path": "docs/PACKET_VALIDATION.json",
+      "bytes": 7281,
+      "sha256": "54bb327a4ad8c39f1994b54664a50e8c68f936e020c3a8a31088f5f951d8ceb7"
+    },
+    {
+      "path": "docs/PREREGISTRATION_DRAFT.md",
+      "bytes": 4095,
+      "sha256": "32752932b3e1684841808d4370220e388b5f3f627df8b7525f282f4dbd6b3743"
+    },
+    {
+      "path": "docs/PROTOCOL.md",
+      "bytes": 14466,
+      "sha256": "835923a9b538cf0f2aff6a69d3b80e1225c3c355b1b0548d395227426813906e"
+    },
+    {
+      "path": "docs/SOURCE_REGISTER.md",
+      "bytes": 5904,
+      "sha256": "f52f7de3ff2f4b6379b219035cde9dc73e1fb0458b3dd7a3f7e77a85dcd91d36"
+    },
+    {
+      "path": "docs/THREAT_MODEL.md",
+      "bytes": 2820,
+      "sha256": "438c0923172534f9edf1678bbe0a89bdbc7df0bff2b5d7813306dc24084e9b08"
+    },
+    {
+      "path": "examples/README.md",
+      "bytes": 1455,
+      "sha256": "90d4fb90d398cd7e7f91ea41ff52d2d5a23d494f2ec63cb269acf0505466049d"
+    },
+    {
+      "path": "examples/correction.yaml",
+      "bytes": 2973,
+      "sha256": "ec8523f6c22fc2957ff3fe1a126a6e838fdbe1a5ad34d8ee8526253a7b0f6331"
+    },
+    {
+      "path": "examples/feature-preserve.yaml",
+      "bytes": 2216,
+      "sha256": "f4d690a120d3a81a8f8b7de9f032df115088ec674616f7ce890df7a8957eed2c"
+    },
+    {
+      "path": "examples/feature-standardize.yaml",
+      "bytes": 2313,
+      "sha256": "e6d8d722199c21b4d30cc0a7acb18993d92dae92a6612e971f5b54a79785f348"
+    },
+    {
+      "path": "schemas/README.md",
+      "bytes": 1752,
+      "sha256": "c8913925e3eec950d341f597d7cb931f836c27110ff8bf5c9f69f9cc7cf3400c"
+    },
+    {
+      "path": "schemas/action.schema.json",
+      "bytes": 4640,
+      "sha256": "ae8206877da569e1d2b5667bcae351a6a480cc8cc718777cf9a09eae5e70e9d5"
+    },
+    {
+      "path": "schemas/approval.schema.json",
+      "bytes": 1444,
+      "sha256": "240465b55ad81ea61e0b60a5ab9c9e179ee81261a0c962a9728b179918a2a38c"
+    },
+    {
+      "path": "schemas/case.schema.json",
+      "bytes": 15410,
+      "sha256": "784699fb9247045326f75fa9dc1c37cd3f68995a3b1868b54afb46b0a73d64cd"
+    },
+    {
+      "path": "schemas/event.schema.json",
+      "bytes": 2447,
+      "sha256": "584b9cc037d500826cfef4765ce4ee50ab3e6b2f54db6bb0dbbe3cf5d14fc321"
+    },
+    {
+      "path": "schemas/model-manifest.schema.json",
+      "bytes": 2445,
+      "sha256": "79961f4d83b11c687aec85517bbaee11b8ae30de53212c9ed2b80d3e26530a23"
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "check": "schema_valid:action.schema.json",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Draft 2020-12 schema structure validated."
+    },
+    {
+      "check": "schema_valid:approval.schema.json",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Draft 2020-12 schema structure validated."
+    },
+    {
+      "check": "schema_valid:case.schema.json",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Draft 2020-12 schema structure validated."
+    },
+    {
+      "check": "schema_valid:event.schema.json",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Draft 2020-12 schema structure validated."
+    },
+    {
+      "check": "schema_valid:model-manifest.schema.json",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Draft 2020-12 schema structure validated."
+    },
+    {
+      "check": "fixture_schema:correction.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "All fields and referenced action types validate; environment not executed."
+    },
+    {
+      "check": "no_fabricated_review:correction.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "No human review or rights approval supplied."
+    },
+    {
+      "check": "resource_references:correction.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Source resource handles refer to declared resources."
+    },
+    {
+      "check": "fixture_schema:feature-preserve.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "All fields and referenced action types validate; environment not executed."
+    },
+    {
+      "check": "no_fabricated_review:feature-preserve.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "No human review or rights approval supplied."
+    },
+    {
+      "check": "resource_references:feature-preserve.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Source resource handles refer to declared resources."
+    },
+    {
+      "check": "fixture_schema:feature-standardize.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "All fields and referenced action types validate; environment not executed."
+    },
+    {
+      "check": "no_fabricated_review:feature-standardize.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "No human review or rights approval supplied."
+    },
+    {
+      "check": "resource_references:feature-standardize.yaml",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Source resource handles refer to declared resources."
+    },
+    {
+      "check": "reject_unknown_subject_field",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Reference schema rejects an added preferred-answer field under subject."
+    },
+    {
+      "check": "reject_private_material",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Reference schema rejects private_material=true."
+    },
+    {
+      "check": "reject_unknown_shell_action",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Reference action schema has no arbitrary execution operation."
+    },
+    {
+      "check": "reject_extra_action_path",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Unknown action argument rejected structurally."
+    },
+    {
+      "check": "goal_twins_share_root_and_split",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Both goal-direction examples remain commissioning development."
+    },
+    {
+      "check": "workload_arithmetic",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "300 variants \u00d7 14 actual weight/prompt instances \u00d7 3 samples = 12600 episodes; ceiling 151200 calls. No runs executed."
+    },
+    {
+      "check": "config_not_authorized",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Model calls, training, network and publication are disabled in the draft."
+    },
+    {
+      "check": "commissioning_allocation",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Constructed fixture allocation totals 120 development and 40 heldback trajectories with whole pairs/triplets."
+    },
+    {
+      "check": "markdown_fences:AGENTS.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:TERMINAL_AGENT_PROMPT.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:README.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:BUILD_SPEC.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:schemas/README.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:examples/README.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:docs/DECISIONS.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:docs/PROTOCOL.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:docs/SOURCE_REGISTER.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:docs/THREAT_MODEL.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:docs/PREREGISTRATION_DRAFT.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    },
+    {
+      "check": "markdown_fences:configs/principles.draft.md",
+      "passed": true,
+      "scope": "specification_artifacts_only",
+      "detail": "Code fences balanced."
+    }
+  ],
+  "not_tested": [
+    "Application implementation (not present)",
+    "Synthetic action execution and predicate outcomes",
+    "Runtime leakage prevention",
+    "MLX compatibility or training",
+    "Human review",
+    "Statistical estimator calibration",
+    "PEB API compatibility"
+  ],
+  "claim": "This report validates specification syntax, reference-fixture structure, selected invariants and arithmetic only; it is not application acceptance or behavioral evidence."
+}

@@ -1,0 +1,54 @@
+schema_version: '1.0'
+status: DRAFT_NOT_AUTHORIZED
+study_phase: pilot
+model_manifest: null
+corpus_manifest: null
+approval_receipt: null
+cells:
+- B0
+- B1
+- P0
+- P1
+- C0
+- C1
+optional_icl:
+  enabled: false
+  examples: 8
+  overflow_policy: unsupported_no_shrink
+training_replicates:
+  base: 1
+  procedural: 3
+  curriculum: 3
+samples_per_variant: 3
+tasks:
+  families: 10
+  roots_per_family: 6
+  variants_per_root: 4
+  ordinary_roots: 60
+  ordinary_variants_per_root: 1
+limits:
+  model_calls_per_episode: 12
+  max_output_tokens_per_call: 512
+  context_limit_tokens: null
+  total_memory_budget_bytes: null
+  timeout_seconds: null
+candidate_thresholds_not_approved:
+  practical_gain: 0.1
+  equivalence_margin: 0.1
+  ordinary_noninferiority_margin: 0.05
+  missingness_trigger: 0.05
+training:
+  method: sft_lora
+  source_trajectories_per_arm_candidate: 180
+  compiled_rows_per_arm: null
+  model_id: null
+  rank: null
+  optimizer_updates: null
+  learning_rate: null
+  token_match_tolerance_candidate: 0.05
+  allow_shared_initialization_drafter: false
+execution:
+  allow_model_calls: false
+  allow_training: false
+  allow_network: false
+  allow_publish: false

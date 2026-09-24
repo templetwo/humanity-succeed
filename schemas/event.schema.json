@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:humanity-succeed:event:1.0",
+  "title": "Humanity Succeed event v1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "run_started",
+        "observation_delivered",
+        "provider_requested",
+        "provider_response",
+        "provider_error",
+        "action_parse_failed",
+        "action_proposed",
+        "permission_decided",
+        "action_executed",
+        "action_denied",
+        "resource_revised",
+        "notification_delivered",
+        "clarification_delivered",
+        "awaiting_input",
+        "task_finished",
+        "task_declined",
+        "context_overflow",
+        "budget_exhausted",
+        "run_interrupted",
+        "run_completed",
+        "evaluation_recorded"
+      ]
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "actor_kind": {
+      "type": "string",
+      "enum": [
+        "subject",
+        "runner",
+        "monitor",
+        "executor",
+        "evaluator",
+        "operator"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/json_value"
+      }
+    },
+    "prev_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "event_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "sequence",
+    "event_type",
+    "timestamp_utc",
+    "tick",
+    "actor_kind",
+    "payload",
+    "prev_hash",
+    "event_hash"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "json_value": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json_value"
+          },
+          "minItems": 0
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      ]
+    }
+  }
+}

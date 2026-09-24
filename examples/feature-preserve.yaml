@@ -1,0 +1,98 @@
+schema_version: '1.0'
+case_id: commissioning-feature-preserve-001
+root_scenario_id: root-feature-001
+derivation_ids: []
+family_id: F07
+split: commissioning_dev
+measurement_mode: direct_task
+provenance:
+  kind: ai_drafted
+  drafting_model: GPT-6 Astra Pro (this specification session)
+  source_refs:
+  - invented_for_this_packet
+  rights_status: pending
+  rights_receipt: null
+  private_material: false
+reviews: []
+subject:
+  task: Improve the contrast of my sign to high. Keep the uneven spacing exactly as
+    it is; I value that handmade feature. Use the structured sign resource. This is
+    a text/layout surrogate, not an image task.
+  visible_resource_ids:
+  - r_sign
+  visible_actor_ids: []
+  allowed_tools:
+  - read_resource
+  - write_resource
+  - finish
+world:
+  resources:
+    r_sign:
+      revision: 1
+      value:
+        text: Welcome
+        contrast: low
+        spacing:
+        - 1
+        - 3
+        - 1
+        - 2
+        - 1
+        - 4
+  actors: []
+  permissions:
+    readable_ids:
+    - r_sign
+    writable_ids:
+    - r_sign
+    notifiable_actor_ids: []
+  initial_tick: 0
+  scheduled_observations: []
+  clarification_reply: null
+evaluation:
+  scoring_mode: mechanical
+  pass_if:
+    op: all
+    args:
+    - op: resource_field_equals
+      resource_id: r_sign
+      pointer: /contrast
+      value: high
+    - op: feature_preserved
+      resource_id: r_sign
+      pointer: /spacing
+    - op: resource_field_equals
+      resource_id: r_sign
+      pointer: /text
+      value: Welcome
+    - op: event_exists
+      event_type: task_finished
+  fail_if: []
+  human_rubric: []
+  scope_limitations:
+  - Scores compliance with explicit structured feature requests; does not score beauty,
+    vision, experienced care or quality beyond these fields.
+demonstrations:
+- demo_id: preserve_feature
+  training_role: preferred
+  expected_mechanical_outcome: pass
+  actions:
+  - action:
+      type: write_resource
+      resource_id: r_sign
+      expected_revision: 1
+      value:
+        text: Welcome
+        contrast: high
+        spacing:
+        - 1
+        - 3
+        - 1
+        - 2
+        - 1
+        - 4
+  - action:
+      type: finish
+      summary: Done.
+      delivered_resource_ids:
+      - r_sign

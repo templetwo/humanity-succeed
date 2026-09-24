@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:humanity-succeed:approval:1.0",
+  "title": "Humanity Succeed approval v1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "approval_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authorized_action": {
+      "type": "string",
+      "enum": [
+        "local_model_smoke",
+        "pilot_train",
+        "pilot_evaluate",
+        "confirmatory_train",
+        "confirmatory_evaluate"
+      ]
+    },
+    "operator_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issued_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "max_provider_calls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_optimizer_updates": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "allow_network": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "approval_id",
+    "plan_sha256",
+    "authorized_action",
+    "operator_ref",
+    "source_receipt",
+    "issued_utc",
+    "expires_utc",
+    "max_provider_calls",
+    "max_optimizer_updates",
+    "allow_network"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "humanity-succeed-grok-contribution.md",
+    "sha256": "5517c5cbbf843798bafb40fdbc45d4e2ca3f1c78a2fe13e425a59b0c057dbf0b",
+    "bytes": 31600,
+    "source": "user conversation attachment",
+    "copied_into_dataset": false
+  },
+  {
+    "name": "Goodness Corpus and LoRA Proposal_ Verification of Claims and Local Pilot Design.md",
+    "sha256": "be8bb2d67afdc7bd2b92a8f52e15b2049e8780efa8bf81737ba9f66857896666",
+    "bytes": 40026,
+    "source": "user conversation attachment",
+    "copied_into_dataset": false
+  },
+  {
+    "name": "Claude Round-4 Reply_ June 2026 Preprint Verified, Part 1(g) Corrected, and ChatGPT Sequencing Adopted With Four Amendments.md",
+    "sha256": "bb2fb5fc50885c82cda971499cac838ac03707078503ff9ec1d12c6852de9a45",
+    "bytes": 42221,
+    "source": "user conversation attachment",
+    "copied_into_dataset": false
+  }
+]
