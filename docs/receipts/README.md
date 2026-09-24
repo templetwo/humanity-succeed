@@ -8,6 +8,8 @@
 | `wp2-lint.txt` | `ruff check` and generated-schema freeze check at `365090d` |
 | `wp2-demo/` | `hs demo` output at `365090d`: 15 scripted bundles, 15 replays, `comparison.html/json` |
 | `wp2-anchors/` | `hs evidence anchor` for each demo bundle, made at the time of the run |
+| `PUSH_RECEIPT.md` | Public remote creation, first push, and the authority for it |
+| `wp2r1/` | Post-red-team receipts at fix commit `e6c5d7c`: `tests.txt` (195 passed), `lint.txt`, `demo/`, `anchors/` |
 
 Every bundle is a `scripted_instrument` run. None is a model result.
 

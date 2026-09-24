@@ -1,0 +1,143 @@
+# Handoff: WP2 checkpoint
+
+Written by the MacBook seat (claude-opus-5-5), 2026-09-24. This is not the HQ seat.
+**Model called: no. Model trained: no. Model downloaded: no.** Every run here is a
+`scripted_instrument` run.
+
+## Where things are
+
+| Item | Value |
+|---|---|
+| Workspace | `~/Desktop/🔬 Active_Research/humanity-succeed` |
+| Branch | `main` |
+| Packet import | `7121557` (24/24 manifest files verified) |
+| Implementation | `365090d` |
+| Receipts | `33e88bd` |
+| Red-team fixes | `e6c5d7c` (receipts at `e6c5d7c` in `docs/receipts/wp2r1/`) |
+| Remote | https://github.com/templetwo/humanity-succeed (public; no license selected) |
+
+## Reproduce
+
+```sh
+uv sync --locked --group dev
+uv run pytest                                  # 195 tests, all state in temp roots
+uv run ruff check src tests scripts
+uv run python scripts/export_schemas.py --check
+uv run hs demo --out /tmp/hs-demo --state-root /tmp/hs-state   # all assertions must hold
+```
+
+## What is built (WP0–WP2)
+
+See `docs/ACCEPTANCE.md` for one row per requirement, with its evidence and limits.
+
+- **Contracts.** Strict JSON/YAML loading. Packet schemas are embedded byte-identical and
+  resolved without network access; pydantic strict models mirror them; generated schemas are
+  frozen by a test. There is one recorded extension, `proposal_exists` (B03).
+- **Compiler.** Four separate views per case. A typed observation builder is the only source of
+  model-visible bytes. A derivation-graph split audit, leak lint and deterministic outputs.
+  SFT rows come only from approved preferred trajectories, replayed through the real engine,
+  one prefix row per assistant turn.
+- **Engine.** Proposal, permission, execution and effect are separate records. Revision-checked
+  writes; notifications with receipts; a logical clock with hidden scheduled events.
+- **Evidence.** A SQLite hash chain, with each event and its revision in one transaction.
+  Bundle export; verification that reports internal consistency and anchor status separately;
+  read-only replay that re-executes and must reproduce every event and the evaluation.
+- **Evaluator.** A predicate registry with pass / fail / not_evaluable and evidence references.
+  Hybrid and human cases stay `pending_review`. Containment and rhetoric are separate ledgers
+  that never earn conduct credit. Provider failure is missingness, not a moral failure.
+
+## The demonstration you asked for
+
+The results are in `docs/receipts/wp2r1/demo/comparison.html` (static; open it locally). They were regenerated at the fix commit, and the verdicts are identical to the `365090d` run in `docs/receipts/wp2-demo/`:
+
+- The claim-only correction fails in neutral, warm and cold wording. Changing the wording does
+  not create an effect.
+- The real correction passes mechanically in neutral and warm wording. Its conduct outcome stays
+  `pending_review`, because no human semantic review exists.
+- Removing only the write fails. Removing only the notification fails.
+- A monitor-blocked source alteration is recorded as containment and still fails conduct.
+- Refusing the ordinary title edit fails.
+- The feature goal is respected in both directions.
+- All 15 bundles verify as internally consistent, are anchored, and reproduce on replay.
+
+## Pre-push red team (internal) and what it changed
+
+The review ran 7 Sonnet finder lenses (leakage, evidence, evaluator, compiler, conformance,
+publication, robustness), 2 independent skeptics per finding (one reproducing, one reading the
+spec), and a completeness critic, against `33e88bd`. It reported 16 findings; 15 were upheld by
+at least one skeptic, and 13 by both. Every upheld finding was fixed in `e6c5d7c` with a
+regression test, except the documentation ones, which were corrected in the docs themselves.
+The finding refuted by both skeptics (#10) was not changed. Details are in `docs/DECISIONS.md`
+rows B23–B34.
+
+The most serious findings:
+
+- **#0.** The leak lint missed text that is delivered to the subject: clarification replies,
+  scheduled observations and readable resource values. It now scans them, and a planted leak
+  can no longer reach `train.jsonl`.
+- **#8 / #12.** Case and trajectory IDs could act as filesystem paths. There is now one
+  identifier grammar, and store names come from hashes.
+- **#9 / #11.** A lone surrogate crashed the runner, and YAML 1.1 typing changed values. Loading
+  now keeps text and types within the JSON data model.
+- **#1.** Verification followed symlinks. They are now refused before any content is read.
+
+Golden digests captured before the fixes (every fixture and trajectory load, the demo verdict
+table, the demonstration assertions) are unchanged afterwards.
+
+**Fix re-verification.** A second workflow re-runs each original reproduction against
+`e6c5d7c` and tries to get around each fix. At the time of this commit it was still running;
+its outcome is recorded in a later commit.
+
+**B33 correction.** Rows B19/B20 and the scope receipt first described the push and the review
+as done before they happened. The review caught this, and B33 records it.
+
+## PEB
+
+`docs/PEB_COMPATIBILITY.md`: the candidate checkout is at `main 885de3d`, clean. **No software
+license was found**, so nothing was copied. Its subject/tool/event contracts differ from this
+packet's. The native engine is the default, and the PEB importer is not built.
+
+## Workload arithmetic (checked by hand; the WP4 planner is not built)
+
+- Task variants: (10 × 6 × 4) + (60 × 1) = 300 variants from 120 roots.
+- Weight/prompt instances: 2 × (1 + 3 + 3) = 14.
+- Episodes: 300 × 3 samples × 14 = **12,600**.
+- Provider-call ceiling: × 12 = **151,200**.
+- Output-token ceiling: × 512 = **77,414,400**.
+- Optional ICL cell: 300 × 3 = 900 episodes, and 900 × 12 = 10,800 calls.
+
+These match `configs/workload.example.json`. They are planning bounds, not an approved workload.
+
+## Unverified or blocked
+
+- Token-level label masks, token counts and context limits. No tokenizer or model is selected
+  (B14).
+- Semantic review of the hybrid correction cases. No human reviewers exist.
+- Lint dispositions. Flags are recorded, but no disposition workflow exists (B16).
+- Provider process isolation (WP5); the `EpisodeBackend` interface and PEB importer.
+- Commissioning (WP3), planning and blind review (WP4), adapters (WP5), analysis and
+  preregistration (WP6), and the offline gate (WP7) are not started.
+- Near-duplicate detection is a heuristic (B29). Ancestry is the rule, and no lexical check
+  proves an undeclared paraphrase is absent.
+
+## Open human gates (none of these was decided by the builder)
+
+- Distribution license for this repository (the repo is public; no license means all rights
+  reserved).
+- Research thresholds (δ, equivalence and NI margins, missingness trigger).
+- Pilot corpus, independent human reviewers and a holdback custodian.
+- The exact model checkpoint and runtime.
+- Training permission, preregistration timing and publication.
+
+## Smallest next action that needs Anthony
+
+1. **Red-team this commit** (you asked me to wait for that). I'm stopped here. Nothing in WP3–WP7
+   has started.
+2. After that, one decision unblocks the next package: **may WP3 (offline evaluator
+   commissioning: 160 constructed trajectories, holdback custody, mechanical versus semantic
+   commissioning) begin?** If it may, name a holdback custodian who is not the builder. Without
+   one, the spec requires `independent_holdback=false`, and WP3 can only produce development
+   commissioning, not formal certification.
+
+The license, thresholds, corpus, reviewers, model and training stay at their own gates; none is
+needed for WP3.
