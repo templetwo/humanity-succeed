@@ -64,6 +64,30 @@ Stack policy and not research approvals. The packet rows above are unchanged.
 | B17 | Evidence: SQLite is the authority; the genesis `prev_hash` is 64 zeros; `run_started` binds the manifest hash; `evaluation_recorded` binds the evaluation hash; JSONL is an export | §7.1 |
 | B18 | CLI additions for WP2: `hs run scripted`, `hs evidence anchor`, `hs demo`. Commands from later work packages exit 4 `unsupported_at_checkpoint` and do nothing | §12: no fake-success stubs |
 | B19 | **Public GitHub remote at Anthony's direction, 2026-09-24**, verbatim: "continue alse start the git repo offocially(public) then push and await red teaming of your commit". **No distribution license was selected**; rights remain pending, so the default is all rights reserved | AGENTS.md reserves public repos to explicit approval. That approval is quoted here; the license choice is still his |
-| B20 | WP0–WP2 was built single-agent, per the assignment ("Keep the first slice single-agent"). Before the push, Anthony enabled ultracode ("use ultracode when helpfull"), and a pre-push review workflow ran with Sonnet agents (tier law: one tier below this Opus seat) | Delegation tier law, pol_20260804 v2 |
+| B20 | WP0–WP2 was built single-agent, per the assignment ("Keep the first slice single-agent"). Before the push, Anthony enabled ultracode ("use ultracode when helpfull"), and a pre-push review workflow ran with Sonnet agents (tier law: one tier below this Opus seat) | The Temple's delegation tier rule (subagents one tier below the spawning seat) |
 | B21 | The packet README moved to `docs/PACKET_README.md`; the new `README.md` carries the mandatory sentence. The packet manifest and all other packet files stay where the manifest lists them | §1.3 README requirement; keeps `PACKET_MANIFEST.json` paths valid |
 | B22 | Anthony's three originals (`~/Downloads/HS_BUILD_SPEC.md`, `PROTOCOL.md`, `TERMINAL_AGENT_PROMPT.md`) are byte-identical to the packet's `BUILD_SPEC.md`, `docs/PROTOCOL.md` and `TERMINAL_AGENT_PROMPT.md`. There was no divergent governing text to retain | See `docs/receipts/PACKET_VERIFICATION.json` |
+
+### Red-team corrections (pre-push review workflow, 2026-09-24)
+
+A pre-push review ran 7 Sonnet finder lenses, 2 independent Sonnet skeptics per finding (one
+reproducing, one reading the spec) and a completeness critic. It reviewed commit `33e88bd`,
+reported 16 findings, and 15 were upheld by at least one skeptic. The fixes below come with
+regression tests. Before the fixes, golden digests of every fixture load, every trajectory
+load and the demo verdict table were frozen; all are unchanged after the fixes.
+
+| ID | Finding (severity as verified) | Correction |
+|---|---|---|
+| B23 | #0 critical: the leak lint ignored `world.clarification_reply`, `scheduled_observations` and readable resource contents, all of which reach the provider. Evaluator prose planted there compiled into `train.jsonl` with zero flags | The lint now scans every case-authored surface the subject can receive. The resulting flags withhold SFT eligibility (tested end to end) |
+| B24 | #8 critical: `case_id` became a compiler output directory name (path traversal, NUL-byte crash). #12 critical: `trajectory_id` became a store filename (absolute-path escape) | One identifier grammar, `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`, for case, root, family, derivation, demo, resource and actor IDs, plus a containment check in the compiler. Store names derive from a hash, never from an ID |
+| B25 | #9 critical: a lone UTF-16 surrogate in a write value crashed canonical hashing | Strict loading rejects text that is not valid Unicode (`invalid_unicode`), so the parser records `invalid_action`. Loaded data must stay in the JSON data model (`non_json_type`) |
+| B26 | #11 high: YAML 1.1 implicit typing turned unquoted `no`/`yes`/`on`/`off`/`017`/`1_000`/`12:30`/dates into other types | JSON-model implicit resolvers only: `true`/`false`, `null`/`~`/empty, decimal ints without leading zeros, decimal floats. Everything else stays a string. Explicit non-JSON tags are rejected |
+| B27 | #1 high: verify/replay followed symlinks and `../` names. #2 medium: replay output could be created inside the bundle | Verification refuses symlinks anywhere in the bundle, names outside a fixed allowlist (`artifacts/<sha256>` plus six top-level files), and files over 64 MiB, all before reading any content. Replay refuses an output path inside the bundle |
+| B28 | #3 high: a JSON-pointer array index accepted Unicode digits and crashed `int()` | Only ASCII decimal array indexes are accepted (RFC 6901) |
+| B29 | #4 critical/low (split verdict): the near-duplicate check was exact-match | Word-3-gram Jaccard ≥ 0.5 on the task, or an identical world, across lineages. It **blocks** when the matching cases are in different splits and **warns** within one split. It remains a heuristic: ancestry is the rule, and no lexical check proves the absence of a paraphrase |
+| B30 | #15 high/low (split verdict): the compiler followed symlinks in a corpus directory | Symlinked or out-of-root case files are refused with stage `path` |
+| B31 | #13 medium / #14 high: malformed trajectories and case/trajectory mismatches produced tracebacks | A strict trajectory model; the mismatch is checked before any store is created. Input errors return the `invalid_input` envelope (exit 2) |
+| B32 | #7 medium/low: internal governance identifiers appeared in public receipts | Replaced with plain descriptions |
+| B33 | #5 high: **correction to B19/B20 and the scope receipt as first written.** They described the public push and the pre-push review as done before either had happened. The reviewer correctly found no remote and a missing push receipt at `33e88bd` | The push happened afterwards, at `33e88bd` then `77dcbf5` (see `docs/receipts/PUSH_RECEIPT.md`), while this review was still running. This row records that the text was ahead of the facts; it is not a quiet fix |
+| B34 | #6 high: README cited a handoff that did not exist yet | `docs/HANDOFF.md` is added in the receipts commit that follows this fix commit (it has to cite that commit's receipts) |
+| — | #10 (int versus float counted as a type change) | Refuted by both skeptics. No change: both are JSON numbers |

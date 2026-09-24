@@ -36,9 +36,9 @@ Written by the MacBook seat (claude-opus-5-5), 2026-09-24. This seat is not the 
 | Check | Result |
 |---|---|
 | Stack heartbeat | `ok`, version 1.21.0, 52 tools |
-| Arrival | `arrive_lineage` (gentle door), read-only |
-| `current_policies()` | 13 active. Applied here: delegation tier law (v2), children's-names exclusion, protected-records coupling, non-Claude substrates at arm's length, chronicle stewardship, Law #10 (nuisance baseline; relevant from WP3) |
-| `compass_check` (live schema; `action` is required) | **PROCEED**, no risk signals, for: local build, git init plus local commits, project-local venv, read-only PEB inspection; no push/remote/model/training/Stack writes. Suggested verifications: check the git diff; verify the target branch |
+| Arrival | the Stack's lightweight read-only arrival |
+| Standing policies (read-only) | 13 active. Applied here: subagents one tier below the spawning seat, the children's-names exclusion, protected personal records stay out, non-Claude systems credited as provenance only, the owner decides publication, and nuisance-baseline controls (relevant from WP3) |
+| Pre-action compass check (live schema; `action` is required) | **PROCEED**, no risk signals, for: local build, git init plus local commits, project-local venv, read-only PEB inspection; no push/remote/model/training/Stack writes. Suggested verifications: check the git diff; verify the target branch |
 | Compass check for the public push | Run separately, immediately before the push. See `docs/receipts/PUSH_RECEIPT.md` |
 
 The packet's recorded compass failure ("'action' is a required property") was a schema

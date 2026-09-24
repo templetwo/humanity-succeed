@@ -41,7 +41,11 @@ def test_strict_json_rejects(text, code):
     ("a: 1\na: 2\n", "duplicate_key"),
     ("a: &x 1\nb: *x\n", "yaml_alias"),
     ("a: !!python/object/apply:os.system ['true']\n", "invalid_yaml"),
-    ("a: .nan\n", "nonfinite_number"),
+    ("a: !!float .nan\n", "nonfinite_number"),
+    ("a: !!timestamp 2026-09-24\n", "non_json_type"),
+    ("a: !!binary aGk=\n", "non_json_type"),
+    ("a: !!set {x}\n", "non_json_type"),
+    (b"a: \xff\n", "invalid_utf8"),
     ("a: 1\n---\nb: 2\n", "document_count"),
     ("1: x\n", "non_string_key"),
 ])
@@ -53,6 +57,24 @@ def test_strict_yaml_rejects(text, code):
 
 def test_yaml_dates_stay_strings():
     assert strict_yaml_loads("d: 2026-09-24\n") == {"d": "2026-09-24"}
+
+
+def test_yaml_uses_json_model_implicit_typing():
+    """Red-team #11: YAML 1.1 implicit typing silently changed types."""
+    doc = strict_yaml_loads(
+        "a: no\nb: yes\nc: on\nd: off\ne: 017\nf: 0o17\ng: 1_000\nh: 12:30\ni: .nan\n"
+        "t: true\nn: null\nz: ~\nk: 48\nm: -3\nx: 1.5\ny: 1e5\n")
+    assert doc == {"a": "no", "b": "yes", "c": "on", "d": "off", "e": "017", "f": "0o17",
+                   "g": "1_000", "h": "12:30", "i": ".nan", "t": True, "n": None, "z": None,
+                   "k": 48, "m": -3, "x": 1.5, "y": 100000.0}
+
+
+@pytest.mark.parametrize("text", ['{"a":"\\ud800"}', '{"\\udc00":1}', '"\ud800"'])
+def test_lone_surrogates_rejected(text):
+    """Red-team #9: a lone surrogate crashed canonical hashing downstream."""
+    with pytest.raises(StrictLoadError) as e:
+        strict_json_loads(text)
+    assert e.value.code == "invalid_unicode"
 
 
 def test_oversize_rejected():

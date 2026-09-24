@@ -3,7 +3,7 @@
   "checkpoint": "WP2",
   "note": "One row per requirement. pytest exiting zero does not fill a row.",
   "counts": {
-    "implemented": 28,
+    "implemented": 29,
     "partial": 6,
     "not_started": 12,
     "blocked": 0
@@ -71,6 +71,17 @@
       "unresolved_limits": ""
     },
     {
+      "id": "WP0.8",
+      "requirement": "Identifiers can never act as filesystem paths (cases, trajectories, stores)",
+      "status": "implemented",
+      "test_evidence": [
+        "tests/unit/test_splits_and_compiler.py::test_identifiers_cannot_be_paths",
+        "tests/integration/test_cli.py::test_malformed_trajectory_is_invalid_input"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "red-team #8/#12 fixed"
+    },
+    {
       "id": "WP0.7",
       "requirement": "Contracts mirror packet schemas; generated schemas frozen",
       "status": "implemented",
@@ -98,7 +109,7 @@
         "tests/unit/test_splits_and_compiler.py"
       ],
       "verification_class": "unit",
-      "unresolved_limits": "near-duplicate check is normalized-text only"
+      "unresolved_limits": "near-duplicate check is a 3-gram/world-hash heuristic; it cannot prove paraphrase absence"
     },
     {
       "id": "WP1.3",
@@ -122,13 +133,15 @@
     },
     {
       "id": "WP1.5",
-      "requirement": "Leakage lints (4-gram overlap, hidden labels)",
+      "requirement": "Leakage lints (4-gram overlap, hidden labels) over every subject-deliverable surface",
       "status": "implemented",
       "test_evidence": [
-        "tests/unit/test_splits_and_compiler.py::test_lint_flags_hidden_labels_and_overlap"
+        "tests/unit/test_splits_and_compiler.py::test_lint_flags_hidden_labels_and_overlap",
+        "tests/unit/test_splits_and_compiler.py::test_lint_scans_every_subject_deliverable_surface",
+        "tests/unit/test_splits_and_compiler.py::test_planted_clarification_leak_cannot_reach_train_jsonl"
       ],
       "verification_class": "unit",
-      "unresolved_limits": "phrase lint is not semantic proof; disposition workflow not built"
+      "unresolved_limits": "phrase lint is not semantic proof; disposition workflow not built (red-team #0 fixed)"
     },
     {
       "id": "WP1.6",
@@ -338,7 +351,7 @@
         "tests/integration/test_evidence.py"
       ],
       "verification_class": "integration",
-      "unresolved_limits": ""
+      "unresolved_limits": "symlinks, escaping names and oversized files are refused before reading (red-team #1)"
     },
     {
       "id": "A13",

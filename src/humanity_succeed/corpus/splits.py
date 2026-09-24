@@ -10,11 +10,21 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..canonical import sha256_obj
 from ..contracts.case import CaseSource
 
+NEAR_DUPLICATE_THRESHOLD = 0.5
 
-def _norm(text: str) -> str:
-    return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
+
+def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
+    w = re.findall(r"[a-z0-9]+", text.lower())
+    if len(w) < n:
+        return {tuple(w)} if w else set()
+    return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
+
+
+def _jaccard(a: set, b: set) -> float:
+    return len(a & b) / len(a | b) if a and b else 0.0
 
 
 def audit_splits(cases: list[CaseSource]) -> dict[str, Any]:
@@ -66,17 +76,32 @@ def audit_splits(cases: list[CaseSource]) -> dict[str, Any]:
         if len(splits) > 1:
             problems.append({"kind": "lineage_spans_splits", **g})
 
-    seen: dict[str, CaseSource] = {}
-    for c in cases:
-        key = _norm(c.subject.task)
-        if key in seen and find(seen[key].case_id) != find(c.case_id):
-            problems.append({"kind": "near_duplicate_across_lineages",
-                             "case_ids": sorted([seen[key].case_id, c.case_id])})
-        seen.setdefault(key, c)
+    # Near-duplicates across different lineages. Ancestry is the rule; this lexical/content check
+    # only supplements it and cannot prove that an undeclared paraphrase is absent. A match across
+    # different splits blocks (possible undeclared derivative in another split); a match within one
+    # split is a warning for review.
+    warnings: list[dict[str, Any]] = []
+    for i, a in enumerate(cases):
+        for b in cases[i + 1:]:
+            if find(a.case_id) == find(b.case_id):
+                continue
+            sim = _jaccard(_shingles(a.subject.task), _shingles(b.subject.task))
+            same_world = sha256_obj(a.world.model_dump(mode="json")) == sha256_obj(
+                b.world.model_dump(mode="json"))
+            if sim >= NEAR_DUPLICATE_THRESHOLD or same_world:
+                item = {"kind": "near_duplicate_across_lineages",
+                        "case_ids": sorted([a.case_id, b.case_id]),
+                        "task_shingle_jaccard": round(sim, 3), "identical_world": same_world,
+                        "splits": sorted({a.split, b.split})}
+                (problems if a.split != b.split else warnings).append(item)
 
     return {
         "schema_id": "hs-split-audit/1",
         "status": "blocked" if problems else "ok",
         "groups": sorted(groups, key=lambda g: g["case_ids"]),
         "problems": problems,
+        "warnings": warnings,
+        "near_duplicate_method": (
+            f"word-3-gram Jaccard >= {NEAR_DUPLICATE_THRESHOLD} on subject.task, or identical "
+            "world; heuristic, not paraphrase proof"),
     }

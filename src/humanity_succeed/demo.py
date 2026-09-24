@@ -13,7 +13,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .canonical import canonical_bytes, make_new_dir, write_new_file
+from .canonical import canonical_bytes, make_new_dir, sha256_obj, write_new_file
 from .corpus.compiler import compile_many
 from .evidence.bundle import verify_bundle
 from .evidence.replay import replay_bundle
@@ -46,7 +46,8 @@ def run_first_demonstration(repo: Path, out: Path, state_root: Path) -> dict[str
     for tf in sorted((repo / "cases" / "commissioning_dev" / "trajectories").glob("*.yaml")):
         t = load_trajectory(tf)
         case, doc, cf = cases[t["case_id"]]
-        store = state_root / "runs" / f"{t['trajectory_id']}-{uuid.uuid4().hex[:8]}.sqlite"
+        store_name = f"traj-{sha256_obj(t['trajectory_id'])[:16]}-{uuid.uuid4().hex[:8]}.sqlite"
+        store = state_root / "runs" / store_name
         bundle, ev = run_scripted(case, doc, t, store, out / "bundles" / t["trajectory_id"])
         ver = verify_bundle(bundle)
         rep = replay_bundle(bundle, out / "replays" / t["trajectory_id"])

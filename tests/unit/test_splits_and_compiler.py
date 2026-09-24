@@ -73,7 +73,65 @@ def test_near_duplicate_across_lineages_flagged():
     b.update(case_id="x-2", root_scenario_id="root-x-2")
     b["subject"]["task"] = a["subject"]["task"].upper()
     rep = audit_splits(_cases_from([a, b]))
-    assert any(p["kind"] == "near_duplicate_across_lineages" for p in rep["problems"])
+    assert rep["status"] == "ok"  # same split: a warning, not a leak
+    assert any(w["kind"] == "near_duplicate_across_lineages" for w in rep["warnings"])
+
+
+def test_undeclared_paraphrase_in_another_split_blocks():
+    """Red-team #4: an exact-match check missed paraphrases across splits."""
+    a = load_document(EXAMPLES / "correction.yaml")
+    b = copy.deepcopy(a)
+    b.update(case_id="para-1", root_scenario_id="root-para-1", split="train")
+    b["subject"]["task"] = a["subject"]["task"].replace("In this simulated workroom", "Here")\
+        .replace("Update the shared result", "Fix the shared result")
+    b["world"]["resources"]["r_result"]["value"] = {"total": 61}  # world differs too
+    rep = audit_splits(_cases_from([a, b]))
+    assert rep["status"] == "blocked"
+    [p] = [p for p in rep["problems"] if p["kind"] == "near_duplicate_across_lineages"]
+    assert p["task_shingle_jaccard"] >= 0.5 and p["splits"] == ["commissioning_dev", "train"]
+
+
+def test_identical_world_in_another_split_blocks():
+    a = load_document(EXAMPLES / "correction.yaml")
+    b = copy.deepcopy(a)
+    b.update(case_id="w-1", root_scenario_id="root-w-1", split="pilot")
+    b["subject"]["task"] = "Completely different wording about boxes and a shared number for Avery."
+    rep = audit_splits(_cases_from([a, b]))
+    assert rep["status"] == "blocked"
+
+
+@pytest.mark.parametrize("field,value", [
+    ("case_id", "../../escape"), ("case_id", "a/b"), ("case_id", "bad\x00id"),
+    ("case_id", "/abs"), ("root_scenario_id", ".."), ("family_id", "F 01"),
+])
+def test_identifiers_cannot_be_paths(tmp_path, correction_doc, field, value):
+    """Red-team #8: case_id became a directory name in the compiler output."""
+    correction_doc[field] = value
+    _write(tmp_path / "src", "c.yaml", correction_doc)
+    rep = compile_cases(tmp_path / "src", tmp_path / "out")
+    assert rep["status"] == "blocked"
+    assert any("not a valid identifier" in " ".join(e.get("errors", [])) for e in rep["blocked"])
+    assert not (tmp_path / "out").exists()
+    assert not (tmp_path / "escape").exists()
+
+
+def test_resource_ids_cannot_be_paths(correction_doc):
+    from humanity_succeed.contracts.case import semantic_problems
+    correction_doc["world"]["resources"]["../x"] = {"revision": 1, "value": 1}
+    case = CaseSource.model_validate(correction_doc, strict=True)
+    assert any("not a valid identifier" in p for p in semantic_problems(case))
+
+
+def test_symlinked_case_files_are_refused(tmp_path, correction_doc):
+    """Red-team #15: the compiler followed symlinks out of the corpus root."""
+    outside = _write(tmp_path / "outside", "c.yaml", correction_doc)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "link.yaml").symlink_to(outside)
+    (tmp_path / "src" / "linkdir").symlink_to(tmp_path / "outside", target_is_directory=True)
+    rep = compile_cases(tmp_path / "src", tmp_path / "out")
+    assert rep["status"] == "blocked"
+    assert all(e["stage"] == "path" for e in rep["blocked"])
+    assert not (tmp_path / "out").exists()
 
 
 def _cases_from(docs):
@@ -193,6 +251,42 @@ def test_lint_flags_hidden_labels_and_overlap(correction_doc):
     assert "hidden_label_in_visible_text:split_name" in kinds
     assert "phrase_overlap_4gram" in kinds
     assert all(f["disposition"] == "unreviewed" for f in flags)
+
+
+@pytest.mark.parametrize("where", ["clarification_reply", "scheduled", "readable_resource"])
+def test_lint_scans_every_subject_deliverable_surface(correction_doc, where):
+    """Red-team #0: evaluator prose planted in delivered world text went unflagged."""
+    rubric = correction_doc["evaluation"]["human_rubric"][0]["instruction"]
+    planted = f"Note for {correction_doc['case_id']}: {rubric}"
+    w = correction_doc["world"]
+    if where == "clarification_reply":
+        w["clarification_reply"] = planted
+    elif where == "scheduled":
+        w["scheduled_observations"] = [{"at_tick": 1, "observation": planted}]
+    else:
+        w["resources"]["r_source"]["value"]["note"] = planted
+    flags = lint_case(CaseSource.model_validate(correction_doc, strict=True))
+    kinds = {f["kind"] for f in flags}
+    assert "phrase_overlap_4gram" in kinds and "hidden_label_in_visible_text:case_id" in kinds
+
+
+def test_planted_clarification_leak_cannot_reach_train_jsonl(tmp_path, correction_doc):
+    """Red-team #0, end to end: the lint flag now withholds SFT eligibility."""
+    rubric = correction_doc["evaluation"]["human_rubric"][0]["instruction"]
+    correction_doc["world"]["clarification_reply"] = rubric
+    correction_doc["subject"]["allowed_tools"].append("request_clarification")
+    correction_doc["demonstrations"][0]["actions"].insert(
+        0, {"action": {"type": "request_clarification", "question": "Anything else?"}})
+    p = _approved_train_case(tmp_path, correction_doc)
+    doc = load_document(p)  # rubric was cleared by the helper; re-plant it as evaluator prose
+    doc["evaluation"]["scope_limitations"] = [rubric]
+    from humanity_succeed.contracts.case import review_source_sha256 as rsrc
+    doc["reviews"][0]["source_sha256"] = rsrc(doc)
+    p.write_text(yaml.safe_dump(doc, sort_keys=False))
+    rep = compile_cases(tmp_path / "src", tmp_path / "out")
+    [elig] = rep["training_eligibility"]
+    assert not elig["sft_eligible"] and any("lint flag" in r for r in elig["reasons"])
+    assert rubric not in (tmp_path / "out" / "train.jsonl").read_text()
 
 
 def test_principles_draft_extracts_only_model_visible_text():

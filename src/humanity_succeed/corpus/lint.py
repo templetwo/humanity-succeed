@@ -36,10 +36,30 @@ def extract_principles_text(markdown: str) -> str:
     return markdown.split(marker, 1)[1].strip()
 
 
+def _strings(value: Any, where: str) -> list[tuple[str, str]]:
+    if isinstance(value, str):
+        return [(where, value)]
+    if isinstance(value, list):
+        return [x for i, v in enumerate(value) for x in _strings(v, f"{where}[{i}]")]
+    if isinstance(value, dict):
+        return [x for k, v in value.items() for x in _strings(v, f"{where}.{k}")]
+    return []
+
+
 def _visible_texts(case: CaseSource, principles: str | None) -> list[tuple[str, str]]:
+    """Every case-authored text the subject can receive: the task, the principles block, readable
+    resource contents, the clarification reply, scheduled observations, and SFT target text."""
     out = [("subject.task", case.subject.task)]
     if principles:
         out.append(("principles", principles))
+    w = case.world
+    for rid in sorted(w.permissions.readable_ids):
+        if rid in w.resources:
+            out += _strings(w.resources[rid].value, f"world.resources.{rid}")
+    if w.clarification_reply is not None:
+        out.append(("world.clarification_reply", w.clarification_reply))
+    for i, o in enumerate(w.scheduled_observations):
+        out.append((f"world.scheduled_observations[{i}]", o.observation))
     for d in case.demonstrations:
         if d.training_role != "preferred":
             continue

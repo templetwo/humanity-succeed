@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .canonical import StrictLoadError, canonical_bytes, load_document, write_new_file
+from .canonical import StrictLoadError, canonical_bytes, load_document, sha256_obj, write_new_file
 
 EXIT_OK, EXIT_INVALID, EXIT_PRECONDITION, EXIT_UNSUPPORTED, EXIT_CORRUPT, EXIT_INTERRUPTED = (
     0, 2, 3, 4, 5, 6)
@@ -157,8 +157,15 @@ def cmd_run_scripted(a: argparse.Namespace) -> int:
     except (StrictLoadError, CaseSemanticError, ValueError) as e:
         return emit(envelope("invalid", None, error={"code": "invalid_input", "message": str(e)}),
                     EXIT_INVALID)
+    if traj["case_id"] != case.case_id:
+        return emit(envelope("invalid", None, error={
+            "code": "invalid_input",
+            "message": f"trajectory is bound to case {traj['case_id']!r}, not {case.case_id!r}"}),
+            EXIT_INVALID)
     root = state_root(a.state_root)
-    store_path = root / "runs" / f"{traj['trajectory_id'].replace('#', '_')}-{uuid.uuid4().hex[:8]}.sqlite"
+    # The store name derives from a hash, never from a user-supplied ID.
+    store_name = f"traj-{sha256_obj(traj['trajectory_id'])[:16]}-{uuid.uuid4().hex[:8]}.sqlite"
+    store_path = root / "runs" / store_name
     bundle, evaluation = run_scripted(case, doc, traj, store_path, Path(a.out))
     return emit(envelope("ok", {
         "bundle": str(bundle),
@@ -312,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
     except FileExistsError as e:
         return emit(envelope("invalid", None, error={"code": "refuse_overwrite",
                                                      "message": str(e)}), EXIT_INVALID)
-    except (StrictLoadError, FileNotFoundError) as e:
+    except (ValueError, FileNotFoundError) as e:  # StrictLoadError is a ValueError
         return emit(envelope("invalid", None, error={"code": "invalid_input",
                                                      "message": str(e)}), EXIT_INVALID)
     except KeyboardInterrupt:

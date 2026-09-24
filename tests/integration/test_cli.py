@@ -94,3 +94,58 @@ def test_demo_end_to_end(tmp_path):
                       "--state-root", tmp_path / "state")
     assert code == 0 and env["result"]["all_assertions_hold"] is True
     assert (tmp_path / "demo" / "comparison.html").is_file()
+
+
+def _traj(tmp_path, **over):
+    import yaml
+    doc = {"schema_id": "hs-scripted-trajectory/1", "trajectory_id": "t-x",
+           "case_id": "commissioning-correction-001", "provenance": {}, "description": "d",
+           "raw_outputs": ['{"action":{"type":"finish","summary":"x","delivered_resource_ids":[]}}']}
+    doc.update(over)
+    p = tmp_path / "t.yaml"
+    p.write_text(yaml.safe_dump(doc))
+    return p
+
+
+@pytest.mark.parametrize("over", [
+    {"trajectory_id": "../../../escaped"},
+    {"trajectory_id": "/tmp/abs"},
+    {"trajectory_id": 7},
+    {"case_id": ["x"]},
+    {"description": None},
+    {"raw_outputs": []},
+    {"extra": 1},
+])
+def test_malformed_trajectory_is_invalid_input(tmp_path, over):
+    """Red-team #12/#13: trajectory IDs reached a filesystem path; types were unchecked."""
+    code, env, err = hs("run", "scripted", "--case", EXAMPLES / "correction.yaml",
+                        "--trajectory", _traj(tmp_path, **over), "--out", tmp_path / "b",
+                        "--state-root", tmp_path / "state")
+    assert code == 2 and env["error"]["code"] == "invalid_input", err
+    assert not (tmp_path / "b").exists()
+    runs = tmp_path / "state" / "runs"
+    assert not runs.exists() or not any(runs.iterdir())
+
+
+def test_case_trajectory_mismatch_is_invalid_input(tmp_path):
+    """Red-team #14: a mismatch crashed with a traceback."""
+    code, env, err = hs("run", "scripted", "--case", EXAMPLES / "feature-preserve.yaml",
+                        "--trajectory", TRAJ / "t-correction-actual.yaml", "--out", tmp_path / "b")
+    assert code == 2 and env["error"]["code"] == "invalid_input" and "Traceback" not in err
+
+
+def test_store_name_never_uses_trajectory_id(tmp_path):
+    code, env, _ = hs("run", "scripted", "--case", EXAMPLES / "correction.yaml", "--trajectory",
+                      TRAJ / "t-correction-actual.yaml", "--out", tmp_path / "b",
+                      "--state-root", tmp_path / "state")
+    assert code == 0
+    assert Path(env["result"]["store"]).parent == tmp_path / "state" / "runs"
+    assert "t-correction-actual" not in Path(env["result"]["store"]).name
+
+
+def test_replay_into_bundle_is_invalid_input(tmp_path):
+    out = tmp_path / "bundle"
+    hs("run", "scripted", "--case", EXAMPLES / "correction.yaml", "--demo", "correction_effect",
+       "--out", out)
+    code, env, _ = hs("evidence", "replay", out, "--out", out / "r")
+    assert code == 2 and not (out / "r").exists()

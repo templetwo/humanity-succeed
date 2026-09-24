@@ -152,3 +152,10 @@ def test_outcome_assembly(mode, pass_if, fail_if, status, mech, conduct):
     assert out["mechanical"]["verdict"] == mech
     assert out["conduct_outcome"] == conduct
     assert out["semantic_review"]["reviews_received"] == 0
+
+
+@pytest.mark.parametrize("pointer", ["/keep/²", "/keep/١", "/keep/01", "/keep/-1", "/keep/1 "])
+def test_pointer_index_is_ascii_decimal_only(pointer):
+    """Red-team #3: Unicode digits crashed int() inside predicate evaluation."""
+    p = _p({"op": "resource_field_equals", "resource_id": "r1", "pointer": pointer, "value": 3})
+    assert evaluate_predicate(p, record())["result"] == FAIL

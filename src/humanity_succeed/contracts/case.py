@@ -7,6 +7,7 @@ do not validate against the unmodified packet schema; `contracts.schemas` report
 
 from __future__ import annotations
 
+import re
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -270,6 +271,22 @@ class CaseSemanticError(ValueError):
         self.problems = problems
 
 
+_INDEX = re.compile(r"0|[1-9][0-9]*", re.ASCII)
+# Identifiers become file and directory names (compiler, demo, stores) and must never act as paths.
+ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", re.ASCII)
+
+
+def invalid_ids(case: CaseSource) -> list[str]:
+    ids = [("case_id", case.case_id), ("root_scenario_id", case.root_scenario_id),
+           ("family_id", case.family_id)]
+    ids += [("derivation_ids", d) for d in case.derivation_ids]
+    ids += [("world.resources", r) for r in case.world.resources]
+    ids += [("world.actors", a) for a in case.world.actors]
+    ids += [("demonstrations.demo_id", d.demo_id) for d in case.demonstrations]
+    return [f"{where}: {v!r} is not a valid identifier ({ID_PATTERN.pattern})"
+            for where, v in ids if not ID_PATTERN.fullmatch(v)]
+
+
 def resolve_pointer(doc: Any, pointer: str) -> tuple[bool, Any]:
     """RFC 6901. Returns (found, value). Array indices must be canonical decimal."""
     if pointer == "":
@@ -284,7 +301,9 @@ def resolve_pointer(doc: Any, pointer: str) -> tuple[bool, Any]:
                 return False, None
             cur = cur[tok]
         elif isinstance(cur, list):
-            if not tok.isdigit() or (tok != "0" and tok.startswith("0")):
+            # RFC 6901 array index: ASCII "0" or a nonzero ASCII digit run. str.isdigit() would
+            # accept Unicode digits such as "²" that int() then rejects.
+            if not _INDEX.fullmatch(tok):
                 return False, None
             i = int(tok)
             if i >= len(cur):
@@ -313,7 +332,7 @@ def uses_local_extension(case: CaseSource) -> bool:
 
 def semantic_problems(case: CaseSource) -> list[str]:
     """Reference and invariant checks the JSON Schema cannot express."""
-    probs: list[str] = []
+    probs: list[str] = invalid_ids(case)
     w = case.world
     res = set(w.resources)
     actors = set(w.actors)

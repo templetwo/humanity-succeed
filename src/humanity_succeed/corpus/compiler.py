@@ -41,12 +41,26 @@ TOKENIZER_IDENTITY = None  # no model selected; token/label audits are blocked, 
 
 def load_cases(path: Path) -> tuple[list[tuple[Path, CaseSource, dict[str, Any]]], list[dict]]:
     path = Path(path)
-    files = sorted(
-        [path] if path.is_file() else
-        [p for p in path.rglob("*") if p.suffix in (".yaml", ".yml", ".json") and p.is_file()
-         and "trajectories" not in p.parts]
-    )
     loaded, errors = [], []
+    if path.is_symlink():
+        return [], [{"file": str(path), "stage": "path", "error": "symlinked corpus root refused"}]
+    root = path.resolve()
+    candidates = [path] if path.is_file() else sorted(
+        p for p in path.rglob("*")
+        if p.suffix in (".yaml", ".yml", ".json") and "trajectories" not in p.relative_to(path).parts
+    )
+    files = []
+    for f in candidates:
+        # Only regular files that physically live under the corpus root; symlinks are refused
+        # rather than followed (a link could pull content from anywhere on disk).
+        rel = f.relative_to(path) if path.is_dir() else Path(f.name)
+        base = path if path.is_dir() else path.parent
+        link = any((base / q).is_symlink() for q in (rel, *rel.parents) if q != Path("."))
+        if link or not f.resolve().is_relative_to(root if path.is_dir() else root.parent):
+            errors.append({"file": str(f), "stage": "path", "error": "symlink or out-of-root file"})
+            continue
+        if f.is_file():
+            files.append(f)
     for f in files:
         try:
             doc = load_document(f)
@@ -211,6 +225,9 @@ def compile_cases(path: Path, out_dir: Path, principles_text: str | None = None)
     for _, case, doc in loaded:
         views = four_views(case, doc)
         src = sha256_obj(doc)
+        host_dir = (out / "host" / case.case_id).resolve()
+        if not host_dir.is_relative_to((out / "host").resolve()):  # IDs are validated; belt+braces
+            raise ValueError(f"case_id {case.case_id!r} escapes the output directory")
         emit(f"subject_views/{views['subject']['episode_ref']}.json",
              canonical_bytes(views["subject"]), "model_visible_subject_view",
              split=case.split, source_sha256=src)

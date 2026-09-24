@@ -34,6 +34,9 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
     from ..runner.scripted import evaluate_and_record
 
     bundle = Path(bundle)
+    target = Path(out_dir).resolve()
+    if target == bundle.resolve() or target.is_relative_to(bundle.resolve()):
+        raise ValueError("replay output must be outside the bundle; replay never writes into it")
     verification = verify_bundle(bundle)
     out = make_new_dir(Path(out_dir))
     result: dict[str, Any] = {"schema_id": "hs-replay-report/1", "bundle": str(bundle),

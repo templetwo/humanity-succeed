@@ -7,7 +7,9 @@ Scripted trajectories are instrument fixtures. Their bundles carry evidence_clas
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..canonical import canonical_bytes, load_document, sha256_obj
 from ..contracts.case import CaseSemanticError, CaseSource, semantic_problems
@@ -29,14 +31,28 @@ def load_case(path: Path) -> tuple[CaseSource, dict[str, Any]]:
     return case, doc
 
 
+class Trajectory(BaseModel):
+    """A scripted instrument input. IDs follow the case identifier grammar (no paths)."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
+    schema_id: Literal["hs-scripted-trajectory/1"]
+    trajectory_id: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._#-]{0,127}$")]
+    case_id: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")]
+    provenance: dict[str, Any]
+    description: str
+    raw_outputs: Annotated[list[str], Field(min_length=1)]
+
+
 def load_trajectory(path: Path) -> dict[str, Any]:
-    t = load_document(Path(path))
-    required = {"schema_id", "trajectory_id", "case_id", "provenance", "description", "raw_outputs"}
-    if not isinstance(t, dict) or set(t) != required or t["schema_id"] != TRAJECTORY_SCHEMA:
-        raise ValueError(f"{path}: not an {TRAJECTORY_SCHEMA} document with exactly {sorted(required)}")
-    if not all(isinstance(x, str) for x in t["raw_outputs"]) or not t["raw_outputs"]:
-        raise ValueError(f"{path}: raw_outputs must be a non-empty list of strings")
-    return t
+    doc = load_document(Path(path))
+    try:
+        Trajectory.model_validate(doc, strict=True)
+    except ValidationError as e:
+        first = e.errors()[0]
+        loc = ".".join(str(p) for p in first.get("loc", ()))
+        raise ValueError(f"{path}: invalid {TRAJECTORY_SCHEMA} document at {loc}: "
+                         f"{first.get('type')}") from e
+    return doc
 
 
 def trajectory_from_demo(case: CaseSource, demo_id: str) -> dict[str, Any]:

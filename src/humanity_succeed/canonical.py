@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -69,25 +70,45 @@ def _typed(v: Any) -> Any:
     raise TypeError(f"not a JSON value: {type(v).__name__}")
 
 
+def _check_str(s: str) -> None:
+    if len(s) > MAX_STRING_CHARS:
+        raise StrictLoadError("string_too_long", f"string longer than {MAX_STRING_CHARS}")
+    try:
+        s.encode("utf-8")
+    except UnicodeEncodeError as e:
+        # e.g. an unpaired UTF-16 surrogate from a "\ud800" escape: not representable as UTF-8
+        raise StrictLoadError("invalid_unicode", "string is not valid Unicode text") from e
+
+
 def _check_finite(obj: Any, depth: int = 0) -> None:
+    """Enforce the JSON data model: finite numbers, string keys, valid Unicode, bounded size."""
     if depth > MAX_DEPTH:
         raise StrictLoadError("depth_exceeded", f"nesting deeper than {MAX_DEPTH}")
-    if isinstance(obj, float) and not math.isfinite(obj):
-        raise StrictLoadError("nonfinite_number", "NaN/Infinity are not JSON")
+    if obj is None or isinstance(obj, (bool, int)):
+        return
+    if isinstance(obj, float):
+        if not math.isfinite(obj):
+            raise StrictLoadError("nonfinite_number", "NaN/Infinity are not JSON")
+        return
+    if isinstance(obj, str):
+        _check_str(obj)
+        return
     if isinstance(obj, dict):
         if len(obj) > MAX_CONTAINER_ITEMS:
             raise StrictLoadError("too_many_items", "object too large")
         for k, v in obj.items():
             if not isinstance(k, str):
                 raise StrictLoadError("non_string_key", f"object key {k!r} is not a string")
+            _check_str(k)
             _check_finite(v, depth + 1)
-    elif isinstance(obj, list):
+        return
+    if isinstance(obj, list):
         if len(obj) > MAX_CONTAINER_ITEMS:
             raise StrictLoadError("too_many_items", "array too large")
         for v in obj:
             _check_finite(v, depth + 1)
-    elif isinstance(obj, str) and len(obj) > MAX_STRING_CHARS:
-        raise StrictLoadError("string_too_long", f"string longer than {MAX_STRING_CHARS}")
+        return
+    raise StrictLoadError("non_json_type", f"{type(obj).__name__} is not a JSON value")
 
 
 def _no_dup_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -112,7 +133,7 @@ def strict_json_loads(text: str | bytes) -> Any:
             text = text.decode("utf-8")
         except UnicodeDecodeError as e:
             raise StrictLoadError("invalid_utf8", str(e)) from e
-    if len(text.encode("utf-8")) > MAX_DOCUMENT_BYTES:
+    if len(text.encode("utf-8", "surrogatepass")) > MAX_DOCUMENT_BYTES:
         raise StrictLoadError("document_too_large", f"over {MAX_DOCUMENT_BYTES} bytes")
     try:
         obj = json.loads(
@@ -126,8 +147,51 @@ def strict_json_loads(text: str | bytes) -> Any:
     return obj
 
 
-class _StrictYamlLoader(yaml.SafeLoader):
-    """SafeLoader (no arbitrary tags) that also rejects duplicate mapping keys and aliases."""
+class _JsonResolver(yaml.resolver.BaseResolver):
+    """Implicit typing limited to the JSON data model (YAML 1.2 JSON-schema-like).
+
+    PyYAML's default YAML 1.1 resolvers turn unquoted ``no``/``yes``/``on``/``off`` into
+    booleans, ``0o17``/``017`` into octal ints, ``1_000`` into ints, ``12:30`` into sexagesimal
+    ints and dates into timestamps. Here only ``true/false``, ``null``/``~``/empty, plain
+    decimal integers without leading zeros, and decimal floats resolve; everything else stays a
+    string.
+    """
+
+
+_JsonResolver.yaml_implicit_resolvers = {}
+_JsonResolver.add_implicit_resolver(
+    "tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF")
+)
+_JsonResolver.add_implicit_resolver(
+    "tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL|)$"), ["~", "n", "N", ""]
+)
+_JsonResolver.add_implicit_resolver(
+    "tag:yaml.org,2002:int", re.compile(r"^-?(?:0|[1-9][0-9]*)$"), list("-0123456789")
+)
+_JsonResolver.add_implicit_resolver(
+    "tag:yaml.org,2002:float",
+    re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?|[eE][-+]?[0-9]+)$"),
+    list("-0123456789"),
+)
+
+
+class _StrictYamlLoader(
+    yaml.reader.Reader,
+    yaml.scanner.Scanner,
+    yaml.parser.Parser,
+    yaml.composer.Composer,
+    yaml.constructor.SafeConstructor,
+    _JsonResolver,
+):
+    """Safe constructors only, JSON-model implicit typing, no duplicate keys, no aliases."""
+
+    def __init__(self, stream: str) -> None:
+        yaml.reader.Reader.__init__(self, stream)
+        yaml.scanner.Scanner.__init__(self)
+        yaml.parser.Parser.__init__(self)
+        yaml.composer.Composer.__init__(self)
+        yaml.constructor.SafeConstructor.__init__(self)
+        _JsonResolver.__init__(self)
 
     def compose_node(self, parent, index):  # type: ignore[override]
         if self.check_event(yaml.AliasEvent):
@@ -151,18 +215,17 @@ def _construct_mapping(loader: _StrictYamlLoader, node: yaml.MappingNode, deep: 
 _StrictYamlLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping
 )
-# Timestamps and other implicit non-JSON types are refused: keep YAML to the JSON data model.
-_StrictYamlLoader.add_constructor(
-    "tag:yaml.org,2002:timestamp", lambda loader, node: loader.construct_scalar(node),  # type: ignore[arg-type]
-)
 
 
 def strict_yaml_loads(text: str | bytes) -> Any:
     if isinstance(text, bytes):
         if len(text) > MAX_DOCUMENT_BYTES:
             raise StrictLoadError("document_too_large", f"over {MAX_DOCUMENT_BYTES} bytes")
-        text = text.decode("utf-8")
-    if len(text.encode("utf-8")) > MAX_DOCUMENT_BYTES:
+        try:
+            text = text.decode("utf-8")
+        except UnicodeDecodeError as e:
+            raise StrictLoadError("invalid_utf8", str(e)) from e
+    if len(text.encode("utf-8", "surrogatepass")) > MAX_DOCUMENT_BYTES:
         raise StrictLoadError("document_too_large", f"over {MAX_DOCUMENT_BYTES} bytes")
     loader = _StrictYamlLoader(text)
     try:

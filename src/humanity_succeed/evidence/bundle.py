@@ -10,6 +10,7 @@ A locally consistent chain is never called historically authentic.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,11 @@ from ..corpus.views import four_views
 from .store import EvidenceStore, compute_event_hash
 
 BUNDLE_SCHEMA = "hs-evidence-bundle/1"
+MAX_BUNDLE_FILE_BYTES = 64 * 1024 * 1024
+# The only names a bundle may list: fixed top-level files and content-addressed artifacts.
+_ALLOWED_NAME = re.compile(
+    r"(?:manifest\.json|events\.jsonl|revisions\.json|case_source\.json|trajectory\.json"
+    r"|evaluation\.json|artifacts/[0-9a-f]{64})", re.ASCII)
 
 
 def export_bundle(
@@ -111,14 +117,31 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None) -> dict[st
         checks.append({"check": name, "passed": bool(ok), "detail": detail})
         return bool(ok)
 
+    # 0. layout safety before reading any content: no symlinks anywhere, only expected names,
+    #    nothing that resolves outside the bundle, bounded sizes.
+    if bundle.is_symlink() or not bundle.is_dir():
+        check("bundle_is_plain_directory", False, "bundle path is a symlink or not a directory")
+        return _report(checks, None, anchor, None)
+    links = [str(p.relative_to(bundle)) for p in bundle.rglob("*") if p.is_symlink()]
+    if not check("no_symlinks", not links, ", ".join(sorted(links))):
+        return _report(checks, None, anchor, None)
+    big = [str(p.relative_to(bundle)) for p in bundle.rglob("*")
+           if p.is_file() and p.stat().st_size > MAX_BUNDLE_FILE_BYTES]
+    if not check("file_sizes_bounded", not big, ", ".join(big)):
+        return _report(checks, None, anchor, None)
     try:
         index = strict_json_loads((bundle / "bundle.json").read_bytes())
     except (OSError, StrictLoadError) as e:
         check("bundle_index_readable", False, str(e))
         return _report(checks, None, anchor, None)
+    files = index.get("files") if isinstance(index, dict) else None
+    bad_names = sorted(n for n in (files or {}) if not _ALLOWED_NAME.fullmatch(n)) if isinstance(
+        files, dict) else ["<files is not an object>"]
+    if not check("file_names_well_formed", not bad_names, ", ".join(bad_names)):
+        return _report(checks, None, anchor, None)
 
     # 1. file inventory and hashes
-    listed = dict(index.get("files", {}))
+    listed = dict(files)
     present = {
         str(p.relative_to(bundle)) for p in bundle.rglob("*") if p.is_file()
     } - {"bundle.json", "SHA256SUMS"}

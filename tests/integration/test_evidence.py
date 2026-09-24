@@ -184,3 +184,37 @@ def test_bundle_copy_verifies_independently(bundle, tmp_path):
     dst = tmp_path / "copy"
     shutil.copytree(bundle, dst)
     assert verify_bundle(dst)["internal"] == "consistent"
+
+
+def test_symlinked_file_in_bundle_fails_before_reading(bundle, tmp_path):
+    """Red-team #1: verify/replay followed symlinks to content outside the bundle."""
+    outside = tmp_path / "evil.json"
+    outside.write_text("{}")
+    (bundle / "evaluation.json").unlink()
+    (bundle / "evaluation.json").symlink_to(outside)
+    rep = verify_bundle(bundle)
+    assert rep["internal"] == "failed"
+    assert [c["check"] for c in rep["checks"]] == ["no_symlinks"]
+
+
+def test_escaping_names_in_index_fail(bundle):
+    idx = json.loads((bundle / "bundle.json").read_text())
+    idx["files"]["../outside.json"] = "0" * 64
+    (bundle / "bundle.json").write_bytes(canonical_bytes(idx))
+    rep = verify_bundle(bundle)
+    assert rep["internal"] == "failed"
+    assert not next(c for c in rep["checks"] if c["check"] == "file_names_well_formed")["passed"]
+
+
+def test_symlinked_bundle_root_fails(bundle, tmp_path):
+    link = tmp_path / "link"
+    link.symlink_to(bundle, target_is_directory=True)
+    assert verify_bundle(link)["internal"] == "failed"
+
+
+def test_replay_refuses_output_inside_bundle(bundle):
+    """Red-team #2."""
+    before = _digest(bundle)
+    with pytest.raises(ValueError):
+        replay_bundle(bundle, bundle / "replay")
+    assert _digest(bundle) == before
