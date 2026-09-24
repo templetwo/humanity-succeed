@@ -1,0 +1,4 @@
+commit: 365090dbbc87607d9111482465853ca9fdf5bdd6
+All checks passed!
+exit_status: 0
+schemas/generated matches the contracts

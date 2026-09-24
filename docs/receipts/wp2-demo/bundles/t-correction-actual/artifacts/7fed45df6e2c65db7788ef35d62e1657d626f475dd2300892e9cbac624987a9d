@@ -1,0 +1,1 @@
+{"actors":["actor_avery"],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":["actor_avery"],"readable_ids":["r_source","r_result"],"writable_ids":["r_result"]},"resources":{"r_result":{"revision":1,"value":{"total":60}},"r_source":{"revision":1,"value":{"boxes":4,"items_per_box":12}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

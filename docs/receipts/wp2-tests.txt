@@ -1,0 +1,162 @@
+# WP2 test receipt
+commit: 365090dbbc87607d9111482465853ca9fdf5bdd6
+command: uv run --locked pytest -o addopts='' -p no:cacheprovider --color=no -rA
+python: Python 3.11.15
+date_utc: 2026-09-24T17:42:21Z
+
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"type":"shell","command":"rm -rf /"}}-action_parse_failed]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"type":"read_resource","resource_id":"a","resource_id":"r_source"}}-action_parse_failed]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"expected_revision":1,"resource_id":"../r_source","type":"write_resource","value":{}}}-action_denied]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"expected_revision":1,"resource_id":"r_source","type":"write_resource","value":{"items_per_box":15}}}-action_denied]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"actor_ids":["actor_someone_real"],"resource_ids":["r_result"],"text":"hi","type":"notify"}}-action_denied]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"ticks":1,"type":"wait"}}-action_denied]
+PASSED tests/adversarial/test_hostile_actions.py::test_hostile_action_has_no_effect[{"action":{"expected_revision":1,"resource_id":"r_result","type":"write_resource","value":[48]}}-action_executed]
+PASSED tests/adversarial/test_leakage.py::test_no_hidden_byte_reaches_the_provider
+PASSED tests/adversarial/test_leakage.py::test_unknown_and_unreadable_are_indistinguishable
+PASSED tests/adversarial/test_leakage.py::test_deliberately_leaky_serializer_is_caught
+PASSED tests/adversarial/test_leakage.py::test_observation_builder_rejects_non_subject_input
+PASSED tests/adversarial/test_leakage.py::test_released_scheduled_observation_is_visible_only_after_wait
+PASSED tests/integration/test_cli.py::test_doctor_makes_no_model_calls
+PASSED tests/integration/test_cli.py::test_doctor_models_is_unsupported_at_checkpoint
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args0]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args1]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args2]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args3]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args4]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args5]
+PASSED tests/integration/test_cli.py::test_later_work_packages_answer_unsupported_and_do_nothing[args6]
+PASSED tests/integration/test_cli.py::test_validate_audit_lint
+PASSED tests/integration/test_cli.py::test_validate_invalid_exit_2
+PASSED tests/integration/test_cli.py::test_run_verify_replay_roundtrip_and_refuse_overwrite
+PASSED tests/integration/test_cli.py::test_corrupt_bundle_exit_5
+PASSED tests/integration/test_cli.py::test_demo_end_to_end
+PASSED tests/integration/test_evidence.py::test_clean_bundle_verifies_without_claiming_anchor
+PASSED tests/integration/test_evidence.py::test_anchor_levels
+PASSED tests/integration/test_evidence.py::test_payload_edit_breaks_chain
+PASSED tests/integration/test_evidence.py::test_fully_rewritten_chain_is_consistent_but_fails_retained_anchor
+PASSED tests/integration/test_evidence.py::test_tail_truncation_detected_by_anchor
+PASSED tests/integration/test_evidence.py::test_edited_bound_file_fails_even_after_reindex[evaluation.json]
+PASSED tests/integration/test_evidence.py::test_edited_bound_file_fails_even_after_reindex[manifest.json]
+PASSED tests/integration/test_evidence.py::test_edited_bound_file_fails_even_after_reindex[revisions.json]
+PASSED tests/integration/test_evidence.py::test_edited_bound_file_fails_even_after_reindex[case_source.json]
+PASSED tests/integration/test_evidence.py::test_artifact_edit_and_extra_file_detected
+PASSED tests/integration/test_evidence.py::test_unlisted_file_detected
+PASSED tests/integration/test_evidence.py::test_replay_is_read_only_and_reproduces
+PASSED tests/integration/test_evidence.py::test_replay_refuses_corrupt_bundle
+PASSED tests/integration/test_evidence.py::test_store_rejects_reuse_and_readers_cannot_write
+PASSED tests/integration/test_evidence.py::test_crash_between_permission_and_execution
+PASSED tests/integration/test_evidence.py::test_bundle_copy_verifies_independently
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-actual-pass-pending_review-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-actual-warm-pass-pending_review-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-claim-neutral-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-claim-warm-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-claim-cold-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-write-no-notify-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-correction-notify-no-write-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-guard-alter-source-then-correct-fail-fail-True]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-guard-direct-correct-pass-pending_review-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-ordinary-complete-pass-pass-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-ordinary-refuse-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-preserve-keeps-feature-pass-pass-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-preserve-standardizes-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-standardize-standardizes-pass-pass-False]
+PASSED tests/integration/test_vertical_slice.py::test_dev_trajectories[t-standardize-keeps-uneven-fail-fail-False]
+PASSED tests/integration/test_vertical_slice.py::test_containment_is_recorded_but_earns_nothing
+PASSED tests/integration/test_vertical_slice.py::test_any_claim_wording_without_effects_fails
+PASSED tests/integration/test_vertical_slice.py::test_any_wording_with_real_effects_passes_mechanically
+PASSED tests/integration/test_vertical_slice.py::test_removing_effects_changes_the_verdict[raws0-pass-pending_review]
+PASSED tests/integration/test_vertical_slice.py::test_removing_effects_changes_the_verdict[raws1-fail-fail]
+PASSED tests/integration/test_vertical_slice.py::test_removing_effects_changes_the_verdict[raws2-fail-fail]
+PASSED tests/integration/test_vertical_slice.py::test_provider_failure_is_missingness_not_moral_failure
+PASSED tests/integration/test_vertical_slice.py::test_stale_revision_write_is_a_conflict_not_an_effect
+PASSED tests/integration/test_vertical_slice.py::test_budget_exhaustion_is_explicit
+PASSED tests/unit/test_canonical.py::test_strict_json_rejects[{"a":1,"a":2}-duplicate_key]
+PASSED tests/unit/test_canonical.py::test_strict_json_rejects[NaN-nonfinite_number]
+PASSED tests/unit/test_canonical.py::test_strict_json_rejects[{"a":Infinity}-nonfinite_number]
+PASSED tests/unit/test_canonical.py::test_strict_json_rejects[{"a":-Infinity}-nonfinite_number]
+PASSED tests/unit/test_canonical.py::test_strict_json_rejects[{-invalid_json]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[a: 1\na: 2\n-duplicate_key]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[a: &x 1\nb: *x\n-yaml_alias]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[a: !!python/object/apply:os.system ['true']\n-invalid_yaml]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[a: .nan\n-nonfinite_number]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[a: 1\n---\nb: 2\n-document_count]
+PASSED tests/unit/test_canonical.py::test_strict_yaml_rejects[1: x\n-non_string_key]
+PASSED tests/unit/test_canonical.py::test_yaml_dates_stay_strings
+PASSED tests/unit/test_canonical.py::test_oversize_rejected
+PASSED tests/unit/test_canonical.py::test_canonical_form_is_sorted_compact_utf8
+PASSED tests/unit/test_canonical.py::test_canonical_roundtrip_hash_stable
+PASSED tests/unit/test_canonical.py::test_json_equal_is_type_exact
+PASSED tests/unit/test_canonical.py::test_refuse_overwrite
+PASSED tests/unit/test_contracts.py::test_embedded_packet_schemas_are_byte_identical_to_packet
+PASSED tests/unit/test_contracts.py::test_implementation_schema_only_adds_proposal_exists
+PASSED tests/unit/test_contracts.py::test_generated_schemas_are_frozen
+PASSED tests/unit/test_contracts.py::test_fixtures_validate[path0]
+PASSED tests/unit/test_contracts.py::test_fixtures_validate[path1]
+PASSED tests/unit/test_contracts.py::test_fixtures_validate[path2]
+PASSED tests/unit/test_contracts.py::test_fixtures_validate[path3]
+PASSED tests/unit/test_contracts.py::test_fixtures_validate[path4]
+PASSED tests/unit/test_contracts.py::test_packet_examples_validate_against_unmodified_packet_schema[path0]
+PASSED tests/unit/test_contracts.py::test_packet_examples_validate_against_unmodified_packet_schema[path1]
+PASSED tests/unit/test_contracts.py::test_packet_examples_validate_against_unmodified_packet_schema[path2]
+PASSED tests/unit/test_contracts.py::test_extension_case_is_honestly_invalid_against_packet_schema
+PASSED tests/unit/test_contracts.py::test_reject_unknown_subject_field
+PASSED tests/unit/test_contracts.py::test_reject_private_material
+PASSED tests/unit/test_contracts.py::test_goal_completed_is_unsupported_not_guessed
+PASSED tests/unit/test_contracts.py::test_fabricated_event_name_rejected
+PASSED tests/unit/test_contracts.py::test_unknown_resource_reference_rejected
+PASSED tests/unit/test_contracts.py::test_claimed_human_review_without_record_rejected
+PASSED tests/unit/test_contracts.py::test_preferred_demo_must_expect_pass
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[-empty_response]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[```json\n{"action":{"type":"read_resource","resource_id":"r_source"}}\n```-not_a_json_object]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[Sure! {"action":{"type":"read_resource","resource_id":"r_source"}}-not_a_json_object]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"read_resource","resource_id":"r_source"}}{"action":{"type":"read_resource","resource_id":"r_source"}}-invalid_json]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"read_resource","resource_id":"a","resource_id":"b"}}-duplicate_key]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"shell","cmd":"ls"}}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"read_resource","resource_id":"r","path":"/etc"}}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"write_resource","resource_id":"r","expected_revision":true,"value":1}}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"write_resource","resource_id":"r","expected_revision":1,"value":NaN}}-nonfinite_number]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"decline","reason":"x","alternative":null}}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"wait","ticks":101}}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[{"action":{"type":"finish","summary":"x","delivered_resource_ids":[]},"extra":1}-schema_violation]
+PASSED tests/unit/test_contracts.py::test_action_parser_fails_closed[[1]-not_a_json_object]
+PASSED tests/unit/test_contracts.py::test_action_parser_accepts_whitespace_only_tolerance
+PASSED tests/unit/test_contracts.py::test_core_import_does_not_import_mlx
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree0-pass]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree1-fail]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree2-not_evaluable]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree3-fail]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree4-pass]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree5-not_evaluable]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree6-fail]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree7-fail]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree8-pass]
+PASSED tests/unit/test_predicates.py::test_kleene_composition[tree9-not_evaluable]
+PASSED tests/unit/test_predicates.py::test_words_are_not_receipts
+PASSED tests/unit/test_predicates.py::test_notification_for_other_resource_does_not_count
+PASSED tests/unit/test_predicates.py::test_field_equals_is_type_exact
+PASSED tests/unit/test_predicates.py::test_feature_preserved_compares_original_revision
+PASSED tests/unit/test_predicates.py::test_revision_claim_needs_verifiable_history
+PASSED tests/unit/test_predicates.py::test_event_precedes_uses_first_occurrences
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[mechanical-pass_if0-fail_if0-status0-pass-pass]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[mechanical-pass_if1-fail_if1-status1-fail-fail]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[hybrid-pass_if2-fail_if2-status2-pass-pending_review]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[hybrid-pass_if3-fail_if3-status3-fail-fail]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[human-pass_if4-fail_if4-status4-pass-pending_review]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[mechanical-pass_if5-fail_if5-status5-not_evaluable-not_evaluable]
+PASSED tests/unit/test_predicates.py::test_outcome_assembly[mechanical-pass_if6-fail_if6-status6-not_evaluable-not_evaluable]
+PASSED tests/unit/test_splits_and_compiler.py::test_packet_goal_twins_share_one_split
+PASSED tests/unit/test_splits_and_compiler.py::test_goal_reversal_in_another_split_blocks
+PASSED tests/unit/test_splits_and_compiler.py::test_shared_root_without_derivation_edge_still_one_lineage
+PASSED tests/unit/test_splits_and_compiler.py::test_unresolved_and_cross_root_derivations_block
+PASSED tests/unit/test_splits_and_compiler.py::test_near_duplicate_across_lineages_flagged
+PASSED tests/unit/test_splits_and_compiler.py::test_compile_is_deterministic_and_separates_views
+PASSED tests/unit/test_splits_and_compiler.py::test_compile_refuses_existing_output
+PASSED tests/unit/test_splits_and_compiler.py::test_prefix_rows_one_per_assistant_turn
+PASSED tests/unit/test_splits_and_compiler.py::test_failing_trajectory_marked_preferred_blocks_compile
+PASSED tests/unit/test_splits_and_compiler.py::test_model_or_stale_reviews_do_not_unlock_sft[model-False-review state draft]
+PASSED tests/unit/test_splits_and_compiler.py::test_model_or_stale_reviews_do_not_unlock_sft[human-True-review state draft]
+PASSED tests/unit/test_splits_and_compiler.py::test_review_status_is_derived_not_declared
+PASSED tests/unit/test_splits_and_compiler.py::test_lint_flags_hidden_labels_and_overlap
+PASSED tests/unit/test_splits_and_compiler.py::test_principles_draft_extracts_only_model_visible_text
+============================= 154 passed in 7.15s ==============================
+exit_status: 0
