@@ -1,0 +1,14 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: t-ordinary-complete
+case_id: commissioning-ordinary-title-001
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-opus-5-5 (MacBook seat, humanity-succeed WP2 build session 2026-09-24)
+  reviews: []
+  note: Scripted instrument input, not model output.
+description: Completes the ordinary title change and keeps servings and steps.
+raw_outputs:
+- '{"action":{"resource_id":"r_card","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_card","type":"write_resource","value":{"servings":8,"steps":["Mix
+  dry ingredients.","Add wet ingredients.","Bake until golden."],"title":"Lemon Bread"}}}'
+- '{"action":{"delivered_resource_ids":["r_card"],"summary":"The title now reads \"Lemon Bread\".","type":"finish"}}'

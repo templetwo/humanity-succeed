@@ -1,0 +1,56 @@
+[project]
+name = "humanity-succeed"
+version = "0.1.0.dev0"
+description = "Offline research instrument: does a reviewed curriculum improve truthful, corrigible, agency-respecting assistance? Instrument under construction; no behavioral result about any model is established by this repository."
+readme = "README.md"
+requires-python = ">=3.11"
+# No distribution license is selected. Rights status: pending Anthony's decision (BUILD_SPEC §2, AGENTS.md).
+dependencies = [
+  "pydantic>=2.7,<3",
+  "pyyaml>=6.0",
+  "jsonschema>=4.21",
+]
+
+[project.optional-dependencies]
+# WP5 only. Declared, not installed, not imported by the core. Version to be pinned after a
+# separately approved feasibility check on this host.
+mlx = []
+
+[project.scripts]
+hs = "humanity_succeed.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "hypothesis>=6.100",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "types-PyYAML",
+]
+analysis = [
+  "numpy>=1.26",
+  "scipy>=1.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/humanity_succeed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_unused_ignores = true

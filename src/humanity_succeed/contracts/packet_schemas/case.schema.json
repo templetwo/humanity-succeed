@@ -1,0 +1,689 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:humanity-succeed:case:1.0",
+  "title": "Humanity Succeed case v1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root_scenario_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "derivation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "family_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "split": {
+      "type": "string",
+      "enum": [
+        "commissioning_dev",
+        "commissioning_holdback",
+        "train",
+        "dev",
+        "pilot",
+        "confirmatory",
+        "external_regression"
+      ]
+    },
+    "measurement_mode": {
+      "type": "string",
+      "enum": [
+        "end_to_end_discovery",
+        "after_supplied_evidence",
+        "direct_task"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "human_authored",
+            "ai_drafted",
+            "ai_drafted_human_reviewed"
+          ]
+        },
+        "drafting_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "rights_status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved_for_local_use",
+            "approved_for_distribution"
+          ]
+        },
+        "rights_receipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "private_material": {
+          "const": false
+        }
+      },
+      "required": [
+        "kind",
+        "drafting_model",
+        "source_refs",
+        "rights_status",
+        "rights_receipt",
+        "private_material"
+      ],
+      "additionalProperties": false
+    },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reviewer_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewer_kind": {
+            "type": "string",
+            "enum": [
+              "human",
+              "model"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "author",
+              "reviewer",
+              "adjudicator"
+            ]
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "timestamp_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "revise",
+              "reject"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "reviewer_ref",
+          "reviewer_kind",
+          "role",
+          "source_sha256",
+          "timestamp_utc",
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "subject": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visible_resource_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "visible_actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "allowed_tools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "read_resource",
+              "write_resource",
+              "notify",
+              "request_clarification",
+              "decline",
+              "wait",
+              "finish"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "task",
+        "visible_resource_ids",
+        "visible_actor_ids",
+        "allowed_tools"
+      ],
+      "additionalProperties": false
+    },
+    "world": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "revision": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "$ref": "#/$defs/json_value"
+              }
+            },
+            "required": [
+              "revision",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "readable_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "writable_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "notifiable_actor_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "readable_ids",
+            "writable_ids",
+            "notifiable_actor_ids"
+          ],
+          "additionalProperties": false
+        },
+        "initial_tick": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scheduled_observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at_tick": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "observation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "at_tick",
+              "observation"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "clarification_reply": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "resources",
+        "actors",
+        "permissions",
+        "initial_tick",
+        "scheduled_observations",
+        "clarification_reply"
+      ],
+      "additionalProperties": false
+    },
+    "evaluation": {
+      "type": "object",
+      "properties": {
+        "scoring_mode": {
+          "type": "string",
+          "enum": [
+            "mechanical",
+            "hybrid",
+            "human"
+          ]
+        },
+        "pass_if": {
+          "$ref": "#/$defs/predicate"
+        },
+        "fail_if": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          },
+          "minItems": 0
+        },
+        "human_rubric": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dimension": {
+                "type": "string",
+                "minLength": 1
+              },
+              "instruction": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "dimension",
+              "instruction"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "scope_limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "scoring_mode",
+        "pass_if",
+        "fail_if",
+        "human_rubric",
+        "scope_limitations"
+      ],
+      "additionalProperties": false
+    },
+    "demonstrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "demo_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "training_role": {
+            "type": "string",
+            "enum": [
+              "preferred",
+              "counterexample"
+            ]
+          },
+          "expected_mechanical_outcome": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "not_evaluable"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:humanity-succeed:action:1.0"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "demo_id",
+          "training_role",
+          "expected_mechanical_outcome",
+          "actions"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "case_id",
+    "root_scenario_id",
+    "derivation_ids",
+    "family_id",
+    "split",
+    "measurement_mode",
+    "provenance",
+    "reviews",
+    "subject",
+    "world",
+    "evaluation"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "json_value": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json_value"
+          },
+          "minItems": 0
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      ]
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "resource_field_equals"
+            },
+            "resource_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pointer": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/json_value"
+            }
+          },
+          "required": [
+            "op",
+            "resource_id",
+            "pointer",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "resource_revision_at_least"
+            },
+            "resource_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "op",
+            "resource_id",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "notification_exists"
+            },
+            "actor_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "resource_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "actor_id",
+            "resource_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "event_exists"
+            },
+            "event_type": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "event_type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "event_absent"
+            },
+            "event_type": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "event_type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "feature_preserved"
+            },
+            "resource_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pointer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "resource_id",
+            "pointer"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "goal_completed"
+            },
+            "goal_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "goal_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "event_precedes"
+            },
+            "first_event_type": {
+              "type": "string",
+              "minLength": 1
+            },
+            "second_event_type": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "first_event_type",
+            "second_event_type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "all"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/predicate"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "any"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/predicate"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "not"
+            },
+            "arg": {
+              "$ref": "#/$defs/predicate"
+            }
+          },
+          "required": [
+            "op",
+            "arg"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}
