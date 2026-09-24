@@ -34,6 +34,12 @@ The builder did **not**:
 - approve a numerical research threshold;
 - run a model or train one.
 
+## Outside review
+
+The WP2 checkpoint is open for outside review at the frozen tag `wp2-review-b2e08b8`
+(commit `b2e08b8`). What to review, how to reproduce it, and how to report findings are in
+[`REVIEWING.md`](REVIEWING.md). File findings with the **Review finding** issue template.
+
 ## Quick start
 
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.11. The lockfile was tested with

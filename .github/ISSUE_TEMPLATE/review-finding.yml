@@ -1,0 +1,85 @@
+name: Review finding
+description: One substantive finding against the frozen WP2 review target (see REVIEWING.md)
+title: "[review] "
+labels: ["review-finding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One finding per issue. The review target is tag `wp2-review-b2e08b8`
+        (commit `b2e08b81b5a7bbb7295c1a84fc454536e73a0fad`). Report nothing where nothing is
+        established. Scripted instrument only: no model result exists in this repository.
+  - type: input
+    id: reviewer
+    attributes:
+      label: Reviewer and tooling
+      description: Who you are (or a handle) and what you used (for example, static reading only, or ran the tests on Linux).
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit reviewed
+      value: b2e08b81b5a7bbb7295c1a84fc454536e73a0fad
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: File and lines
+      placeholder: src/humanity_succeed/…:123-140
+    validations:
+      required: true
+  - type: input
+    id: contract
+    attributes:
+      label: Violated contract
+      placeholder: e.g. BUILD_SPEC §4.3 leakage checks; AGENTS.md minimum vertical slice
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: [critical, high, medium, low]
+    validations:
+      required: true
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: Mechanism
+      description: What goes wrong, precisely.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: Exact commands or a small script. New fixtures are development-only material.
+      render: shell
+  - type: textarea
+    id: expected_observed
+    attributes:
+      label: Expected versus observed
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Execution status
+      options:
+        - static_candidate
+        - static_only (no execution tools)
+        - reproduced_in_review
+        - not_reproduced
+        - blocked_by_environment
+    validations:
+      required: true
+  - type: input
+    id: evidence
+    attributes:
+      label: Evidence pointer or hash
+  - type: textarea
+    id: repair
+    attributes:
+      label: Smallest proposed repair
