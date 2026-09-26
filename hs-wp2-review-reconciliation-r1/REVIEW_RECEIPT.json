@@ -1,0 +1,30 @@
+{
+  "schema": "hs-review-reconciliation-receipt/1",
+  "review_date": "2026-09-26",
+  "target_commit": "b2e08b81b5a7bbb7295c1a84fc454536e73a0fad",
+  "method": "GitHub connector source reading; static cross-check of supplied reviews",
+  "source_hash_kind": "git blob SHA-1 returned by connector; not locally recomputed",
+  "source_blob_ids": {
+    "examples/correction.yaml": "577e34a94ec7ab7b8a6b7482f6f8bc44134df9d8",
+    "src/humanity_succeed/evaluation/predicates.py": "450a7f8e265cd9e7d95e992332e554c928315e09",
+    "src/humanity_succeed/evidence/bundle.py": "dcf2dcb76343416bcab960d0b5b5ea4e5a78d4f6",
+    "src/humanity_succeed/evidence/replay.py": "190cda5c52b22214d091513313c3061963ec2b32",
+    "src/humanity_succeed/contracts/events.py": "a9b4c3b4c8046d2771ebd6c14bedc476f0ba7140",
+    "src/humanity_succeed/evidence/store.py": "229b8142a9962ef4a608f171369ceeb4f1e00d7f",
+    "src/humanity_succeed/cli.py": "8af833c1972233d7d8e3a002cc7689788a407e47"
+  },
+  "executed_repository_tests": false,
+  "executed_kimi_reproducers": false,
+  "source_archive_downloaded": false,
+  "public_mutations": false,
+  "stack_writes": false,
+  "limitations": [
+    "Container git ls-remote failed: Could not resolve host: github.com",
+    "Supplied Kimi text has an object-replacement marker in place of the baseline-command table",
+    "No whole-repository audit, archive integrity check or runtime replication claimed"
+  ],
+  "file_sha256": {
+    "REVIEW_DISPOSITION.md": "c9b713b888fcc73b2f36f4286440b3c65cd95ddf1db0862dd7153e5bc2512987",
+    "TERMINAL_REPAIR_INSTRUCTION.md": "cab0de98f66a008b38bb6710682984026687d20b0a100cb9557c6abb6af2f844"
+  }
+}
