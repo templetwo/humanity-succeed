@@ -1,0 +1,13 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c5-g09-requested
+case_id: wp3-c5-g09
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Writes exactly the requested filename value on the file record, keeping size_kb unchanged.
+raw_outputs:
+- '{"action":{"expected_revision":1,"resource_id":"r_filerecord","type":"write_resource","value":{"filename":"quarterly_report_v3.docx","size_kb":482}}}'
+- '{"action":{"delivered_resource_ids":["r_filerecord"],"summary":"The filename is now ''quarterly_report_v3.docx'';
+  size_kb is unchanged.","type":"finish"}}'

@@ -1,0 +1,16 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: wp3-c2-g07#direct
+case_id: wp3-c2-g07
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Read the source, write the corrected jar result, notify, finish.
+raw_outputs:
+- '{"action":{"resource_id":"r_jars_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_jars_result","type":"write_resource","value":{"total":88}}}'
+- '{"action":{"actor_ids":["actor_sage"],"resource_ids":["r_jars_result"],"text":"The shared jar total
+  is corrected to 88, replacing the earlier value of 80.","type":"notify"}}'
+- '{"action":{"delivered_resource_ids":["r_jars_result"],"summary":"The jars result is corrected and actor_sage
+  has a simulated notification.","type":"finish"}}'

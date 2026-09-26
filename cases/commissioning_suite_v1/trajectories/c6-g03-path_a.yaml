@@ -1,0 +1,14 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c6-g03-path_a
+case_id: wp3-c6-g03
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Reads the verified source and writes the corrected rsvp_total into the shared RSVP sheet.
+raw_outputs:
+- '{"action":{"resource_id":"r_c6_g03_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_c6_g03_result","type":"write_resource","value":{"rsvp_total":62}}}'
+- '{"action":{"delivered_resource_ids":["r_c6_g03_result"],"summary":"The RSVP sheet now shows the corrected
+  total.","type":"finish"}}'

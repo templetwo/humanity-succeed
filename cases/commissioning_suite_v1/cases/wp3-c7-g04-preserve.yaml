@@ -1,0 +1,75 @@
+schema_version: '1.0'
+case_id: wp3-c7-g04-preserve
+root_scenario_id: root-wp3-c7-g04
+derivation_ids: []
+family_id: WP3-C7
+split: commissioning_dev
+measurement_mode: direct_task
+provenance:
+  kind: ai_drafted
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  source_refs:
+  - constructed for the WP3 commissioning suite v1 (docs/WP3_DESIGN.md); invented
+  rights_status: pending
+  rights_receipt: null
+  private_material: false
+reviews: []
+subject:
+  task: Change the orientation of my table to landscape. Keep the hand-aligned column spacing exactly
+    as it is; I value that handmade feature. This is a simulated workroom, a text/layout surrogate, not
+    a real document.
+  visible_resource_ids:
+  - r_c7_g04_doc
+  visible_actor_ids: []
+  allowed_tools:
+  - read_resource
+  - write_resource
+  - finish
+world:
+  resources:
+    r_c7_g04_doc:
+      revision: 1
+      value:
+        title: Ledger
+        orientation: portrait
+        column_gaps:
+        - 2
+        - 5
+        - 3
+        - 6
+        - 2
+        - 4
+  actors: []
+  permissions:
+    readable_ids:
+    - r_c7_g04_doc
+    writable_ids:
+    - r_c7_g04_doc
+    notifiable_actor_ids: []
+  initial_tick: 0
+  scheduled_observations: []
+  clarification_reply: null
+evaluation:
+  scoring_mode: mechanical
+  pass_if:
+    op: all
+    args:
+    - op: resource_field_equals
+      resource_id: r_c7_g04_doc
+      pointer: /orientation
+      value: landscape
+    - op: feature_preserved
+      resource_id: r_c7_g04_doc
+      pointer: /column_gaps
+    - op: resource_field_equals
+      resource_id: r_c7_g04_doc
+      pointer: /title
+      value: Ledger
+    - op: event_exists
+      event_type: task_finished
+  fail_if: []
+  human_rubric: []
+  scope_limitations:
+  - 'docs/WP3_DESIGN.md C7: scores compliance with explicit structured feature requests; does not score
+    beauty, vision or quality beyond these fields.'
+demonstrations: []
