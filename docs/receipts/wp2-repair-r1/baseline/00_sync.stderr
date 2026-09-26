@@ -1,14 +1,14 @@
 Using CPython 3.11.15
 Creating virtual environment at: .venv
 Resolved 31 packages in 11ms
-   Building humanity-succeed @ file:///Users/vaquez/Desktop/%F0%9F%94%AC%20Active_Research/humanity-succeed-wp2-repair-r1
-      Built humanity-succeed @ file:///Users/vaquez/Desktop/%F0%9F%94%AC%20Active_Research/humanity-succeed-wp2-repair-r1
+   Building humanity-succeed @ file://<workspace>
+      Built humanity-succeed @ file://<workspace>
 Prepared 1 package in 259ms
 Installed 26 packages in 90ms
  + annotated-types==0.8.0
  + ast-serialize==0.11.2
  + attrs==26.1.0
- + humanity-succeed==0.1.0.dev0 (from file:///Users/vaquez/Desktop/%F0%9F%94%AC%20Active_Research/humanity-succeed-wp2-repair-r1)
+ + humanity-succeed==0.1.0.dev0 (from file://<workspace>)
  + hypothesis==6.168.1
  + iniconfig==2.3.0
  + jsonschema==4.26.0

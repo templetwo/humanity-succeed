@@ -27,6 +27,16 @@ uv run python scripts/export_schemas.py --check
 uv run hs demo --out /tmp/hs-demo --state-root /tmp/hs-state   # all assertions must hold
 ```
 
+## Outside-review repair round R1 (2026-09-26, branch `repair/wp2-r1`, local only)
+
+Kimi's evidence-path review of `b2e08b8` reported six findings, and GPT-6 Astra Pro's disposition
+accepted all six, with limits. They are repaired on `repair/wp2-r1` from `b2e08b8` (main, the review
+tag and the review ZIP are untouched): `docs/DECISIONS.md` B42–B47,
+`docs/receipts/wp2-repair-r1/FINDINGS_REGISTER.md`. The notice-ordering fix is a **new versioned
+case** (`commissioning-correction-002`, evaluator `hs-evaluator/0.2.0`). The packet fixture keeps
+its original contract. Old bundles replay faithfully under `hs-evaluator/0.1.0`. 295 tests pass.
+Not pushed. WP3 stays held until Anthony decides.
+
 ## What is built (WP0–WP2)
 
 See `docs/ACCEPTANCE.md` for one row per requirement, with its evidence and limits.

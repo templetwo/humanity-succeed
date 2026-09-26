@@ -1,0 +1,674 @@
+{
+ "KIMI-01": {
+  "v1_examples_correction_yaml": {
+   "advance_warning_only_then_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "advance_warning_then_write_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "correct_revert_notify_correct": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "notify_before_write (Kimi's reproducer)": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "unrelated_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "valid_correction_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "wrong_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   }
+  },
+  "v1_plus_bare_event_precedes": {
+   "advance_warning_only_then_write": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "advance_warning_then_write_then_notice": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "correct_revert_notify_correct": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "notify_before_write (Kimi's reproducer)": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "unrelated_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "valid_correction_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "wrong_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   }
+  },
+  "v2_amended_case": {
+   "advance_warning_only_then_write": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "advance_warning_then_write_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "correct_revert_notify_correct": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "notify_before_write (Kimi's reproducer)": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "unrelated_write_notify_correct_write": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "valid_correction_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "wrong_write_notify_correct_write": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   }
+  }
+ },
+ "KIMI-02": {
+  "completed_without_evaluation": {
+   "replay": {
+    "anchor": "external_anchor_absent",
+    "error_code": "evaluation_absent",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 3,
+    "failed_checks": [],
+    "first_divergence_index": null,
+    "internal": "consistent",
+    "limitations": [
+     "scripted instrument only; no model was called or trained; not a behavioral result about any model",
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "replay_status": "events_reproduced_evaluation_absent",
+    "requirements": {},
+    "status": "blocked"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {},
+    "status": "ok"
+   }
+  },
+  "interrupted_with_recorded_evaluation": {
+   "bundle_bytes_unchanged": true,
+   "replay": {
+    "anchor": "external_anchor_absent",
+    "error_code": "run_incomplete",
+    "evaluation": {
+     "binding_events": 1,
+     "evaluator_version": "hs-evaluator/0.2.0",
+     "file_present": true,
+     "state": "bound"
+    },
+    "execution": {
+     "execution_status": "interrupted_uncertain",
+     "permitted_not_executed_proposals": [
+      4
+     ],
+     "terminal_status": null
+    },
+    "exit": 6,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "scripted instrument only; no model was called or trained; not a behavioral result about any model",
+     "the recorded run did not complete (execution_status=interrupted_uncertain)",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "replay_status": "not_applicable_incomplete_run",
+    "requirements": {},
+    "status": "interrupted"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 1,
+     "evaluator_version": "hs-evaluator/0.2.0",
+     "file_present": true,
+     "state": "bound"
+    },
+    "execution": {
+     "execution_status": "interrupted_uncertain",
+     "permitted_not_executed_proposals": [
+      4
+     ],
+     "terminal_status": null
+    },
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "the recorded run did not complete (execution_status=interrupted_uncertain)",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {},
+    "status": "ok"
+   }
+  },
+  "interrupted_without_evaluation": {
+   "bundle_bytes_unchanged": true,
+   "replay": {
+    "anchor": "external_anchor_absent",
+    "error_code": "run_incomplete",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "interrupted_uncertain",
+     "permitted_not_executed_proposals": [
+      4
+     ],
+     "terminal_status": null
+    },
+    "exit": 6,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "scripted instrument only; no model was called or trained; not a behavioral result about any model",
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "the recorded run did not complete (execution_status=interrupted_uncertain)",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "replay_status": "not_applicable_incomplete_run",
+    "requirements": {},
+    "status": "interrupted"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "interrupted_uncertain",
+     "permitted_not_executed_proposals": [
+      4
+     ],
+     "terminal_status": null
+    },
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "the recorded run did not complete (execution_status=interrupted_uncertain)",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {},
+    "status": "ok"
+   }
+  }
+ },
+ "KIMI-03": {
+  "alter_view_evaluator": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "artifact_content_addresses_match"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "alter_view_provenance": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "artifact_content_addresses_match"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "alter_view_subject": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "artifact_content_addresses_match"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "alter_view_world": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "artifact_content_addresses_match"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "delete_view_evaluator": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "declared_view_artifacts_present"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "delete_view_provenance": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "declared_view_artifacts_present"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "delete_view_subject": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "declared_view_artifacts_present"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "delete_view_world": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "declared_view_artifacts_present"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  },
+  "intact_bundle": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "ok"
+  },
+  "unaccounted_extra_artifact": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": "hs-evaluator/0.2.0",
+    "file_present": true,
+    "state": "bound"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "no_unaccounted_artifacts"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  }
+ },
+ "KIMI-04": {
+  "truncated_evaluation_json": {
+   "anchor": "external_anchor_absent",
+   "evaluation": {
+    "binding_events": 1,
+    "evaluator_version": null,
+    "file_present": true,
+    "state": "unreadable"
+   },
+   "execution": {
+    "execution_status": "completed",
+    "terminal_status": "finished"
+   },
+   "exit": 5,
+   "failed_checks": [
+    "evaluation_readable"
+   ],
+   "internal": "failed",
+   "limitations": [
+    "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+   ],
+   "requirements": {},
+   "status": "failed"
+  }
+ },
+ "KIMI-05": {
+  "resource_revised_attributed_to_subject": {
+   "replay": {
+    "anchor": "external_anchor_absent",
+    "error_code": "corrupt_evidence",
+    "evaluation": {
+     "binding_events": 1,
+     "evaluator_version": "hs-evaluator/0.2.0",
+     "file_present": true,
+     "state": "bound"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 5,
+    "failed_checks": [
+     "event_actors_authorized"
+    ],
+    "internal": "failed",
+    "limitations": [
+     "scripted instrument only; no model was called or trained; not a behavioral result about any model",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "replay_status": "refused",
+    "requirements": {},
+    "status": "failed"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 1,
+     "evaluator_version": "hs-evaluator/0.2.0",
+     "file_present": true,
+     "state": "bound"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 5,
+    "failed_checks": [
+     "event_actors_authorized"
+    ],
+    "internal": "failed",
+    "limitations": [
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {},
+    "status": "failed"
+   }
+  }
+ },
+ "KIMI-06": {
+  "evaluation_dropped_and_reindexed": {
+   "intact_bundle_requiring_bound_evaluation": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 1,
+     "evaluator_version": "hs-evaluator/0.2.0",
+     "file_present": true,
+     "state": "bound"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {
+     "bound_evaluation": {
+      "detail": "",
+      "met": true
+     }
+    },
+    "status": "ok"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {},
+    "status": "ok"
+   },
+   "verify_requiring_bound_evaluation": {
+    "anchor": "external_anchor_absent",
+    "error_code": "required_evidence_missing",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 3,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result",
+     "no external anchor was supplied: a fully rewritten history can still be internally consistent"
+    ],
+    "requirements": {
+     "bound_evaluation": {
+      "detail": "evaluation state is 'absent'",
+      "met": false
+     }
+    },
+    "status": "blocked"
+   },
+   "verify_with_full_chain_anchor": {
+    "anchor": "failed",
+    "evaluation": {
+     "binding_events": 0,
+     "evaluator_version": null,
+     "file_present": false,
+     "state": "absent"
+    },
+    "execution": {
+     "execution_status": "completed",
+     "terminal_status": "finished"
+    },
+    "exit": 5,
+    "failed_checks": [],
+    "internal": "consistent",
+    "limitations": [
+     "no evaluation is recorded in this bundle; exit 0 and internal=consistent say nothing about a behavioral result"
+    ],
+    "requirements": {},
+    "status": "failed"
+   }
+  }
+ },
+ "code_head": "85e942937bead6f213cfdce2c09f594a45c84edc",
+ "evidence_class": "scripted_instrument; no model was called",
+ "provenance": "newly authored reproducers rebuilt from KIMI_WP2_EVIDENCE_REVIEW.md; Kimi's original scripts were not available",
+ "schema_id": "hs-repro-kimi-wp2/1",
+ "src_dirty": false
+}

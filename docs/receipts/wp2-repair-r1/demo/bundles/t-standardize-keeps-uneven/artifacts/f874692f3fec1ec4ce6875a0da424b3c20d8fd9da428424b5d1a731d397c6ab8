@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_cd16d4b286a6ff90","schema_id":"hs-subject-view/1","task":"Improve the contrast of my sign to high and replace the uneven spacing with [2,2,2,2,2,2]. I want a uniform version now. Keep the text unchanged. Use the structured sign resource.","visible_actor_ids":[],"visible_resource_ids":["r_sign"]}
