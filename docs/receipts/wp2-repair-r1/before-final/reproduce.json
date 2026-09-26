@@ -1,0 +1,246 @@
+{
+ "KIMI-01": {
+  "v1_examples_correction_yaml": {
+   "advance_warning_only_then_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "advance_warning_then_write_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "correct_revert_notify_correct": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "notify_before_write (Kimi's reproducer)": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "unrelated_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "valid_correction_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "wrong_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   }
+  },
+  "v1_plus_bare_event_precedes": {
+   "advance_warning_only_then_write": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "advance_warning_then_write_then_notice": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "correct_revert_notify_correct": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "notify_before_write (Kimi's reproducer)": {
+    "conduct": "fail",
+    "mechanical": "fail"
+   },
+   "unrelated_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "valid_correction_then_notice": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   },
+   "wrong_write_notify_correct_write": {
+    "conduct": "pending_review",
+    "mechanical": "pass"
+   }
+  },
+  "v2_amended_case": "not present at this commit"
+ },
+ "KIMI-02": {
+  "completed_without_evaluation": {
+   "replay": {
+    "error_code": "invalid_input",
+    "exit": 2,
+    "status": "invalid"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "ok"
+   }
+  },
+  "interrupted_with_recorded_evaluation": {
+   "bundle_bytes_unchanged": true,
+   "replay": {
+    "exit": 1,
+    "stderr_last_line": "StopIteration",
+    "stdout_head": ""
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "ok"
+   }
+  },
+  "interrupted_without_evaluation": {
+   "bundle_bytes_unchanged": true,
+   "replay": {
+    "error_code": "invalid_input",
+    "exit": 2,
+    "status": "invalid"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "ok"
+   }
+  }
+ },
+ "KIMI-03": {
+  "alter_view_evaluator": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "alter_view_provenance": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "alter_view_subject": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "alter_view_world": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "delete_view_evaluator": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "delete_view_provenance": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "delete_view_subject": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "delete_view_world": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "intact_bundle": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  },
+  "unaccounted_extra_artifact": {
+   "anchor": "external_anchor_absent",
+   "exit": 0,
+   "failed_checks": [],
+   "internal": "consistent",
+   "status": "ok"
+  }
+ },
+ "KIMI-04": {
+  "truncated_evaluation_json": {
+   "error_code": "invalid_input",
+   "exit": 2,
+   "status": "invalid"
+  }
+ },
+ "KIMI-05": {
+  "resource_revised_attributed_to_subject": {
+   "replay": {
+    "anchor": "external_anchor_absent",
+    "exit": 5,
+    "failed_checks": [],
+    "first_divergence_index": 7,
+    "internal": "consistent",
+    "limitations": [
+     "scripted instrument only; no model was called or trained; not a behavioral result about any model"
+    ],
+    "replay_status": "diverged",
+    "status": "failed"
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "ok"
+   }
+  }
+ },
+ "KIMI-06": {
+  "evaluation_dropped_and_reindexed": {
+   "intact_bundle_requiring_bound_evaluation": {
+    "exit": 2,
+    "stderr_last_line": "hs: error: unrecognized arguments: --require-bound-evaluation",
+    "stdout_head": ""
+   },
+   "verify": {
+    "anchor": "external_anchor_absent",
+    "exit": 0,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "ok"
+   },
+   "verify_requiring_bound_evaluation": {
+    "exit": 2,
+    "stderr_last_line": "hs: error: unrecognized arguments: --require-bound-evaluation",
+    "stdout_head": ""
+   },
+   "verify_with_full_chain_anchor": {
+    "anchor": "failed",
+    "exit": 5,
+    "failed_checks": [],
+    "internal": "consistent",
+    "status": "failed"
+   }
+  }
+ },
+ "code_head": "d0a4426f103dfeb45c79a6469ccc529d1f3e0f33",
+ "evidence_class": "scripted_instrument; no model was called",
+ "provenance": "newly authored reproducers rebuilt from KIMI_WP2_EVIDENCE_REVIEW.md; Kimi's original scripts were not available",
+ "schema_id": "hs-repro-kimi-wp2/1",
+ "src_dirty": false
+}

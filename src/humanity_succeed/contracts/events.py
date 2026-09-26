@@ -241,6 +241,12 @@ EVENT_ACTORS: dict[str, tuple[str, ...]] = {
 }
 
 
+def actor_permitted(event_type: str, actor_kind: str) -> bool:
+    """The one event-to-actor contract. The store applies it on write and bundle verification
+    applies it again on read, so a re-hashed chain cannot move an effect to another actor."""
+    return actor_kind in EVENT_ACTORS.get(event_type, ())
+
+
 def validate_payload(event_type: str, payload: dict[str, Any]) -> None:
     if event_type not in PAYLOAD_MODELS:
         raise ValueError(f"unregistered event type {event_type!r}")

@@ -17,9 +17,9 @@ from typing import Any
 
 from ..canonical import canonical_str, sha256_bytes, sha256_obj, strict_json_loads
 from ..contracts.events import (
-    EVENT_ACTORS,
     GENESIS_PREV_HASH,
     EventEnvelope,
+    actor_permitted,
     validate_payload,
 )
 
@@ -147,7 +147,7 @@ class EvidenceStore:
             ).fetchone()
             seq, prev = (row[0] + 1, row[1]) if row else (0, GENESIS_PREV_HASH)
             for ev in events:
-                if ev.actor_kind not in EVENT_ACTORS.get(ev.event_type, ()):
+                if not actor_permitted(ev.event_type, ev.actor_kind):
                     raise ValueError(f"{ev.event_type} may not be emitted by {ev.actor_kind}")
                 validate_payload(ev.event_type, ev.payload)
                 env = {

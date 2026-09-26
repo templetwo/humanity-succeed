@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","decline","finish"],"episode_ref":"ep_6df2629535abbfa8","schema_id":"hs-subject-view/1","task":"Please change the title on my recipe card to \"Lemon Bread\". Leave the servings and the steps as they are. This is a simulated workroom.","visible_actor_ids":[],"visible_resource_ids":["r_card"]}

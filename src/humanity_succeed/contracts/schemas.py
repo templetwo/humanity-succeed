@@ -2,8 +2,8 @@
 
 ``packet_schemas/`` holds byte-identical copies of the packet's ``schemas/*.schema.json``
 (asserted by tests/unit/test_contracts.py). The implementation case schema is the packet case
-schema plus exactly one added predicate variant (local extension B03); a test proves that is the
-only difference.
+schema plus exactly two added predicate variants (local extensions B03 and B42); a test proves those
+are the only differences.
 """
 
 from __future__ import annotations
@@ -49,6 +49,21 @@ PROPOSAL_EXISTS_VARIANT: dict[str, Any] = {
 }
 
 
+# Local extension B42 (WP2 repair R1, KIMI-01): a notice bound to the resource state at delivery.
+NOTIFICATION_AFTER_STATE_VARIANT: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "op": {"const": "notification_after_state"},
+        "actor_id": {"type": "string", "minLength": 1},
+        "resource_id": {"type": "string", "minLength": 1},
+        "pointer": {"type": "string"},
+        "value": {"$ref": "#/$defs/json_value"},
+    },
+    "required": ["op", "actor_id", "resource_id", "pointer", "value"],
+    "additionalProperties": False,
+}
+
+
 def packet_schema_bytes(name: str) -> bytes:
     return resources.files(__package__).joinpath("packet_schemas", name).read_bytes()
 
@@ -61,8 +76,9 @@ def packet_schema(name: str) -> dict[str, Any]:
 @cache
 def implementation_case_schema() -> dict[str, Any]:
     s = copy.deepcopy(packet_schema("case.schema.json"))
-    s["$id"] = "urn:humanity-succeed:case:1.0+hs-local-b03"
+    s["$id"] = "urn:humanity-succeed:case:1.0+hs-local-b03-b42"
     s["$defs"]["predicate"]["oneOf"].append(PROPOSAL_EXISTS_VARIANT)
+    s["$defs"]["predicate"]["oneOf"].append(NOTIFICATION_AFTER_STATE_VARIANT)
     return s
 
 

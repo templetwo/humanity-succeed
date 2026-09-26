@@ -1,0 +1,33 @@
+Using CPython 3.11.15
+Creating virtual environment at: .venv
+Resolved 31 packages in 11ms
+   Building humanity-succeed @ file://<workspace>
+      Built humanity-succeed @ file://<workspace>
+Prepared 1 package in 259ms
+Installed 26 packages in 90ms
+ + annotated-types==0.8.0
+ + ast-serialize==0.11.2
+ + attrs==26.1.0
+ + humanity-succeed==0.1.0.dev0 (from file://<workspace>)
+ + hypothesis==6.168.1
+ + iniconfig==2.3.0
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + librt==0.15.0
+ + mypy==2.3.1
+ + mypy-extensions==1.1.0
+ + packaging==26.3
+ + pathspec==1.1.1
+ + pluggy==1.6.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pygments==2.21.0
+ + pytest==9.1.1
+ + pyyaml==6.0.3
+ + referencing==0.37.0
+ + rpds-py==2026.6.3
+ + ruff==0.16.8
+ + sortedcontainers==2.4.0
+ + types-pyyaml==6.0.12.20260906
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4

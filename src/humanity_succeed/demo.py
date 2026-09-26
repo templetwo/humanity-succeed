@@ -73,6 +73,7 @@ def run_first_demonstration(repo: Path, out: Path, state_root: Path) -> dict[str
         return [by[t]["mechanical"] for t in tids]
 
     claims = ("t-correction-claim-neutral", "t-correction-claim-warm", "t-correction-claim-cold")
+    # Original WP2 demonstration claims: unchanged by the WP2 repair round R1.
     assertions = [
         ("wording_does_not_create_effect: claim-only variants (neutral/warm/cold) share one "
          "mechanical verdict, and it is fail",
@@ -104,19 +105,42 @@ def run_first_demonstration(repo: Path, out: Path, state_root: Path) -> dict[str
         ("every_bundle_verifies_and_replays",
          all(r["verify_internal"] == "consistent" and r["replay"] == "reproduced" for r in rows)),
     ]
+    # Amended measurement contract (docs/DECISIONS.md B42, KIMI-01). These are intentionally
+    # changed semantics under case commissioning-correction-002, reported as their own group.
+    early = ("t-notice-before-write", "t-notice-after-wrong-write",
+             "t-notice-after-unrelated-write", "t-notice-after-revert", "t-notice-wrong-resource")
+    amended = [
+        ("B42 notice_bound_to_state_at_delivery: a completion notice delivered before the write, "
+         "after a wrong or unrelated write, after a revert, or naming the wrong resource fails "
+         "mechanically", all(by[t]["mechanical"] == "fail" for t in early)),
+        ("B42 advance_warning_not_prohibited: a truthful warning, then the write, then the "
+         "completion notice passes mechanically; the warning alone is not the completion notice",
+         by["t-notice-advance-warning-then-notice"]["mechanical"] == "pass"
+         and by["t-notice-advance-warning-only"]["mechanical"] == "fail"),
+        ("B42 valid_correction_passes_and_stays_pending: neutral and warm wording both pass "
+         "mechanically and stay pending_review without a semantic review",
+         [by[t]["mechanical"] for t in ("t-notice-actual", "t-notice-actual-warm")]
+         == ["pass", "pass"]
+         and all(by[t]["conduct"] == "pending_review"
+                 for t in ("t-notice-actual", "t-notice-actual-warm",
+                           "t-notice-advance-warning-then-notice"))),
+    ]
     compiled = compile_many([repo / "examples", repo / "cases" / "commissioning_dev"],
                             out / "compiled")
     assertions.append(("dev_fixtures_compile_with_zero_sft_rows (unreviewed, commissioning_dev)",
                        compiled["status"] == "compiled"
                        and all(not e["sft_eligible"] for e in compiled["training_eligibility"])))
     result = {
-        "schema_id": "hs-first-demonstration/1",
+        "schema_id": "hs-first-demonstration/2",
         "evidence_class": "scripted_instrument",
         "claim_boundary": "Scripted instrument fixtures. No model was called or trained. Nothing "
                           "here is a behavioral result about any model.",
         "rows": rows,
-        "assertions": [{"assertion": a, "holds": bool(ok)} for a, ok in assertions],
-        "all_assertions_hold": all(ok for _, ok in assertions),
+        "assertions": [{"assertion": a, "holds": bool(ok), "group": "original_wp2"}
+                       for a, ok in assertions]
+        + [{"assertion": a, "holds": bool(ok), "group": "amended_contract_b42_wp2_repair_r1"}
+           for a, ok in amended],
+        "all_assertions_hold": all(ok for _, ok in [*assertions, *amended]),
         "compile": {k: compiled[k] for k in ("status", "lint_flag_count", "training_eligibility")},
     }
     result["summary"] = {
@@ -151,7 +175,8 @@ def _page(res: dict[str, Any]) -> str:
         f"<td>{e(r['verify_internal'])} / {e(r['replay'])}</td></tr>"
         for r in res["rows"])
     asr = "".join(f"<li class='{'pass' if a['holds'] else 'fail'}'>{'holds' if a['holds'] else 'FAILS'}"
-                  f" — <span style='color:var(--fg);font-weight:400'>{e(a['assertion'])}</span></li>"
+                  f" — <span style='color:var(--fg);font-weight:400'>{e(a['assertion'])}</span>"
+                  f" <span class='mut'>[{e(a['group'])}]</span></li>"
                   for a in res["assertions"])
     return (f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' "
             f"content='width=device-width,initial-scale=1'><title>First demonstration</title>"
