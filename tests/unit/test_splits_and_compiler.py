@@ -150,7 +150,7 @@ def test_compile_is_deterministic_and_separates_views(tmp_path):
     assert r1["status"] == r2["status"] == "compiled"
     assert _tree_digest(tmp_path / "a") == _tree_digest(tmp_path / "b")
     subj = list((tmp_path / "a" / "subject_views").iterdir())
-    assert len(subj) == 5
+    assert len(subj) == 6  # 3 packet examples + 3 dev cases (002 added in WP2 repair R1, B42)
     for f in subj:
         v = strict_json_loads(f.read_bytes())
         assert set(v) == {"schema_id", "episode_ref", "task", "visible_resource_ids",

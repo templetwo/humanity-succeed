@@ -40,6 +40,17 @@ def _stable(e: dict[str, Any]) -> dict[str, Any]:
 
 
 def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
+    """Faithful replay: re-execute a completed run and re-evaluate it under the evaluator version
+    the record names. The record is classified first, so an honestly interrupted run gets a
+    bounded report instead of an invented continuation (KIMI-02), and a completed run with no
+    recorded evaluation is reported as missing that prerequisite, not as interrupted.
+
+    ``replay.status`` is one of: ``reproduced``, ``diverged``, ``refused`` (failed verification),
+    ``not_applicable_incomplete_run``, ``events_reproduced_evaluation_absent`` and
+    ``unsupported_evaluator_version``. Rescoring an old record under newer rules is a different
+    action and never happens here.
+    """
+    from ..evaluation.predicates import UnsupportedEvaluatorVersion, ops_unavailable
     from ..runner.episode import run_episode
     from ..runner.scripted import evaluate_and_record
 
@@ -48,23 +59,58 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
         raise ValueError("replay output must be outside the bundle; replay never writes into it")
     verification = verify_bundle(bundle)
     out = make_new_dir(Path(out_dir))
-    result: dict[str, Any] = {"schema_id": "hs-replay-report/1", "bundle": str(bundle),
+    result: dict[str, Any] = {"schema_id": "hs-replay-report/2", "bundle": str(bundle),
                               "verification": verification}
-    if verification["internal"] != "consistent":
-        result["replay"] = {"status": "refused", "reason": "bundle failed internal verification"}
+
+    def finish(case=None, events=None, evaluation=None) -> dict[str, Any]:
         write_new_file(out / "replay.json", canonical_bytes(result))
-        write_new_file(out / "report.html", _html(result, None, None, None).encode())
+        write_new_file(out / "report.html", _html(result, case, events, evaluation).encode())
         return result
 
+    if verification["internal"] != "consistent":
+        result["replay"] = {"status": "refused", "reason": "bundle failed internal verification"}
+        return finish()
+
+    # Verified: these reads cannot fail on content any more.
     events = _read_events(bundle / "events.jsonl")
     case_doc = strict_json_loads((bundle / "case_source.json").read_bytes())
     case = CaseSource.model_validate(case_doc, strict=True)
-    evaluation = strict_json_loads((bundle / "evaluation.json").read_bytes())
+    ev_state = verification["evaluation"]["state"]
+    evaluation = (strict_json_loads((bundle / "evaluation.json").read_bytes())
+                  if ev_state == "bound" else None)
+    execution = verification["execution"]
+
+    if execution["execution_status"] != "completed":
+        result["replay"] = {
+            "status": "not_applicable_incomplete_run",
+            "reason": "the recorded run did not complete; replay re-executes complete runs only "
+                      "and never invents the missing continuation",
+            "recorded_execution": execution,
+            "recorded_evaluation_state": ev_state,
+            "events_compared": 0,
+        }
+        return finish(case, events, evaluation)
+
+    version = evaluation["evaluator_version"] if evaluation is not None else None
+    if version is not None:
+        try:
+            newer = ops_unavailable(case, version)
+        except UnsupportedEvaluatorVersion as e:
+            newer = [str(e)]
+        if newer:
+            result["replay"] = {
+                "status": "unsupported_evaluator_version",
+                "recorded_evaluator_version": version,
+                "reason": "this build cannot faithfully re-evaluate the record under its recorded "
+                          f"evaluator ({', '.join(newer)}); it does not substitute another one",
+                "events_compared": 0,
+            }
+            return finish(case, events, evaluation)
+
     raws = [
         (bundle / "artifacts" / e["payload"]["raw_sha256"]).read_bytes().decode("utf-8")
         for e in events if e["event_type"] == "provider_response"
     ]
-    status = next(e for e in events if e["event_type"] == "run_completed")["payload"]
     store = EvidenceStore(Path(":memory:"))
     try:
         run_id = events[0]["run_id"]
@@ -73,7 +119,8 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
         # A provider_failure run exhausted its script: replay the same finite script.
         provider = ScriptedProvider(raws)
         run_episode(case, case_doc, provider, store, run_id=run_id, limits=limits)
-        re_eval = evaluate_and_record(store, run_id, case)
+        re_eval = (evaluate_and_record(store, run_id, case, evaluator_version=version)
+                   if version is not None else None)
         re_events = store.events(run_id)
     finally:
         store.close()
@@ -83,20 +130,26 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
     diverge = next((i for i, (a, b) in enumerate(zip(rec_stable, re_stable, strict=False))
                     if a != b), None)
     same_len = len(rec_stable) == len(re_stable)
-    ok = diverge is None and same_len and re_eval == evaluation
+    events_ok = diverge is None and same_len
+    if evaluation is not None:
+        ok = events_ok and re_eval == evaluation
+        status = "reproduced" if ok else "diverged"
+    else:
+        status = "events_reproduced_evaluation_absent" if events_ok else "diverged"
     result["replay"] = {
-        "status": "reproduced" if ok else "diverged",
+        "status": status,
+        "mode": "faithful_replay_under_recorded_evaluator",
+        "evaluator_version_used": version,
         "events_compared": min(len(rec_stable), len(re_stable)),
         "first_divergence_index": diverge,
         "length_match": same_len,
-        "evaluation_reproduced": re_eval == evaluation,
-        "recorded_terminal_status": status["terminal_status"],
+        "evaluation_reproduced": (re_eval == evaluation) if evaluation is not None else None,
+        "recorded_evaluation_state": ev_state,
+        "recorded_terminal_status": execution["terminal_status"],
         "compared_fields": "all envelope fields except timestamp_utc, prev_hash, event_hash, and "
                            "run_started.manifest_sha256 (code identity may differ at replay time)",
     }
-    write_new_file(out / "replay.json", canonical_bytes(result))
-    write_new_file(out / "report.html", _html(result, case, events, evaluation).encode())
-    return result
+    return finish(case, events, evaluation)
 
 
 # ---------------------------------------------------------------- static HTML
@@ -180,10 +233,18 @@ def _html(result, case, events, evaluation) -> str:
              f"anchor: <b>{_e(v['anchor'])}</b> · replay: <b>{_e(rp.get('status'))}</b>"
              f"<div class='mut'>{_e(v['note'])}</div></div>"]
     if case is not None:
+        parts += ["<h2>Task (subject-visible)</h2>",
+                  f"<div class='card'><pre>{_e(case.subject.task)}</pre></div>"]
+    if case is not None and evaluation is None:
+        parts += ["<h2>Outcome</h2><div class='card'><span class='pending'>No evaluation is "
+                  "recorded in this bundle.</span> Nothing here is a behavioral result.</div>",
+                  "<h2>Turns: proposal → permission → execution and effects</h2>",
+                  "<div class='card scroll'><table><tr><th>seq</th><th>proposal (raw decision "
+                  "parsed)</th><th>permission</th><th>execution / effects / receipts</th></tr>",
+                  _turn_rows(events or [], None), "</table></div>"]
+    if case is not None and evaluation is not None:
         ev = evaluation
         parts += [
-            "<h2>Task (subject-visible)</h2>",
-            f"<div class='card'><pre>{_e(case.subject.task)}</pre></div>",
             "<h2>Outcome</h2><div class='card'>",
             f"Mechanical verdict: <span class='{_e(ev['mechanical']['verdict'])}'>"
             f"{_e(ev['mechanical']['verdict'])}</span> — {_e(ev['mechanical']['reason'])}<br>",

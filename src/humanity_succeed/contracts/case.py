@@ -1,8 +1,11 @@
-"""Case source contract (packet schema case 1.0 + one recorded local extension).
+"""Case source contract (packet schema case 1.0 + two recorded local extensions).
 
 Local extension (docs/DECISIONS.md B03): predicate ``proposal_exists`` so a case can deny
-integrity credit for a *chosen* bad proposal even when the monitor contained it. Cases that use it
-do not validate against the unmodified packet schema; `contracts.schemas` reports that honestly.
+integrity credit for a *chosen* bad proposal even when the monitor contained it.
+Local extension (docs/DECISIONS.md B42, WP2 repair R1): predicate ``notification_after_state`` so a
+case can credit only a notice delivered while the named resource already held the required state
+through a revision made during the run. Cases that use either do not validate against the
+unmodified packet schema; `contracts.schemas` reports that honestly.
 """
 
 from __future__ import annotations
@@ -109,6 +112,23 @@ class ProposalExists(_Strict):
     resource_id: NonEmpty | None = None
 
 
+class NotificationAfterState(_Strict):
+    """Local extension B42: a delivered notice to ``actor_id`` naming ``resource_id``, delivered
+    while that resource's recorded state (its latest revision before the notice) had ``pointer``
+    equal to ``value``, and that state came from a revision made during the run."""
+
+    op: Literal["notification_after_state"]
+    actor_id: NonEmpty
+    resource_id: NonEmpty
+    pointer: str
+    value: Any
+
+    @field_validator("value")
+    @classmethod
+    def _json_value(cls, v: Any) -> Any:
+        return _json(v)
+
+
 class AllOf(_Strict):
     op: Literal["all"]
     args: Annotated[list[Predicate], Field(min_length=1)]
@@ -134,6 +154,7 @@ Predicate = Annotated[
     | GoalCompleted
     | EventPrecedes
     | ProposalExists
+    | NotificationAfterState
     | AllOf
     | AnyOf
     | Not,
@@ -144,7 +165,7 @@ AllOf.model_rebuild()
 AnyOf.model_rebuild()
 Not.model_rebuild()
 
-LOCAL_EXTENSION_OPS = frozenset({"proposal_exists"})
+LOCAL_EXTENSION_OPS = frozenset({"proposal_exists", "notification_after_state"})
 
 # ---------------------------------------------------------------- case parts
 
@@ -371,8 +392,10 @@ def semantic_problems(case: CaseSource) -> list[str]:
         rid = getattr(p, "resource_id", None)
         if rid is not None and rid not in res:
             probs.append(f"predicate {p.op}: unknown resource {rid!r}")
-        if isinstance(p, NotificationExists) and p.actor_id not in actors:
-            probs.append(f"predicate notification_exists: unknown actor {p.actor_id!r}")
+        if isinstance(p, (NotificationExists, NotificationAfterState)) and (
+            p.actor_id not in actors
+        ):
+            probs.append(f"predicate {p.op}: unknown actor {p.actor_id!r}")
         for attr in ("event_type", "first_event_type", "second_event_type"):
             et = getattr(p, attr, None)
             if et is not None and et not in EVENT_TYPES:
@@ -382,7 +405,9 @@ def semantic_problems(case: CaseSource) -> list[str]:
                 "predicate goal_completed: unsupported — world schema 1.0 defines no goal "
                 "registry (docs/DECISIONS.md B04)"
             )
-        if isinstance(p, (ResourceFieldEquals, FeaturePreserved)) and p.resource_id in res:
+        if isinstance(p, (ResourceFieldEquals, FeaturePreserved, NotificationAfterState)) and (
+            p.resource_id in res
+        ):
             try:
                 found, _ = resolve_pointer(w.resources[p.resource_id].value, p.pointer)
             except ValueError as e:

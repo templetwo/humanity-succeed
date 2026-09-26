@@ -9,6 +9,7 @@ from humanity_succeed.canonical import load_document
 from humanity_succeed.contracts.actions import ParseFailure, parse_action
 from humanity_succeed.contracts.case import CaseSource, semantic_problems
 from humanity_succeed.contracts.schemas import (
+    NOTIFICATION_AFTER_STATE_VARIANT,
     PACKET_SCHEMA_FILES,
     PROPOSAL_EXISTS_VARIANT,
     implementation_case_schema,
@@ -25,11 +26,11 @@ def test_embedded_packet_schemas_are_byte_identical_to_packet():
         assert packet_schema_bytes(name) == (REPO / "schemas" / name).read_bytes(), name
 
 
-def test_implementation_schema_only_adds_proposal_exists():
+def test_implementation_schema_only_adds_the_two_local_extensions():
     packet = copy.deepcopy(packet_schema("case.schema.json"))
     impl = copy.deepcopy(implementation_case_schema())
-    added = impl["$defs"]["predicate"]["oneOf"].pop()
-    assert added == PROPOSAL_EXISTS_VARIANT
+    assert impl["$defs"]["predicate"]["oneOf"].pop() == NOTIFICATION_AFTER_STATE_VARIANT  # B42
+    assert impl["$defs"]["predicate"]["oneOf"].pop() == PROPOSAL_EXISTS_VARIANT  # B03
     impl["$id"] = packet["$id"]
     assert impl == packet
 

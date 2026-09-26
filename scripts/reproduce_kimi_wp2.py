@@ -167,6 +167,21 @@ def kimi01(tmp: Path) -> dict[str, Any]:
     for name, raws in trajectories.items():
         _, ev = run_bundle(V1_CASE, raws, tmp, f"k01-v1-{len(out['v1_examples_correction_yaml'])}")
         out["v1_examples_correction_yaml"][name] = mech(ev)
+    # Why a bare first-event ordering term does not close KIMI-01: add
+    # event_precedes(resource_revised, notification_delivered) to the v1 fixture and rerun.
+    import yaml
+
+    doc = yaml.safe_load(V1_CASE.read_text())
+    doc["case_id"] = "repro-v1-plus-event-precedes"
+    doc["evaluation"]["pass_if"]["args"].append(
+        {"op": "event_precedes", "first_event_type": "resource_revised",
+         "second_event_type": "notification_delivered"})
+    bare = tmp / "v1-plus-event-precedes.yaml"
+    bare.write_text(yaml.safe_dump(doc))
+    out["v1_plus_bare_event_precedes"] = {}
+    for i, (name, raws) in enumerate(trajectories.items()):
+        _, ev = run_bundle(bare, raws, tmp, f"k01-bare-{i}")
+        out["v1_plus_bare_event_precedes"][name] = mech(ev)
     if V2_CASE.is_file():
         out["v2_amended_case"] = {}
         for i, (name, raws) in enumerate(trajectories.items()):
@@ -204,6 +219,18 @@ def kimi02(tmp: Path) -> dict[str, Any]:
         after = {str(p.relative_to(b)): sha256_bytes(p.read_bytes()) for p in b.rglob("*")
                  if p.is_file()}
         out[label]["bundle_bytes_unchanged"] = before == after
+    # A completed run exported without its evaluation: a missing prerequisite, not interruption.
+    case, doc = load_case(V1_CASE)
+    store = EvidenceStore(tmp / "completed-unevaluated.sqlite")
+    try:
+        res = run_episode(case, doc, ScriptedProvider([write(48, 1), notify(DONE_TEXT), FINISH]),
+                          store)
+        b = export_bundle(store, res.run_id, doc, None, tmp / "bundle-completed-unevaluated")
+    finally:
+        store.close()
+    out["completed_without_evaluation"] = {
+        "verify": hs("evidence", "verify", b),
+        "replay": hs("evidence", "replay", b, "--out", tmp / "replay-completed-unevaluated")}
     return out
 
 
@@ -251,6 +278,7 @@ def kimi05(tmp: Path, good: Path) -> dict[str, Any]:
 
 
 def kimi06(tmp: Path, good: Path) -> dict[str, Any]:
+    """The require flag does not exist at the frozen commit; there argparse answers exit 2."""
     anchor = tmp / "k06-anchor.json"
     anchor.write_bytes(canonical_bytes(anchor_for(good)))
     b = copy(good, tmp, "k06-no-verdict")
@@ -259,7 +287,11 @@ def kimi06(tmp: Path, good: Path) -> dict[str, Any]:
     reindex(b)
     return {"evaluation_dropped_and_reindexed": {
         "verify": hs("evidence", "verify", b),
-        "verify_with_full_chain_anchor": hs("evidence", "verify", b, "--anchor", anchor)}}
+        "verify_with_full_chain_anchor": hs("evidence", "verify", b, "--anchor", anchor),
+        "verify_requiring_bound_evaluation": hs("evidence", "verify", b,
+                                                "--require-bound-evaluation"),
+        "intact_bundle_requiring_bound_evaluation": hs("evidence", "verify", good,
+                                                       "--require-bound-evaluation")}}
 
 
 def main() -> int:

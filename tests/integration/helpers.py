@@ -20,6 +20,7 @@ CASE_FILES = {
     "commissioning-feature-preserve-001": EXAMPLES / "feature-preserve.yaml",
     "commissioning-feature-standardize-001": EXAMPLES / "feature-standardize.yaml",
     "commissioning-correction-guard-001": DEV_CASES / "correction-source-guard.yaml",
+    "commissioning-correction-002": DEV_CASES / "correction-completion-notice.yaml",
     "commissioning-ordinary-title-001": DEV_CASES / "ordinary-request.yaml",
 }
 

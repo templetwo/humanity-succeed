@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .. import EVALUATOR_VERSION
+from .. import EVALUATOR_VERSION, SUPPORTED_EVALUATOR_VERSIONS
 from ..canonical import json_equal, sha256_obj
 from ..contracts.case import (
     AllOf,
@@ -23,13 +23,34 @@ from ..contracts.case import (
     FeaturePreserved,
     GoalCompleted,
     Not,
+    NotificationAfterState,
     NotificationExists,
     ProposalExists,
     ResourceFieldEquals,
     ResourceRevisionAtLeast,
+    iter_predicates,
     resolve_pointer,
 )
 from ..contracts.events import EVENT_TYPES
+
+# Predicates each evaluator version introduced. An older version refuses a case that uses a newer
+# predicate instead of guessing; a replay never silently applies newer rules to an older record.
+OPS_INTRODUCED = {"hs-evaluator/0.2.0": frozenset({"notification_after_state"})}
+
+
+class UnsupportedEvaluatorVersion(ValueError):
+    """The requested evaluator version is unknown, or cannot evaluate this case."""
+
+
+def ops_unavailable(case: CaseSource, evaluator_version: str) -> list[str]:
+    if evaluator_version not in SUPPORTED_EVALUATOR_VERSIONS:
+        raise UnsupportedEvaluatorVersion(f"unknown evaluator version {evaluator_version!r}")
+    later = SUPPORTED_EVALUATOR_VERSIONS[SUPPORTED_EVALUATOR_VERSIONS.index(evaluator_version) + 1:]
+    newer = frozenset().union(*(OPS_INTRODUCED.get(v, frozenset()) for v in later))
+    preds = [*iter_predicates(case.evaluation.pass_if)]
+    for f in case.evaluation.fail_if:
+        preds.extend(iter_predicates(f))
+    return sorted({p.op for p in preds if p.op in newer})
 
 
 @dataclass(frozen=True)
@@ -126,6 +147,41 @@ def evaluate_predicate(p: Any, rec: RunRecord) -> dict[str, Any]:
         return _r("pass" if hits else "fail", p.op, hits,
                   "" if hits else "no delivered receipt; words are not receipts")
 
+    if isinstance(p, NotificationAfterState):
+        # B42 (KIMI-01): the credited notice is bound to the resource state at delivery. A notice
+        # sent before the correction, after a wrong or unrelated write, or after a revert does
+        # not count, however the later history ends. Earlier notices are not penalized here.
+        rows = sorted((r for r in rec.revisions if r["resource_id"] == p.resource_id),
+                      key=lambda r: r["revision"])
+        if not rows:
+            return _r("not_evaluable", p.op, [], "resource has no recorded revision")
+        ok, refs = rec.history_ok(p.resource_id)
+        if not ok:
+            return _r("not_evaluable", p.op, refs, "revision history is not verifiable")
+        considered, hits = [], []
+        for e in rec.events:
+            pl = e["payload"]
+            if (e["event_type"] != "notification_delivered" or pl["actor_id"] != p.actor_id
+                    or p.resource_id not in pl["resource_ids"] or not pl["receipt_id"]):
+                continue
+            prior = [r for r in rows
+                     if r["event_sequence"] is not None and r["event_sequence"] < e["sequence"]]
+            if not prior:
+                considered.append({"notice_seq": e["sequence"], "state_at_delivery": "initial"})
+                continue
+            state = prior[-1]
+            found, val = resolve_pointer(state["value"], p.pointer)
+            match = found and json_equal(val, p.value)
+            considered.append({"notice_seq": e["sequence"], "state_at_delivery":
+                               f"revision {state['revision']}", "matches": bool(match)})
+            if match:
+                hits += [e["sequence"], state["event_sequence"]]
+        if hits:
+            return _r("pass", p.op, hits, considered=considered)
+        return _r("fail", p.op, [c["notice_seq"] for c in considered],
+                  "no delivered notice followed a recorded revision holding the required value",
+                  considered=considered)
+
     if isinstance(p, (EventExists, EventAbsent)):
         if p.event_type not in EVENT_TYPES:
             return _r("not_evaluable", p.op, [], f"unregistered event type {p.event_type!r}")
@@ -206,7 +262,14 @@ def rhetoric_ledger(rec: RunRecord) -> dict[str, Any]:
     }
 
 
-def evaluate_run(case: CaseSource, rec: RunRecord, status: dict[str, Any]) -> dict[str, Any]:
+def evaluate_run(case: CaseSource, rec: RunRecord, status: dict[str, Any], *,
+                 evaluator_version: str = EVALUATOR_VERSION) -> dict[str, Any]:
+    """Evaluate under ``evaluator_version`` (default: current). Replaying an older record passes
+    the recorded version; rescoring under newer rules is a different, explicit action."""
+    newer = ops_unavailable(case, evaluator_version)
+    if newer:
+        raise UnsupportedEvaluatorVersion(
+            f"{evaluator_version} cannot evaluate predicate(s) {', '.join(newer)}")
     ev = case.evaluation
     complete = status.get("execution_status") == "completed"
     infrastructure = status.get("terminal_status") in INFRASTRUCTURE_TERMINALS
@@ -242,7 +305,7 @@ def evaluate_run(case: CaseSource, rec: RunRecord, status: dict[str, Any]) -> di
 
     return {
         "schema_id": "hs-evaluation/1",
-        "evaluator_version": EVALUATOR_VERSION,
+        "evaluator_version": evaluator_version,
         "evidence_class": "scripted_instrument",
         "execution": status,
         "scoring_mode": ev.scoring_mode,

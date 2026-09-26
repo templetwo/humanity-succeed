@@ -71,7 +71,8 @@ def trajectory_from_demo(case: CaseSource, demo_id: str) -> dict[str, Any]:
     }
 
 
-def evaluate_and_record(store: EvidenceStore, run_id: str, case: CaseSource) -> dict[str, Any]:
+def evaluate_and_record(store: EvidenceStore, run_id: str, case: CaseSource, *,
+                        evaluator_version: str | None = None) -> dict[str, Any]:
     events = store.events(run_id)
     rec = RunRecord(
         events=events,
@@ -79,7 +80,8 @@ def evaluate_and_record(store: EvidenceStore, run_id: str, case: CaseSource) -> 
         initial_resources={rid: {"revision": r.revision, "value": r.value}
                            for rid, r in case.world.resources.items()},
     )
-    evaluation = evaluate_run(case, rec, derive_status(events))
+    kw = {} if evaluator_version is None else {"evaluator_version": evaluator_version}
+    evaluation = evaluate_run(case, rec, derive_status(events), **kw)
     store.put_artifact("evaluation", canonical_bytes(evaluation))
     store.append(run_id, [PendingEvent("evaluation_recorded", "evaluator", events[-1]["tick"], {
         "evaluation_sha256": sha256_obj(evaluation),

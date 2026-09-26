@@ -2,7 +2,14 @@
 
 Exit codes: 0 command completed (read the behavioral result separately); 2 invalid input/contract;
 3 missing approval/precondition; 4 unsupported/unavailable; 5 corrupt or unverifiable evidence;
-6 interrupted/resource failure. Output is a JSON envelope with ``status``, ``result``,
+6 interrupted/resource failure.
+
+Evidence commands (WP2 repair R1, docs/DECISIONS.md B43-B47): ``evidence verify`` exits 5 for a
+failed internal check or a failed/partial anchor, 3 when ``--require-bound-evaluation`` is given and
+the bundle holds no bound evaluation, else 0 (absence and incompleteness are listed under
+``limitations``). ``evidence replay`` exits 0 reproduced; 5 refused or diverged; 6 the recorded run
+did not complete; 3 a completed run with no recorded evaluation; 4 recorded evaluator version not
+supported by this build. Output is a JSON envelope with ``status``, ``result``,
 ``limitations``, ``artifacts`` and, on error, ``error.code``. Commands from later work packages are
 registered and answer ``unsupported`` (exit 4); none fakes success. No command calls a model.
 """
@@ -181,9 +188,19 @@ def cmd_evidence_verify(a: argparse.Namespace) -> int:
     from .evidence.bundle import verify_bundle
 
     anchor = load_document(Path(a.anchor)) if a.anchor else None
-    rep = verify_bundle(Path(a.bundle), anchor)
-    bad = rep["internal"] != "consistent" or rep["anchor"] in ("failed", "partial")
-    return emit(envelope("failed" if bad else "ok", rep), EXIT_CORRUPT if bad else EXIT_OK)
+    if anchor is not None and not isinstance(anchor, dict):
+        raise ValueError(f"{a.anchor}: an anchor file must hold a JSON object")
+    require = ("bound_evaluation",) if a.require_bound_evaluation else ()
+    rep = verify_bundle(Path(a.bundle), anchor, require)
+    if rep["internal"] != "consistent" or rep["anchor"] in ("failed", "partial"):
+        return emit(envelope("failed", rep, limitations=rep["limitations"]), EXIT_CORRUPT)
+    unmet = [k for k, v in rep["requirements"].items() if not v["met"]]
+    if unmet:
+        return emit(envelope("blocked", rep, limitations=rep["limitations"], error={
+            "code": "required_evidence_missing",
+            "message": f"required but not present: {', '.join(unmet)} "
+                       f"({rep['requirements'][unmet[0]]['detail']})"}), EXIT_PRECONDITION)
+    return emit(envelope("ok", rep, limitations=rep["limitations"]), EXIT_OK)
 
 
 def cmd_evidence_anchor(a: argparse.Namespace) -> int:
@@ -202,9 +219,22 @@ def cmd_evidence_replay(a: argparse.Namespace) -> int:
     from .evidence.replay import replay_bundle
 
     rep = replay_bundle(Path(a.bundle), Path(a.out))
-    ok = rep.get("replay", {}).get("status") == "reproduced"
-    return emit(envelope("ok" if ok else "failed", rep, artifacts=[a.out],
-                         limitations=[SCRIPTED_LIMITATION]), EXIT_OK if ok else EXIT_CORRUPT)
+    status = rep["replay"]["status"]
+    lim = [SCRIPTED_LIMITATION, *rep["verification"]["limitations"]]
+    outcome = {
+        "reproduced": ("ok", None, EXIT_OK),
+        "refused": ("failed", "corrupt_evidence", EXIT_CORRUPT),
+        "diverged": ("failed", "replay_diverged", EXIT_CORRUPT),
+        "not_applicable_incomplete_run": ("interrupted", "run_incomplete", EXIT_INTERRUPTED),
+        "events_reproduced_evaluation_absent": ("blocked", "evaluation_absent",
+                                                EXIT_PRECONDITION),
+        "unsupported_evaluator_version": ("unsupported", "unsupported_evaluator_version",
+                                          EXIT_UNSUPPORTED),
+    }
+    env_status, code, exit_code = outcome[status]
+    err = {"code": code, "message": rep["replay"].get("reason", status)} if code else None
+    return emit(envelope(env_status, rep, artifacts=[a.out], limitations=lim, error=err),
+                exit_code)
 
 
 def cmd_demo(a: argparse.Namespace) -> int:
@@ -276,6 +306,8 @@ def build_parser() -> argparse.ArgumentParser:
     e = ev.add_parser("verify")
     e.add_argument("bundle")
     e.add_argument("--anchor")
+    e.add_argument("--require-bound-evaluation", action="store_true",
+                   help="block (exit 3) unless the bundle holds an evaluation bound to its chain")
     e.set_defaults(fn=cmd_evidence_verify)
     e = ev.add_parser("anchor")
     e.add_argument("bundle")
