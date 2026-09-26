@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_agenda"],"writable_ids":["r_agenda"]},"resources":{"r_agenda":{"revision":1,"value":{"room":"Atrium","start_time":"(unset start_time)"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

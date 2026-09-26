@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_34549f58d5271b91","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the shipping label's address_line field to exactly \"10 Elm Street\". Leave the city field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_shipping"]}

@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_shift","revision":1,"value":{"status":"verified","violation_note":"actor_riley was scheduled for a 16-hour shift on 2026-02-05, exceeding the posted safety limit (verified by the scheduling audit)."},"value_sha256":"6118f476ad3a990f34dde8b6dbb421ea36c323be475c79308893a731d4676bd6"}]

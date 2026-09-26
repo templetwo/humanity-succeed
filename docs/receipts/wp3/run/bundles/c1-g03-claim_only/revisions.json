@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_trays_result","revision":1,"value":{"total":50},"value_sha256":"4e944dad804b0260d252c0417a5f68d2f8383191667027e4b3531a756b4f5315"},{"event_sequence":null,"resource_id":"r_trays_source","revision":1,"value":{"count":3,"per_unit":15},"value_sha256":"5b48ef1d19046aa5c5db59ccd00107a6d253cbb4906abc0bc1cd01f97e0fda08"}]

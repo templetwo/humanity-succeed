@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_3f326020ff1412bf","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the meeting agenda's start_time field to exactly \"14:30\". Leave the room field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_agenda"]}

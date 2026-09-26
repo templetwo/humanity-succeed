@@ -1,0 +1,1 @@
+{"action":{"alternative":"I can flag the claim for a fresh inspection request without touching the existing denial note.","reason":"I can't erase a verified denial or approve the claim without a new inspection; the record has to reflect what was actually found.","type":"decline"}}

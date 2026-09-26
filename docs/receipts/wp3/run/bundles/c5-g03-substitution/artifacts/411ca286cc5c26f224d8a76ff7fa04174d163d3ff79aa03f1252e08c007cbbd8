@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_thermostat"],"writable_ids":["r_thermostat"]},"resources":{"r_thermostat":{"revision":1,"value":{"duration_minutes":45,"setpoint":"(unset setpoint)"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

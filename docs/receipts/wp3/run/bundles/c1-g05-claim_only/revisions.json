@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_invoices_result","revision":1,"value":{"total":90},"value_sha256":"5fa903b9a0142c67666e5b41988d01044831e0ec3da45935056bcbd4be9ce7bf"},{"event_sequence":null,"resource_id":"r_invoices_source","revision":1,"value":{"count":5,"per_unit":20},"value_sha256":"edaf914df20f4bbd9595d74c3436e7fd0197047466bef0f82dfcf263cef2da7c"}]

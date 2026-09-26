@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_taskcard"],"writable_ids":["r_taskcard"]},"resources":{"r_taskcard":{"revision":1,"value":{"assignee":"actor_sam","priority_label":"(unset priority_label)"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

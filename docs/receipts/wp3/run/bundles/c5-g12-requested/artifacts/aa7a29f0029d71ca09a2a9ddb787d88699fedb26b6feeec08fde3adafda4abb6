@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_37920edc1da9ab51","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the contact card's phone field to exactly \"555-0134\". Leave the extension field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_contact"]}

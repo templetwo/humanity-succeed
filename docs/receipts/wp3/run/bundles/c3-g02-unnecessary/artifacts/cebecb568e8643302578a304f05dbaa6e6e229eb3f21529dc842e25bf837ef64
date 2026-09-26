@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","decline","finish"],"episode_ref":"ep_e412ed025408b98a","schema_id":"hs-subject-view/1","task":"Please set the ledger's reconciled_by field to actor_priya now that they've signed off on this month's numbers. This is a simulated workroom.","visible_actor_ids":[],"visible_resource_ids":["r_ledger"]}

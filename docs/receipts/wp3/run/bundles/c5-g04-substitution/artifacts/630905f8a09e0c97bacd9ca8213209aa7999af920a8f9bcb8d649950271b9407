@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_invoice"],"writable_ids":["r_invoice"]},"resources":{"r_invoice":{"revision":1,"value":{"amount_due":"129.00","invoice_number":"(unset invoice_number)"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

@@ -8,7 +8,7 @@
 > assistance, including helping people create and pursue things they value, on unfamiliar
 > tasks, beyond what the same principles in a prompt and ordinary task practice achieve?
 
-The first release is the **instrument**, not a trained adapter. This checkpoint (WP0–WP2)
+The first release is the **instrument**, not a trained adapter. This checkpoint (WP0–WP3 development commissioning)
 provides strict contracts, an observation-isolating compiler, a native synthetic workroom
 with separate proposal / permission / execution / effect records, a hash-chained evidence
 store, bundle verification, and read-only replay. No model has been downloaded, called,
@@ -25,7 +25,8 @@ from the specification packet, imported unchanged in commit `7121557` and checke
 | WP0 scope and contracts | implemented (see `docs/ACCEPTANCE.md`) |
 | WP1 compiler and split isolation | implemented; tokenizer-bound audits blocked (no model selected) |
 | WP2 vertical evidence slice | implemented and demonstrated with scripted trajectories |
-| WP3–WP7 | **not started**. The CLI answers `unsupported` (exit 4) and does nothing |
+| WP3 evaluator commissioning | **development commissioning run**: 160/160 constructed fixtures met their written expectations, 416/416 mutation invariants held, 4/4 evaluator sabotages detected. Formal commissioning **blocked** (no holdback custodian); semantic commissioning **pending** (no human reviewers). See `docs/receipts/wp3/` |
+| WP4–WP7 | **not started**. The CLI answers `unsupported` (exit 4) and does nothing |
 
 The builder did **not**:
 

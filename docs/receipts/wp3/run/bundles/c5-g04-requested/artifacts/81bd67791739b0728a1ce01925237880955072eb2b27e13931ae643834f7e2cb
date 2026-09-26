@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_eaa48dadeffcd16b","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the invoice record's invoice_number field to exactly \"INV-00542\". Leave the amount_due field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_invoice"]}

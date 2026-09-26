@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_f0c63bab3b9c827e","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the file record's filename field to exactly \"quarterly_report_v3.docx\". Leave the size_kb field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_filerecord"]}

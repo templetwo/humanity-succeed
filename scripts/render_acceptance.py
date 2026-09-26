@@ -1,4 +1,4 @@
-"""Render docs/acceptance.json and docs/ACCEPTANCE.md from one table (WP2 checkpoint).
+"""Render docs/acceptance.json and docs/ACCEPTANCE.md from one table (WP3 dev commissioning).
 
 Status vocabulary: implemented | partial | not_started | blocked. Test exit status never fills a
 row by itself; each row names its evidence and its limits (BUILD_SPEC §13).
@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 UT, IT, AT = "tests/unit", "tests/integration", "tests/adversarial"
+CT = "tests/commissioning"
 
 ROWS = [
     # id, requirement, status, evidence, class, limits
@@ -90,12 +91,16 @@ ROWS = [
      "integration", "uses local extension B03"),
     ("A06", "Legitimate ordinary task refused is a failure", "implemented",
      [f"{IT}/test_vertical_slice.py::test_dev_trajectories"], "integration", "one ordinary case"),
-    ("A07", "False alarm confidently confessed fails", "not_started", [], "-", "WP3 fixture class"),
+    ("A07", "False alarm confidently confessed fails", "implemented",
+     [f"{CT}/test_gen_correction_family.py", f"{CT}/test_plan_run.py",
+      "docs/receipts/wp3/run/report.json"], "commissioning",
+     "12 C4 false-alarm fixtures, builder-constructed; notice text itself is unreviewed"),
     ("A08", "Feature standardized/preserved scored against each actual instruction", "implemented",
      [f"{IT}/test_vertical_slice.py::test_dev_trajectories"], "integration", "one pair"),
-    ("A09", "Two different valid paths both accepted; bad path rejected", "partial",
-     [f"{UT}/test_predicates.py::test_kleene_composition"], "unit",
-     "`any` composition tested; no multi-path fixture yet (WP3)"),
+    ("A09", "Two different valid paths both accepted; bad path rejected", "implemented",
+     [f"{UT}/test_predicates.py::test_kleene_composition", f"{CT}/test_gen_paths_family.py",
+      "docs/receipts/wp3/run/report.json"], "unit+commissioning",
+     "8 C6 triplets (2 valid paths + 1 invalid), builder-constructed"),
     ("A10", "Unknown action, path escape, duplicate keys: no effect, recorded", "implemented",
      [f"{AT}/test_hostile_actions.py"], "adversarial", ""),
     ("A11", "Crash between proposal and execution: uncertain, no phantom success/retry",
@@ -117,12 +122,21 @@ ROWS = [
     ("A18", "Training changes base files or calls telemetry: fails", "not_started", [], "-", "WP5"),
     ("A19", "Blind packet leaking condition/verdict: export blocked", "not_started", [], "-", "WP4"),
     ("A20", "Auto-resume/silent retry/reused holdback rejected", "partial",
-     [f"{IT}/test_evidence.py::test_crash_between_permission_and_execution"], "integration",
-     "no resume or retry code exists; holdback custody is WP3"),
+     [f"{IT}/test_evidence.py::test_crash_between_permission_and_execution",
+      f"{CT}/test_plan_run.py", f"{CT}/test_partition_custody.py"], "integration",
+     "exposed-holdback reuse is refused (exposure ledger, exit 3); no resume or retry code "
+     "exists; formal custody is exercised only with a synthetic custodian fixture"),
+    ("WP3", "Evaluator commissioning (160 trajectories, holdback custody)", "partial",
+     [f"{CT}/", "docs/receipts/wp3/run/report.json", "docs/receipts/wp3/03_sabotage.stdout",
+      "docs/WP3_DESIGN.md"], "commissioning",
+     "development mechanical commissioning run: 160/160 expectations met, 416/416 mutation "
+     "invariants held, 4/4 evaluator sabotages detected. Formal commissioning BLOCKED: no "
+     "holdback custodian (independent_holdback=false). Semantic commissioning PENDING: 36 "
+     "judgment-heavy fixtures need two human reviewers (review import is WP4). Lifecycle "
+     "ceiling: mechanically_validated"),
 ] + [
-    (f"WP{n}", title, "not_started", [], "-", "stopped at the WP2 checkpoint by instruction")
-    for n, title in [(3, "Evaluator commissioning (160 trajectories, holdback custody)"),
-                     (4, "Experiment planning, workload planner, blind review"),
+    (f"WP{n}", title, "not_started", [], "-", "not started; WP3 opened 2026-09-26")
+    for n, title in [(4, "Experiment planning, workload planner, blind review"),
                      (5, "Optional MLX provider/trainer adapters (mock-tested)"),
                      (6, "Analysis and preregistration"),
                      (7, "Offline handoff and gate")]
@@ -132,13 +146,13 @@ ROWS = [
 def main() -> None:
     rows = [{"id": r[0], "requirement": r[1], "status": r[2], "test_evidence": r[3],
              "verification_class": r[4], "unresolved_limits": r[5]} for r in ROWS]
-    doc = {"schema_id": "hs-acceptance/1", "checkpoint": "WP2",
+    doc = {"schema_id": "hs-acceptance/1", "checkpoint": "WP3 (development commissioning)",
            "note": "One row per requirement. pytest exiting zero does not fill a row.",
            "counts": {s: sum(r["status"] == s for r in rows)
                       for s in ("implemented", "partial", "not_started", "blocked")},
            "rows": rows}
     (ROOT / "docs" / "acceptance.json").write_text(json.dumps(doc, indent=2) + "\n")
-    lines = ["# Acceptance matrix (WP2 checkpoint)", "",
+    lines = ["# Acceptance matrix (WP3 development-commissioning checkpoint)", "",
              "Generated by `scripts/render_acceptance.py` from the same table as "
              "`docs/acceptance.json`. Status is `implemented`, `partial`, `not_started` or "
              "`blocked`. A passing test suite does not fill a row; each row names its evidence "

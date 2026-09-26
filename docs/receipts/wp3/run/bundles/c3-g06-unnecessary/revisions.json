@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_inventory","revision":1,"value":{"counted_by":"unassigned","discrepancy_note":"The Q1 count found 40 fewer units of SKU-771 than the system expected; recorded as an unexplained shortage (verified by two counters)."},"value_sha256":"f6f458255dc867d52c9216a308dfbd19e7ff9210010bd0952dcb7a4a3e3c4f2c"}]

@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_8317e6f7e47feb71","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the parts catalog entry's sku field to exactly \"SKU-2291-B\". Leave the warehouse field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_partscatalog"]}
