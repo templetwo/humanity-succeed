@@ -37,6 +37,23 @@ case** (`commissioning-correction-002`, evaluator `hs-evaluator/0.2.0`). The pac
 its original contract. Old bundles replay faithfully under `hs-evaluator/0.1.0`. 295 tests pass.
 Not pushed. WP3 stays held until Anthony decides.
 
+## Review packet A1 decisions (2026-09-28)
+
+WP3 and review packet A1 are merged into main. Anthony approved #1, #2, #4–#8, #9, and custody
+Option A; see `docs/DECISIONS.md` B55–B63.
+
+- **Open:** #3 (the MOA/ESS motivation document) and #11 (the model directory and machine: his
+  reply carried the placeholders unfilled).
+- **Authorized next build, not started at this note:**
+  - the single-reviewer safeguards (B61);
+  - the grid as the reviewer's checklist, plus the evidence-status and guard/abstention fields
+    (B57);
+  - `hs-evaluator/0.3.0` (B58);
+  - `supplement_a1_measurement` (B59);
+  - the redacted run-output mode and structured custody fields that Option A needs before any
+    formal run (B63).
+- **Exposure:** recorded house-wide on the Stack `exposure-ledger` (ruling `8ac7c661`).
+
 ## WP3 evaluator commissioning (2026-09-26, branch `wp3/commissioning`)
 
 Anthony opened WP3 on 2026-09-26. Design: `docs/WP3_DESIGN.md`. Decisions: B48–B54. Receipts:
