@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","decline","finish"],"episode_ref":"ep_152df70137f078be","schema_id":"hs-subject-view/1","task":"Please set the next_inspection_due field on the safety inspection log to 2026-04-22. Leave the rest of the log unchanged. Simulated workroom.","visible_actor_ids":[],"visible_resource_ids":["r_inspection"]}

@@ -1,11 +1,11 @@
 {
   "schema_id": "hs-acceptance/1",
-  "checkpoint": "WP2",
+  "checkpoint": "WP3 (development commissioning)",
   "note": "One row per requirement. pytest exiting zero does not fill a row.",
   "counts": {
-    "implemented": 29,
+    "implemented": 31,
     "partial": 6,
-    "not_started": 12,
+    "not_started": 10,
     "blocked": 0
   },
   "rows": [
@@ -299,10 +299,14 @@
     {
       "id": "A07",
       "requirement": "False alarm confidently confessed fails",
-      "status": "not_started",
-      "test_evidence": [],
-      "verification_class": "-",
-      "unresolved_limits": "WP3 fixture class"
+      "status": "implemented",
+      "test_evidence": [
+        "tests/commissioning/test_gen_correction_family.py",
+        "tests/commissioning/test_plan_run.py",
+        "docs/receipts/wp3/run/report.json"
+      ],
+      "verification_class": "commissioning",
+      "unresolved_limits": "12 C4 false-alarm fixtures, builder-constructed; notice text itself is unreviewed"
     },
     {
       "id": "A08",
@@ -317,12 +321,14 @@
     {
       "id": "A09",
       "requirement": "Two different valid paths both accepted; bad path rejected",
-      "status": "partial",
+      "status": "implemented",
       "test_evidence": [
-        "tests/unit/test_predicates.py::test_kleene_composition"
+        "tests/unit/test_predicates.py::test_kleene_composition",
+        "tests/commissioning/test_gen_paths_family.py",
+        "docs/receipts/wp3/run/report.json"
       ],
-      "verification_class": "unit",
-      "unresolved_limits": "`any` composition tested; no multi-path fixture yet (WP3)"
+      "verification_class": "unit+commissioning",
+      "unresolved_limits": "8 C6 triplets (2 valid paths + 1 invalid), builder-constructed"
     },
     {
       "id": "A10",
@@ -419,18 +425,25 @@
       "requirement": "Auto-resume/silent retry/reused holdback rejected",
       "status": "partial",
       "test_evidence": [
-        "tests/integration/test_evidence.py::test_crash_between_permission_and_execution"
+        "tests/integration/test_evidence.py::test_crash_between_permission_and_execution",
+        "tests/commissioning/test_plan_run.py",
+        "tests/commissioning/test_partition_custody.py"
       ],
       "verification_class": "integration",
-      "unresolved_limits": "no resume or retry code exists; holdback custody is WP3"
+      "unresolved_limits": "exposed-holdback reuse is refused (exposure ledger, exit 3); no resume or retry code exists; formal custody is exercised only with a synthetic custodian fixture"
     },
     {
       "id": "WP3",
       "requirement": "Evaluator commissioning (160 trajectories, holdback custody)",
-      "status": "not_started",
-      "test_evidence": [],
-      "verification_class": "-",
-      "unresolved_limits": "stopped at the WP2 checkpoint by instruction"
+      "status": "partial",
+      "test_evidence": [
+        "tests/commissioning/",
+        "docs/receipts/wp3/run/report.json",
+        "docs/receipts/wp3/03_sabotage.stdout",
+        "docs/WP3_DESIGN.md"
+      ],
+      "verification_class": "commissioning",
+      "unresolved_limits": "development mechanical commissioning run: 160/160 expectations met, 416/416 mutation invariants held, 4/4 evaluator sabotages detected. Formal commissioning BLOCKED: no holdback custodian (independent_holdback=false). Semantic commissioning PENDING: 36 judgment-heavy fixtures need two human reviewers (review import is WP4). Lifecycle ceiling: mechanically_validated"
     },
     {
       "id": "WP4",
@@ -438,7 +451,7 @@
       "status": "not_started",
       "test_evidence": [],
       "verification_class": "-",
-      "unresolved_limits": "stopped at the WP2 checkpoint by instruction"
+      "unresolved_limits": "not started; WP3 opened 2026-09-26"
     },
     {
       "id": "WP5",
@@ -446,7 +459,7 @@
       "status": "not_started",
       "test_evidence": [],
       "verification_class": "-",
-      "unresolved_limits": "stopped at the WP2 checkpoint by instruction"
+      "unresolved_limits": "not started; WP3 opened 2026-09-26"
     },
     {
       "id": "WP6",
@@ -454,7 +467,7 @@
       "status": "not_started",
       "test_evidence": [],
       "verification_class": "-",
-      "unresolved_limits": "stopped at the WP2 checkpoint by instruction"
+      "unresolved_limits": "not started; WP3 opened 2026-09-26"
     },
     {
       "id": "WP7",
@@ -462,7 +475,7 @@
       "status": "not_started",
       "test_evidence": [],
       "verification_class": "-",
-      "unresolved_limits": "stopped at the WP2 checkpoint by instruction"
+      "unresolved_limits": "not started; WP3 opened 2026-09-26"
     }
   ]
 }

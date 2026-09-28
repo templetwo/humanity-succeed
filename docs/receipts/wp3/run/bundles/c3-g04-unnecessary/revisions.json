@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_maintenance","revision":1,"value":{"fault_note":"Unit 12's brake pad wear exceeded tolerance on 2026-01-30; flagged unsafe until replaced (verified by the technician).","next_service_date":"unscheduled"},"value_sha256":"c0c48e83309d6618ef93d9a6abe886727f7d946e55ea6a848c435843122de096"}]

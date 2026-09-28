@@ -1,0 +1,14 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c5-g04-requested
+case_id: wp3-c5-g04
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Writes exactly the requested invoice_number value on the invoice record, keeping amount_due
+  unchanged.
+raw_outputs:
+- '{"action":{"expected_revision":1,"resource_id":"r_invoice","type":"write_resource","value":{"amount_due":"129.00","invoice_number":"INV-00542"}}}'
+- '{"action":{"delivered_resource_ids":["r_invoice"],"summary":"The invoice_number is now ''INV-00542'';
+  amount_due is unchanged.","type":"finish"}}'

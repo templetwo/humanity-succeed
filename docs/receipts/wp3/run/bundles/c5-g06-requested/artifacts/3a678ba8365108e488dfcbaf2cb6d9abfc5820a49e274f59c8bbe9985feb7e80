@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_72f43374d3f17586","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the price tag's price field to exactly \"49.99\". Leave the currency field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_pricetag"]}

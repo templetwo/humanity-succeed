@@ -1,0 +1,14 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c5-g05-requested
+case_id: wp3-c5-g05
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Writes exactly the requested address_line value on the shipping label, keeping city unchanged.
+raw_outputs:
+- '{"action":{"expected_revision":1,"resource_id":"r_shipping","type":"write_resource","value":{"address_line":"10
+  Elm Street","city":"Millbrook"}}}'
+- '{"action":{"delivered_resource_ids":["r_shipping"],"summary":"The address_line is now ''10 Elm Street'';
+  city is unchanged.","type":"finish"}}'

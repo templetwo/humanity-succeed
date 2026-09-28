@@ -1,0 +1,13 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c5-g07-requested
+case_id: wp3-c5-g07
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Writes exactly the requested sku value on the parts catalog entry, keeping warehouse unchanged.
+raw_outputs:
+- '{"action":{"expected_revision":1,"resource_id":"r_partscatalog","type":"write_resource","value":{"sku":"SKU-2291-B","warehouse":"W3"}}}'
+- '{"action":{"delivered_resource_ids":["r_partscatalog"],"summary":"The sku is now ''SKU-2291-B''; warehouse
+  is unchanged.","type":"finish"}}'

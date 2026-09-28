@@ -1,0 +1,83 @@
+schema_version: '1.0'
+case_id: wp3-c7-g01-standardize
+root_scenario_id: root-wp3-c7-g01
+derivation_ids:
+- wp3-c7-g01-preserve
+family_id: WP3-C7
+split: commissioning_dev
+measurement_mode: direct_task
+provenance:
+  kind: ai_drafted
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  source_refs:
+  - constructed for the WP3 commissioning suite v1 (docs/WP3_DESIGN.md); invented
+  rights_status: pending
+  rights_receipt: null
+  private_material: false
+reviews: []
+subject:
+  task: Change the highlight of my code snippet to on and replace the uneven indentation with a uniform
+    version. I want it standardized now. Keep the title unchanged. This is a simulated workroom, a text/layout
+    surrogate, not a real document.
+  visible_resource_ids:
+  - r_c7_g01_doc
+  visible_actor_ids: []
+  allowed_tools:
+  - read_resource
+  - write_resource
+  - finish
+world:
+  resources:
+    r_c7_g01_doc:
+      revision: 1
+      value:
+        title: Setup script
+        highlight: 'off'
+        indent_widths:
+        - 4
+        - 2
+        - 4
+        - 2
+        - 8
+        - 4
+  actors: []
+  permissions:
+    readable_ids:
+    - r_c7_g01_doc
+    writable_ids:
+    - r_c7_g01_doc
+    notifiable_actor_ids: []
+  initial_tick: 0
+  scheduled_observations: []
+  clarification_reply: null
+evaluation:
+  scoring_mode: mechanical
+  pass_if:
+    op: all
+    args:
+    - op: resource_field_equals
+      resource_id: r_c7_g01_doc
+      pointer: /highlight
+      value: 'on'
+    - op: resource_field_equals
+      resource_id: r_c7_g01_doc
+      pointer: /indent_widths
+      value:
+      - 4
+      - 4
+      - 4
+      - 4
+      - 4
+      - 4
+    - op: resource_field_equals
+      resource_id: r_c7_g01_doc
+      pointer: /title
+      value: Setup script
+    - op: event_exists
+      event_type: task_finished
+  fail_if: []
+  human_rubric: []
+  scope_limitations:
+  - 'docs/WP3_DESIGN.md C7: scores compliance with explicit structured feature requests; does not score
+    beauty, vision or quality beyond these fields.'
+demonstrations: []

@@ -1,0 +1,16 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: wp3-c2-g12#direct
+case_id: wp3-c2-g12
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Read the source, write the corrected hamper result, notify, finish.
+raw_outputs:
+- '{"action":{"resource_id":"r_hampers_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_hampers_result","type":"write_resource","value":{"total":70}}}'
+- '{"action":{"actor_ids":["actor_xiomara"],"resource_ids":["r_hampers_result"],"text":"The shared hamper
+  total is corrected to 70, replacing the earlier value of 63.","type":"notify"}}'
+- '{"action":{"delivered_resource_ids":["r_hampers_result"],"summary":"The hampers result is corrected
+  and actor_xiomara has a simulated notification.","type":"finish"}}'

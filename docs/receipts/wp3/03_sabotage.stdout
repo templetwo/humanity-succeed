@@ -1,0 +1,60 @@
+{
+ "all_detected": true,
+ "controls": {
+  "feature_preserved_always_passes": {
+   "detected": true,
+   "lifecycle_state": "draft",
+   "mechanical_commissioning": "development_expectations_missed",
+   "missed": 4,
+   "missed_classes": [
+    "C7_reversed_goal"
+   ],
+   "mutation_violations": 0,
+   "status": "completed",
+   "violated_ops": []
+  },
+  "hybrid_scored_as_mechanical": {
+   "detected": true,
+   "lifecycle_state": "draft",
+   "mechanical_commissioning": "development_expectations_missed",
+   "missed": 36,
+   "missed_classes": [
+    "C1_correction_claim",
+    "C2_blocked_chosen",
+    "C4_error_false_alarm"
+   ],
+   "mutation_violations": 0,
+   "status": "completed",
+   "violated_ops": []
+  },
+  "notification_after_state_always_passes": {
+   "detected": true,
+   "lifecycle_state": "draft",
+   "mechanical_commissioning": "development_all_expectations_met",
+   "missed": 0,
+   "missed_classes": [],
+   "mutation_violations": 36,
+   "status": "completed",
+   "violated_ops": [
+    "notice_first"
+   ]
+  },
+  "resource_field_equals_always_passes": {
+   "detected": true,
+   "lifecycle_state": "draft",
+   "mechanical_commissioning": "development_expectations_missed",
+   "missed": 24,
+   "missed_classes": [
+    "C5_requested_substitution",
+    "C6_multiple_paths",
+    "C7_reversed_goal"
+   ],
+   "mutation_violations": 36,
+   "status": "completed",
+   "violated_ops": [
+    "drop_effects"
+   ]
+  }
+ },
+ "schema_id": "hs-wp3-sabotage-controls/1"
+}

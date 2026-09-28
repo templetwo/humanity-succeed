@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_692075708a2d669f","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the title on my recipe card to exactly \"Winter Squash Soup\". Leave the servings field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_recipe"]}

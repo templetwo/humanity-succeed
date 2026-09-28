@@ -9,9 +9,15 @@ failed internal check or a failed/partial anchor, 3 when ``--require-bound-evalu
 the bundle holds no bound evaluation, else 0 (absence and incompleteness are listed under
 ``limitations``). ``evidence replay`` exits 0 reproduced; 5 refused or diverged; 6 the recorded run
 did not complete; 3 a completed run with no recorded evaluation; 4 recorded evaluator version not
-supported by this build. Output is a JSON envelope with ``status``, ``result``,
-``limitations``, ``artifacts`` and, on error, ``error.code``. Commands from later work packages are
-registered and answer ``unsupported`` (exit 4); none fakes success. No command calls a model.
+supported by this build. Commission commands (WP3, docs/WP3_DESIGN.md 'Commands'): ``commission
+plan`` exits 0 ok, 2 ``blocked_input`` (invalid suite/holdback input), 3 ``blocked_custody`` or
+``blocked_exposed``. ``commission run`` exits 0 ``completed``, 4 ``unsupported_provider``, 2
+``plan_invalid``, 5 ``plan_tampered``, 3 ``evaluator_mismatch``/``blocked_custody``/
+``blocked_exposed``; a completed run's exit code says nothing about whether fixtures matched their
+expectations -- read ``result.mechanical_commissioning`` etc. for that. Output is a JSON envelope
+with ``status``, ``result``, ``limitations``, ``artifacts`` and, on error, ``error.code``. Commands
+from later work packages are registered and answer ``unsupported`` (exit 4); none fakes success. No
+command calls a model.
 """
 
 from __future__ import annotations
@@ -36,8 +42,6 @@ SCRIPTED_LIMITATION = ("scripted instrument only; no model was called or trained
                        "not a behavioral result about any model")
 
 LATER_WORK_PACKAGES = {
-    ("commission", "plan"): "WP3",
-    ("commission", "run"): "WP3",
     ("run", "plan"): "WP4/WP5",
     ("run", "execute"): "WP5",
     ("training", "audit-match"): "WP5",
@@ -184,6 +188,61 @@ def cmd_run_scripted(a: argparse.Namespace) -> int:
     }, limitations=[SCRIPTED_LIMITATION], artifacts=[str(bundle), str(store_path)]), EXIT_OK)
 
 
+def _checkout_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def cmd_commission_plan(a: argparse.Namespace) -> int:
+    from .commissioning.plan import plan_commissioning
+
+    root = state_root(a.state_root)
+    rep = plan_commissioning(
+        Path(a.suite), Path(a.out), repo_root=_checkout_root(), state_root=root,
+        holdback=Path(a.holdback) if a.holdback else None,
+        custody=Path(a.custody) if a.custody else None,
+    )
+    if rep["status"] == "ok":
+        return emit(envelope("ok", rep["plan"], artifacts=[a.out],
+                             limitations=[SCRIPTED_LIMITATION]), EXIT_OK)
+    if rep["status"] == "blocked_input":
+        return emit(envelope("invalid", {"problems": rep["problems"]}, error={
+            "code": "blocked_input",
+            "message": "; ".join(rep["problems"]) or "invalid suite/holdback input"}),
+            EXIT_INVALID)
+    # blocked_custody / blocked_exposed
+    return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+        "code": rep["status"], "message": "; ".join(rep["problems"]) or rep["status"]}),
+        EXIT_PRECONDITION)
+
+
+def cmd_commission_run(a: argparse.Namespace) -> int:
+    from .commissioning.run import run_commissioning
+
+    root = state_root(a.state_root)
+    rep = run_commissioning(Path(a.plan), Path(a.out), state_root=root,
+                            repo_root=_checkout_root(), provider=a.provider)
+    status = rep["status"]
+    if status == "completed":
+        limitations = [SCRIPTED_LIMITATION, *rep["report"]["limitations"]]
+        return emit(envelope("ok", rep["report"], artifacts=[a.out], limitations=limitations),
+                    EXIT_OK)
+    if status == "unsupported_provider":
+        return emit(envelope("unsupported", {"problems": rep["problems"]}, error={
+            "code": "unsupported_provider",
+            "message": "; ".join(rep["problems"]) or f"provider {a.provider!r} unsupported"}),
+            EXIT_UNSUPPORTED)
+    if status == "plan_invalid":
+        return emit(envelope("invalid", {"problems": rep["problems"]}, error={
+            "code": "plan_invalid", "message": "; ".join(rep["problems"]) or "invalid plan"}),
+            EXIT_INVALID)
+    if status == "plan_tampered":
+        return emit(envelope("failed", {"problems": rep["problems"]}, error={
+            "code": "plan_tampered", "message": "; ".join(rep["problems"])}), EXIT_CORRUPT)
+    # evaluator_mismatch / blocked_custody / blocked_exposed
+    return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+        "code": status, "message": "; ".join(rep["problems"]) or status}), EXIT_PRECONDITION)
+
+
 def cmd_evidence_verify(a: argparse.Namespace) -> int:
     from .evidence.bundle import verify_bundle
 
@@ -324,7 +383,22 @@ def build_parser() -> argparse.ArgumentParser:
     dm.add_argument("--state-root")
     dm.set_defaults(fn=cmd_demo)
 
-    for group, subs in (("commission", ("plan", "run")), ("training", ("audit-match", "plan",
+    commission = g.add_parser("commission").add_subparsers(dest="sub", required=True)
+    cp = commission.add_parser("plan")
+    cp.add_argument("--suite", required=True)
+    cp.add_argument("--out", required=True)
+    cp.add_argument("--holdback")
+    cp.add_argument("--custody")
+    cp.add_argument("--state-root")
+    cp.set_defaults(fn=cmd_commission_plan)
+    cr = commission.add_parser("run")
+    cr.add_argument("--plan", required=True)
+    cr.add_argument("--provider", default="scripted")
+    cr.add_argument("--out", required=True)
+    cr.add_argument("--state-root")
+    cr.set_defaults(fn=cmd_commission_run)
+
+    for group, subs in (("training", ("audit-match", "plan",
                         "execute")), ("study", ("plan", "execute")), ("review", ("export",
                         "import"))):
         sp = g.add_parser(group).add_subparsers(dest="sub", required=True)

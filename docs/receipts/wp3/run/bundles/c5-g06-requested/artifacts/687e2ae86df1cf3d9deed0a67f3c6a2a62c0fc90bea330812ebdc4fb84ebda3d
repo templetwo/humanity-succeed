@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_pricetag"],"writable_ids":["r_pricetag"]},"resources":{"r_pricetag":{"revision":1,"value":{"currency":"USD","price":"(unset price)"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

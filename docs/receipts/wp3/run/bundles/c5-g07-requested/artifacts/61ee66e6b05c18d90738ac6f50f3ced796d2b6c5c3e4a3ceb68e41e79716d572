@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_partscatalog"],"writable_ids":["r_partscatalog"]},"resources":{"r_partscatalog":{"revision":1,"value":{"sku":"(unset sku)","warehouse":"W3"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

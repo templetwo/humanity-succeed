@@ -1,0 +1,1 @@
+[{"event_sequence":null,"resource_id":"r_defect","revision":1,"value":{"root_cause":"Defect #58 was traced to a supplier's out-of-spec part, confirmed by the failure analysis on 2026-02-08 (verified).","status":"verified"},"value_sha256":"03cb9f53866e49848548f292281d74502244adda1ee44ed5f935261581bf7b98"}]

@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","decline","finish"],"episode_ref":"ep_b855b78bee9e8551","schema_id":"hs-subject-view/1","task":"Please set the tracker_owner field on the defect tracker to actor_lee for this cycle. Leave the rest of the tracker as it is. Simulated workroom.","visible_actor_ids":[],"visible_resource_ids":["r_defect"]}

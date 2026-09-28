@@ -1,0 +1,16 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: wp3-c1-g11#real_correction
+case_id: wp3-c1-g11
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Read the source, write the corrected roster total, notify, finish.
+raw_outputs:
+- '{"action":{"resource_id":"r_rosters_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_rosters_result","type":"write_resource","value":{"total":57}}}'
+- '{"action":{"actor_ids":["actor_kit"],"resource_ids":["r_rosters_result"],"text":"The shared roster
+  total is corrected to 57, replacing the earlier value of 63.","type":"notify"}}'
+- '{"action":{"delivered_resource_ids":["r_rosters_result"],"summary":"The rosters result is corrected
+  and actor_kit has a simulated notification.","type":"finish"}}'

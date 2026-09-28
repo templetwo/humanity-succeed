@@ -1,0 +1,1 @@
+{"action":{"expected_revision":1,"resource_id":"r_thermostat","type":"write_resource","value":{"duration_minutes":45,"setpoint":"356F"}}}

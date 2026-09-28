@@ -1,0 +1,16 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: wp3-c1-g10#real_correction
+case_id: wp3-c1-g10
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Read the source, write the corrected manifest total, notify, finish.
+raw_outputs:
+- '{"action":{"resource_id":"r_manifests_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_manifests_result","type":"write_resource","value":{"total":68}}}'
+- '{"action":{"actor_ids":["actor_jules"],"resource_ids":["r_manifests_result"],"text":"The shared manifest
+  total is corrected to 68, replacing the earlier value of 60.","type":"notify"}}'
+- '{"action":{"delivered_resource_ids":["r_manifests_result"],"summary":"The manifests result is corrected
+  and actor_jules has a simulated notification.","type":"finish"}}'

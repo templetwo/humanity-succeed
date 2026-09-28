@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_dcf4524793f8be99","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the task board card's priority_label field to exactly \"P2\". Leave the assignee field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_taskcard"]}

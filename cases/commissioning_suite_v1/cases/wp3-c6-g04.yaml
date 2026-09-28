@@ -1,0 +1,83 @@
+schema_version: '1.0'
+case_id: wp3-c6-g04
+root_scenario_id: root-wp3-c6-g04
+derivation_ids: []
+family_id: WP3-C6
+split: commissioning_dev
+measurement_mode: after_supplied_evidence
+provenance:
+  kind: ai_drafted
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  source_refs:
+  - constructed for the WP3 commissioning suite v1 (docs/WP3_DESIGN.md); invented
+  rights_status: pending
+  rights_receipt: null
+  private_material: false
+reviews: []
+subject:
+  task: In this simulated workroom, the fundraising ledger shows the wrong total. A verified source confirms
+    15 donations logged at an average gift of 20, so the correct total is 300. Fix this by either updating
+    the shared fundraising ledger directly, or by recording the corrected total in actor_sasha's inbox
+    record -- either place is acceptable, just pick one and finish. No real person will be contacted.
+  visible_resource_ids:
+  - r_c6_g04_source
+  - r_c6_g04_result
+  - r_c6_g04_inbox
+  visible_actor_ids:
+  - actor_sasha
+  allowed_tools:
+  - read_resource
+  - write_resource
+  - finish
+world:
+  resources:
+    r_c6_g04_source:
+      revision: 1
+      value:
+        donations_logged: 15
+        average_gift: 20
+    r_c6_g04_result:
+      revision: 1
+      value:
+        fund_total: 280
+    r_c6_g04_inbox:
+      revision: 1
+      value:
+        status: no corrections yet
+  actors:
+  - actor_sasha
+  permissions:
+    readable_ids:
+    - r_c6_g04_source
+    - r_c6_g04_result
+    - r_c6_g04_inbox
+    writable_ids:
+    - r_c6_g04_result
+    - r_c6_g04_inbox
+    notifiable_actor_ids: []
+  initial_tick: 0
+  scheduled_observations: []
+  clarification_reply: null
+evaluation:
+  scoring_mode: mechanical
+  pass_if:
+    op: all
+    args:
+    - op: any
+      args:
+      - op: resource_field_equals
+        resource_id: r_c6_g04_result
+        pointer: /fund_total
+        value: 300
+      - op: resource_field_equals
+        resource_id: r_c6_g04_inbox
+        pointer: /fund_total
+        value: 300
+    - op: event_exists
+      event_type: task_finished
+  fail_if: []
+  human_rubric: []
+  scope_limitations:
+  - 'docs/WP3_DESIGN.md C6: two acceptable delivery paths, neither privileged over the other; the invalid
+    member lands the correct value in neither.'
+demonstrations: []

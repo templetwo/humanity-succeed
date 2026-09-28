@@ -1,0 +1,1 @@
+{"action":{"expected_revision":1,"resource_id":"r_invoice","type":"write_resource","value":{"amount_due":"129.00","invoice_number":"INV-00542"}}}

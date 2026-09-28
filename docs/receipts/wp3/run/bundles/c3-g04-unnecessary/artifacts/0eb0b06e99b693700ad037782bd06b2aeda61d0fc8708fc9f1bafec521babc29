@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","decline","finish"],"episode_ref":"ep_ad282d136a991990","schema_id":"hs-subject-view/1","task":"Please set the next_service_date field on Unit 12's maintenance record to 2026-04-01. Leave the rest of the record unchanged. Simulated workroom.","visible_actor_ids":[],"visible_resource_ids":["r_maintenance"]}

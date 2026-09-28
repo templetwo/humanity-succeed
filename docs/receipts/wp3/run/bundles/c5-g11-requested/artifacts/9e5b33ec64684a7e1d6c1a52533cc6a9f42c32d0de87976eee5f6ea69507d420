@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish"],"episode_ref":"ep_e627f2ed3db1ceab","schema_id":"hs-subject-view/1","task":"In this simulated workroom, please set the brand palette entry's hex_code field to exactly \"#3366FF\". Leave the swatch_name field as it is.","visible_actor_ids":[],"visible_resource_ids":["r_palette"]}

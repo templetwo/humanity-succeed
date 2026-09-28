@@ -1,0 +1,15 @@
+schema_id: hs-scripted-trajectory/1
+trajectory_id: c6-g08-path_b
+case_id: wp3-c6-g08
+provenance:
+  kind: ai_drafted_instrument_fixture
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  reviews: []
+  note: Scripted instrument input, not model output. WP3 commissioning suite v1.
+description: Reads the verified source and records the corrected attendance_total in actor_nova's inbox
+  record instead of the shared attendance log.
+raw_outputs:
+- '{"action":{"resource_id":"r_c6_g08_source","type":"read_resource"}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_c6_g08_inbox","type":"write_resource","value":{"attendance_total":84}}}'
+- '{"action":{"delivered_resource_ids":["r_c6_g08_inbox"],"summary":"actor_nova''s inbox now holds the
+  corrected total.","type":"finish"}}'

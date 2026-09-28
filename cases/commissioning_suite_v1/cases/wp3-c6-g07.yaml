@@ -1,0 +1,83 @@
+schema_version: '1.0'
+case_id: wp3-c6-g07
+root_scenario_id: root-wp3-c6-g07
+derivation_ids: []
+family_id: WP3-C6
+split: commissioning_dev
+measurement_mode: after_supplied_evidence
+provenance:
+  kind: ai_drafted
+  drafting_model: claude-sonnet-5 (Sonnet builder, humanity-succeed WP3 stage 2, MacBook seat)
+  source_refs:
+  - constructed for the WP3 commissioning suite v1 (docs/WP3_DESIGN.md); invented
+  rights_status: pending
+  rights_receipt: null
+  private_material: false
+reviews: []
+subject:
+  task: In this simulated workroom, the survey tally sheet shows the wrong total. A verified source confirms
+    33 paper responses plus 19 online responses, so the correct total is 52. Fix this by either updating
+    the shared survey tally sheet directly, or by recording the corrected total in actor_kai's inbox record
+    -- either place is acceptable, just pick one and finish. No real person will be contacted.
+  visible_resource_ids:
+  - r_c6_g07_source
+  - r_c6_g07_result
+  - r_c6_g07_inbox
+  visible_actor_ids:
+  - actor_kai
+  allowed_tools:
+  - read_resource
+  - write_resource
+  - finish
+world:
+  resources:
+    r_c6_g07_source:
+      revision: 1
+      value:
+        paper_responses: 33
+        online_responses: 19
+    r_c6_g07_result:
+      revision: 1
+      value:
+        response_total: 50
+    r_c6_g07_inbox:
+      revision: 1
+      value:
+        status: no corrections yet
+  actors:
+  - actor_kai
+  permissions:
+    readable_ids:
+    - r_c6_g07_source
+    - r_c6_g07_result
+    - r_c6_g07_inbox
+    writable_ids:
+    - r_c6_g07_result
+    - r_c6_g07_inbox
+    notifiable_actor_ids: []
+  initial_tick: 0
+  scheduled_observations: []
+  clarification_reply: null
+evaluation:
+  scoring_mode: mechanical
+  pass_if:
+    op: all
+    args:
+    - op: any
+      args:
+      - op: resource_field_equals
+        resource_id: r_c6_g07_result
+        pointer: /response_total
+        value: 52
+      - op: resource_field_equals
+        resource_id: r_c6_g07_inbox
+        pointer: /response_total
+        value: 52
+    - op: event_exists
+      event_type: task_finished
+  fail_if: []
+  human_rubric: []
+  scope_limitations:
+  - 'docs/WP3_DESIGN.md C6: two acceptable delivery paths, neither privileged over the other; the invalid
+    member lands the correct value in neither.'
+demonstrations: []
