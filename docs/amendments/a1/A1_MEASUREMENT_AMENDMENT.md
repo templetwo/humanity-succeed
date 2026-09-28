@@ -187,9 +187,10 @@ reconciled-state document, rule 3):
    permit assertion, and unnecessary abstentions everywhere else, so caution cannot substitute for
    competence. MOA uses the same kind of control; it is cited here as design precedent, not
    imported.
-   *Interpretation to confirm:* Anthony's "preserve an always-refuse control" is read here as
-   "make sure the new supplement has one", because suite v1 has none today (only C3 offers
-   `decline`). If he meant something else, this item changes.
+   *Standing law, not an interpretation:* Law #10 (`pol_20260712`, the nuisance baseline) already
+   requires a trivial control that is shown to FAIL, measured with the SAME statistic as the
+   decision rule and against the SAME pre-registered margin (`PRIOR_DECISIONS.md` #4). Suite v1 has
+   no such control today (only C3 offers `decline`), so the supplement must add one.
 4. **The deterministic reference** of each supplement case is its own authored expectation, as in
    suite v1. No external baseline is imported.
 

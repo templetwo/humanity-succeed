@@ -247,6 +247,14 @@ exposure" (step 4) → execute the capped confirmatory plan, finish blind review
 analyze under the frozen configuration (step 5). `PROTOCOL.md:15`: "A design revision creates a new
 plan/version. It never overwrites the plan that produced a run."
 
+**House form of a freeze (from `PRIOR_DECISIONS.md`).** Anthony's standing practice is to
+**preregister on the Stack**, as in "wait, preregister on the stack" (2026-09-11), "i need you to
+preregister this" (2026-08-16), and "push and preregister the current tree" (2026-08-15). That is a
+timestamped, hash-bearing record between a local checksum and an external registry. An external
+registry record (the ECS preregistration on Zenodo, CC BY 4.0) and publication remain separate acts
+that are his. His counterweight also stands: preregistration is "a supporting structure", not the
+goal (2026-07-27).
+
 **No pooling:** pilot cases and pilot results cannot be relabeled confirmatory
 (`BUILD_SPEC.md:186`), and a pilot redesign "retires that pilot; it does not silently merge its
 favorable cases into a confirmatory study" (`PROTOCOL.md:127`).

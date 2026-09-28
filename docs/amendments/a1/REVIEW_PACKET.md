@@ -31,6 +31,7 @@ commit was taken from git metadata.
 | `A1_MEASUREMENT_AMENDMENT.md` | Three separately reported dimensions; an evidence-status × response matrix (supported / unsupported / contradicted / not assessable × asserted / qualified / withheld); paired controls; an always-refuse control; prospective versioning only |
 | `A1_SINGLE_OPERATOR_PILOT.md` | Every two-reviewer gate in the repo, what a single-operator exploratory pilot would change and not change, the review burden, the exact prerequisite changes, and a pilot-plan skeleton |
 | `A1_CUSTODY_ANTHONY_HELD.md` | Three authoring options, what an access boundary actually requires, the seal/plan/run procedure, what would establish custody versus assert it, and the implementation gaps |
+| `PRIOR_DECISIONS.md` | The gate-shape law's prior-decisions line for every decision: Anthony's earlier rulings of the same shape (quoted, with pointers, re-opened), or "no prior ruling found" with the searches named |
 | `A1_GATES.md` | License (pending), every numerical threshold as a candidate with its consequence, the checkpoint/runtime permission request, a training-plan template with every field unset, and preregistration states |
 
 ## Findings surfaced while preparing the packet
@@ -92,7 +93,14 @@ These are facts about the current code and records. None was acted on.
 
 ## Decisions requested, in a workable order
 
-Each decision is independent; approving one approves nothing else. Where a source document
+Each decision is independent; approving one approves nothing else. **Each row's prior-decisions line is in
+`PRIOR_DECISIONS.md`** (same numbering). In short:
+
+- #1 and the prospective-only part of #5 restate existing law.
+- #2, #9 and #11 have clear precedents in other rooms.
+- #10 has a strong precedent (the 2026-08-06 canary draw).
+- #3, #4 (beyond the control), #6, #7 and #8 are genuinely new.
+ Where a source document
 supplies approval wording, the index quotes it **verbatim**. Rows marked *(index wording)* have no
 quote in their source document.
 

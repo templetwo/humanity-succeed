@@ -171,6 +171,57 @@ None may later be described as an untouched external test. Abstracting a known f
 a new synthetic task is legitimate research design; it is not proof of independence, and its
 provenance must say so.
 
+### 6.4 Entries touched by the prior-decisions search (2026-09-28, appended)
+
+The read-only search for Anthony's prior rulings (`PRIOR_DECISIONS.md`) surfaced Stack and helix
+entries that concern MOA or ESS.
+
+- **What the searchers took:** Anthony's governance words only (what may be used, how
+  employer data is handled).
+- **What they did not copy:** case content. The Sonnet searchers were told not to.
+- **What the lead read in full:** Stack `32078c6d` and `0e034083` (the 2026-09-26 two-lane ruling:
+  public sources, employer data, "whatever I bring to the table") via `inspect_claim`, and helix
+  `#22849` (an ESS v3 seat ruling on guard outcomes) via `recall`.
+
+Every entry below is now exposed to this project's authors:
+
+| Entry | Domain / subject |
+|---|---|
+| `0ce00ce35596` | experion-station-sim,master-operations-agent,public-source-map,phase-1,phase-2-passdown,2026-09-26 |
+| `0e034083409c` | anthony,ruling,two-lane-shape,gate-shape:two-lane,experion-station-sim,master-operations-agent,brought-to-the- |
+| `235944fe3811` | stack claim_id=235944fe3811245e64303fde1aece604f2e96b4f244dd915bdc540baf3bc9ebb domain=experion-station-sim da |
+| `32078c6dc67a` | anthony,ruling,two-lane-shape,gate-shape:two-lane,rule-6,experion-station-sim,master-operations-agent,public-s |
+| `4845eef20b6c` | experion-station-sim,codex-seat,hq-verification,rescue,tmp-volatility,double-check,merged,ffde6c7 |
+| `51e285798f0b` | experion-station-sim,mesh-20260827,df003bf,seat-3-3 | claim_id 51e285798f0b6a997500c8503c581fa57f9c71ba45d4ec9 |
+| `5a9298f811f8` | experion-station-sim,jagan-reddy,airco-collaboration,addendum,2026-09-19 |
+| `5ff597ae0209` | Stack domain=experion-station-sim,jagan-reddy,honeywell-contact,two-lane-shape,anthony-gate claim_id=5ff597ae0 |
+| `61b8f693b830` | Stack domain=experion-station-sim,jagan-reddy,honeywell-contact,public-record,correction claim_id=61b8f693b830 |
+| `66d1c80f159b` | experion-station-sim,master-operations-agent,phase-2,verification,2026-09-26 |
+| `75eb610574d7` | templetwo-repos,experion-station-sim,made-public,pre-publication-sweep,anthony-request |
+| `8753dadec411` | experion-station-sim,harbor-delta-review,airco-start-date-unreconciled,exhibit-a-framing,attribution-closed,an |
+| `90550094368a` | experion-station-sim,mesh-20260827,s1-verdict,seat-3-3 | claim_id 90550094368af4de4946a66727e8e8b224a79cb26eea |
+| `a1f19e364d15` | ring-2,hq-adjudication,codex-seat,witness-relay,experion-station-sim,duplicate-attribution,drain |
+| `a5059eece357` | experion-station-sim,jagan-reddy,airco-collaboration,continuation,2026-09-19 |
+| `baf8554637c6` | experion-station-sim | claim_id baf8554637c69e09e8237135b9ea5a0d7ce62ccc22774ee58c1056094a6a507e | 2026-08-30 |
+| `c7ab01d69b24` | experion-station-sim,gate-shape:scope-broadening,rulings,2026-09-27 |
+| `cbfbf3663d33` | experion-station-sim | claim_id cbfbf3663d3317b1a33c41e3e39fd040498fcea9cb89c50bb2fb4707756c8784 | 2026-08-31 |
+| `d2bf3f5914ea` | Stack domain=experion-station-sim claim_id=d2bf3f5914ea9ea55c1e3bc5c4403d07052df5afc57d3900d3d39ec07d854344 (2 |
+| `e7e1f2296148` | experion-station-sim,mesh-20260827,fb3123a,seat-3-3 | claim_id e7e1f2296148bc497d3c0922c8bc67c30db54232a92b06d |
+| `ee2885b29061` | experion-station-sim,mesh-20260827,s2-verdict,seat-3-3 | claim_id ee2885b290618d2a47b486bba2e0398344aab7709a31 |
+| `f2782a2f5af7` | experion-station-sim,phase-2,g2-stage-one,verification,2026-09-27 |
+| `f9520e783a74` | stack claim_id=f9520e783a74ae62adc2cc03690a2ad13876af059383007b3f56649fe398ec72 domain=experion-station-sim da |
+| `fd33e18844e2` | stack claim_id=fd33e18844e2a35adbae82c251a8cdfba35987d900ff5bc8cbc3a9cb605af780 domain=experion-station-sim da |
+| `helix #22834` | t2helix domain=experion-station-sim id=22834 (2026-08-30 RULINGS — sourceBasis, default sourceBasis, and safet |
+| `helix #22849` | t2helix id=22849 domain=experion-station-sim tags=mesh-20260827,v3,ruling,supersession,safety-gate date=2026-0 |
+| `helix #22977` | t2helix domain=experion-station-sim id=22977 (STRIP-DEV FINDING CLOSED) |
+| `helix #24103` | t2helix domain=experion-station-sim id=24103 (CROSS-LENS ON truncation work) |
+| `helix #24307` | t2helix id=24307 domain=experion-station-sim tags=evidence-gate,instrument,baseline date=~2026-08-27 |
+| `helix #24339` | t2helix domain=experion-station-sim id=24339 (PRE-COMMIT SEAM CATCH — evidence-gate sweep) |
+| `helix #24400` | t2helix domain=experion-station-sim id=24400 (EVIDENCE-GATE PREVIEW SOUND) |
+| `helix #24827` | t2helix id=24827 domain=experion-station-sim tags=v3,codex-report,gate-3,do-not-tag date=2026-08-31 |
+| `helix #24918` | t2helix id=24918 domain=experion-station-sim tags=daa5025,verdict,gate-4-spec-vs-test date=~2026-08-27 |
+| `helix #36698` | experion-station-sim |
+
 ## Classification
 
 | Proposed change | Class | Why |

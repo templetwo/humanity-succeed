@@ -51,6 +51,19 @@ itself have to sit on the custodian's side of the access boundary. A template or
 by the builder would carry builder phrasing and structure into the holdback, so it would need to be
 disclosed in the provenance and weighed as exposure. But "permitted" is not "established" — see §3.
 
+**House precedent for this shape (added from `PRIOR_DECISIONS.md` #10).** On 2026-08-06 Anthony ruled
+"I'll do the draw and seal the derivation" for the conditioned-kernel canary (helix #14657, #14667).
+The builder seat built the sealing apparatus. Anthony ran it from his own terminal. It printed only a
+digest and stamp status, so the sealed mapping entered no agent's context, and it was
+OpenTimestamps-stamped before any arm ran. That is a proven builder-blind shape.
+
+- **What it suggests here:** Anthony runs `seal_holdback.py` and the formal `hs commission run`
+  himself, and hands the builder only the aggregate. That needs the redacted run-output mode in §4,
+  so that the tool itself withholds the bundles.
+- **Also from the house record:** "a held-out slice gives fresh ROWS, not a fresh RUBRIC or a fresh
+  INSTRUMENT" (2026-07-12 ratification, Stack `5787c918`). Fresh holdback trajectories do not make
+  the rubric or evaluator independent.
+
 ### 1.2 Same-machine AI seats: why "builder-blind" needs an access boundary, not a promise
 
 If Option B is the one Anthony wants, the isolation claim needs to be concrete, because two AI
