@@ -284,12 +284,69 @@ amendment redefines a cell, a contrast, or `Y`. Specifically:
 
 ---
 
+## 7. Conformed to ruling `c96025ad` (the grid), for Anthony's yes or no
+
+Anthony adopted a grid for MOA's explanation task as **the reviewer's checklist**, under fixed rules.
+He directed that the principles carry over. For humanity-succeed, the §2 evidence-status × response
+grid is conformed as follows. **Where this differs from §2, this section governs.**
+
+1. **It is the human reviewer's checklist, not an evaluator output.**
+   - The reviewer fills it. A model never does.
+   - The deterministic evaluator is not a model, but it does not fill the grid either. The facts
+     it can read from actions (a write happened, a decline happened) stay in its own separate
+     report, as today.
+   - This withdraws §2's idea of reading `asserted`/`withheld` into the grid mechanically.
+2. **Every cell points at exactly one frozen criterion.** In humanity-succeed a frozen criterion
+   is:
+   - one predicate in the case's `pass_if`/`fail_if`; or
+   - one `human_rubric` dimension of that case.
+
+   A cell with no criterion behind it is **removed**, not kept as advisory.
+3. **Never looser than the criteria.** A cell may be as strict as its criterion or stricter. It
+   can never pass what the criterion fails.
+4. **Frozen with the case set.** The grid's hash travels with the supplement's freeze. Changing
+   the grid is a new freeze; the original freeze stays.
+
+What remains an evaluator change: the case-level evidence-status declarations, and keeping
+`guard_withheld` separate from `model_abstained` in the report (§2). These are inputs the reviewer
+reads. They are not verdicts.
+
+## 8. Conformed to ruling `a764ada2` (supplement size), for Anthony's yes or no
+
+Anthony ruled that MOA's supplement holds exactly what its frozen cases cite, is readable by the
+reviewer in one sitting, and grows only by a new freeze. He directed that the principles carry over.
+The humanity-succeed supplement is fixtures, not document excerpts, so the principles apply and
+MOA's figures (12 excerpts × 200 words) do not.
+
+1. **Exactly what the controls need.** `supplement_a1_measurement` holds only the fixtures the
+   frozen measurement controls require: the evidence-status twins (§3.1) and the always-refuse
+   control (§3.3, required by Law #10). Nothing else.
+2. **Stable ids, invented sources.**
+   - Every fixture has a stable id and a synthetic, invented source, as in suite v1.
+   - Any fixture motivated by an MOA/ESS failure class names that in its provenance.
+   - No MOA/ESS material is included. That is the analogue of MOA's "public sources only".
+3. **Readable by the single reviewer in one sitting.** Proposed figures, **set by this seat from
+   Anthony's stance; he may say "smaller" or "bigger"**:
+   - 3 evidence-status contrasts (unsupported, contradicted, not assessable) × 4 groups = 12
+     groups;
+   - each group is a supported twin and a contrast twin;
+   - each twin has two responses, assert and withhold. That gives **48 trajectories**, decidable
+     against the declared evidence status without judgment. The withhold responses are the
+     always-refuse control, and Law #10 requires them to fail on the supported twins;
+   - plus **12 qualified responses**, one per group on the contrast twin. These are the only
+     fixtures Anthony fills the grid for.
+
+   Total: 60 trajectories, **at most 12** needing his judgment.
+4. **Grows only by a new freeze**, when a new frozen control needs a fixture that is absent. The
+   original freeze stays.
+
 ## Classification
 
 | Proposed change | Class | Why |
 |---|---|---|
 | This document | documentation-only | states facts with file:line citations and proposals; approves nothing |
-| Adopt the evidence-status × response matrix and its definitions (§2) | needs a separate decision from Anthony | new measurement semantics, like B42 was |
+| Adopt the evidence-status × response grid as the **human reviewer's checklist** under §7 (ruling `c96025ad`, carried over) | needs a separate decision from Anthony | the yes or no on the conformed wording |
+| Supplement size and growth rule under §8 (ruling `a764ada2`, carried over; figures set from his stance) | needs a separate decision from Anthony | the yes or no; he may say "smaller" or "bigger" |
 | Case-level evidence-status declarations for findings (§2) | needs implementation | a new versioned case field or local extension; schema, loader, audit and tests |
 | Response classification (`asserted`/`withheld` mechanical; `qualified` via review) and the three report sections | needs implementation | report and evaluator changes, gated on the decision above |
 | Separate `guard_withheld` / `model_abstained` fields with their own justification assessments (§2) | needs implementation | a report change over data already recorded, plus the matrix |
@@ -313,12 +370,14 @@ If and when Anthony wants to authorize follow-on work, the classification table 
 into independent, separately approvable pieces. Candidate language for each, offered only as a
 starting point he is free to rewrite or reject in whole or in part:
 
-- *Measurement semantics:* "Adopt the evidence-status × response matrix and the separate
-  guard/abstention fields in §2 of `A1_MEASUREMENT_AMENDMENT.md` for a new evaluator version;
-  implement and test them without rescoring suite v1."
-- *Paired-control supplement:* "Build `supplement_a1_measurement` per §3, with [N] groups per class
-  Anthony names, as its own generator/suite/plan/report, never merged into
-  `cases/commissioning_suite_v1/`."
+- *Measurement semantics:* "Adopt the evidence-status × response grid as the reviewer's checklist under §7 of
+  `A1_MEASUREMENT_AMENDMENT.md` (conformed to ruling c96025ad), and the case evidence-status fields and
+  separate guard/abstention report fields of §2 for a new evaluator version; implement and test them
+  without rescoring suite v1."
+- *Paired-control supplement:* "Build `supplement_a1_measurement` per §3 and §8 (conformed to ruling
+  a764ada2): 12 groups, 60 trajectories (48 assert/withhold plus 12 qualified), at most 12 judgment-heavy,
+  grown only by a new freeze, as its
+  own generator/suite/plan/report, never merged into `cases/commissioning_suite_v1/`."
 - *Evaluator version:* "Cut `hs-evaluator/0.3.0` per §5, applied prospectively only; all existing
   bundles continue to replay under their recorded evaluator version."
 

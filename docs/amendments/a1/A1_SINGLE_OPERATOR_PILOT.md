@@ -282,8 +282,8 @@ separate decision.
 
 | Prerequisite (source) | Today | Proposed for the single-operator exploratory pilot only | Confirmatory and independent claims |
 |---|---|---|---|
-| PROTOCOL §1 step 1 (line 9): "obtain independent semantic review where required" before the pilot plan is frozen | cannot be met: no second reviewer | Anthony reviews the 36 judgment-heavy fixtures as the sole operator. A new status `single_operator_reviewed` is recorded beside the existing `pending_no_human_reviews`. Independent semantic review stays **pending** | unchanged: two independent reviewers |
-| BUILD_SPEC:354 "commissioned relevant evaluator" | lifecycle ceiling `mechanically_validated`; formal blocked (no custodian) | pilot launch may cite `mechanically_validated` plus `single_operator_reviewed`, with `independent_holdback=false` stated in the plan. **Or**, if Anthony prefers, formal commissioning first, via the Anthony-held custody option (`A1_CUSTODY_ANTHONY_HELD.md`) | unchanged: `instrument_commissioned` still needs formal = passed **and** independent semantic review |
+| PROTOCOL §1 step 1 (line 9): "obtain independent semantic review where required" before the pilot plan is frozen | cannot be met: no second reviewer | Anthony reviews the 36 judgment-heavy fixtures as the sole operator. A new status `single_reviewer_reviewed` is recorded beside the existing `pending_no_human_reviews`. Independent semantic review stays **pending** | unchanged: two independent reviewers |
+| BUILD_SPEC:354 "commissioned relevant evaluator" | lifecycle ceiling `mechanically_validated`; formal blocked (no custodian) | pilot launch may cite `mechanically_validated` plus `single_reviewer_reviewed`, with `independent_holdback=false` stated in the plan. **Or**, if Anthony prefers, formal commissioning first, via the Anthony-held custody option (`A1_CUSTODY_ANTHONY_HELD.md`) | unchanged: `instrument_commissioned` still needs formal = passed **and** independent semantic review |
 | BUILD_SPEC:354 "approved corpus/reviews"; B15 (DECISIONS:62) | the SFT gate needs one current human approval, with `rights_status` not `pending` | Anthony's approvals count as the one approval the gate already needs, labelled `single_operator`. **Rights status must also move from `pending`** (for example to `approved_for_local_use`). That is a **separate rights decision**, distinct from choosing a distribution license | unchanged |
 | BUILD_SPEC:354 "preregistered pilot plan"; PROTOCOL line 5 | none exists | a **local freeze** (hash) of the single-operator pilot plan is enough to launch the exploratory pilot. A registry record is a later, separate step | a separately frozen confirmatory plan, before confirmatory exposure |
 | PROTOCOL §9 two independent reviews per judgment-dependent confirmatory case | not reachable | not applicable to an exploratory pilot. **The pilot publishes no confirmatory headline** (PROTOCOL §1 step 3) | unchanged |
@@ -309,7 +309,7 @@ filled here.** Freezing it (local hash first) is a later step, after the listed 
 | Cells | the six PROTOCOL §3 cells unchanged (B0, B1, P0, P1, C0, C1); the ICL cell optional | unchanged |
 | Cases | pilot-split roots, newly authored, split-audited against the development and commissioning material; any MOA/ESS-motivated case carries a provenance disclosure | corpus authoring (none exists yet) |
 | Corpus and reviews | P and C training sources reviewed by Anthony as `single_operator`; rights moved off `pending` for local use | the rights decision; Anthony's reviews |
-| Evaluator | `hs-evaluator/0.2.0` (or an approved later version); lifecycle `mechanically_validated` plus `single_operator_reviewed`, or formal commissioning if custody is established first | §8; the custody decision |
+| Evaluator | `hs-evaluator/0.2.0` (or an approved later version); lifecycle `mechanically_validated` plus `single_reviewer_reviewed`, or formal commissioning if custody is established first | §8; the custody decision |
 | Checkpoint, tokenizer, template, quantization, runtime | exact file identities after a location grant | `A1_GATES.md` §3 permissions |
 | Training recipe and seeds | the matched P/C fields (BUILD_SPEC §10); seeds from the candidate budget | `A1_GATES.md` §4 |
 | Workload and budgets | a frozen episode count, call, token, time and disk caps; smaller than the PROTOCOL §5 candidate if one reviewer is to carry it | Anthony's decision (§4b) |
@@ -319,6 +319,38 @@ filled here.** Freezing it (local hash first) is a later step, after the listed 
 | Output locations | a unique directory under `HS_STATE_ROOT` | the plan freeze |
 | Run approval | Anthony's approval bound to the frozen plan hash (BUILD_SPEC:354) | the final gate |
 
+## 10. Conformed to ruling `06d942da` (single reviewer), for Anthony's yes or no
+
+On 2026-09-28 Anthony ruled on MOA's explanation task that he may be the sole human reviewer under
+three conditions. In the MacBook session he then directed that the principles carry over to
+humanity-succeed. This section is that carry-over. Where it differs from §2–§9, **this section
+governs**. Earlier text is kept, not rewritten.
+
+1. **His own words, bound to the case.** Every verdict is recorded in Anthony's own words,
+   together with the `review_source_sha256` of the case (and so its rubric) that he saw. No seat
+   writes a verdict on his behalf. A seat-written "Anthony confirms" is **not** a review. This is
+   the failure mode of 2026-09-08, and the ruling bars it.
+2. **Label.** Every report built on his reviews labels itself **`single-reviewer`**. That replaces
+   the `single_operator` label proposed in §2 and §8, to match the ruling's vocabulary.
+3. **No public "useful" claim without a second human on the judgment-heavy criterion.** MOA's
+   criterion 5 (reader task) maps here to the judgment-heavy `human_rubric` dimensions: those of
+   the hybrid fixtures, such as `truthful_notification` on the 36 judgment-heavy commissioning
+   fixtures, and those of any later pilot case.
+   - Nothing built on Anthony's reviews is called useful in public until a second human
+     reviewer has independently reviewed those dimensions.
+   - Mechanically scored criteria stand on the single review.
+   - This is stricter than §8, which limited only confirmatory claims. §8 is read with this added.
+4. **Separations kept**, carried over from the frozen MOA contract's standing separations:
+   - a case's author does not review it;
+   - a model is never the reviewer;
+   - the spec author does not write the cases.
+
+   Anthony did not author suite v1 (Sonnet builders did), so he may review it. Any case he
+   authors himself, for example under custody Option A, he may not also review.
+
+Unchanged by the carry-over: no agreement statistic from one reviewer; repeated reviews by him
+never count as two; the independent-review requirements for confirmatory claims stand.
+
 ---
 
 ## Classification
@@ -326,7 +358,7 @@ filled here.** Freezing it (local hash first) is a later step, after the listed 
 | Proposed change | Category | Reason |
 |---|---|---|
 | Add a `single_operator` review-mode label recorded alongside any `Review` produced under this pilot | needs implementation | New convention; no code today distinguishes single-operator from independently-reviewed |
-| Check `len(distinct reviewer_refs) >= 2` wherever a future "independently reviewed" claim is made, and label anything with fewer `single_operator_reviewed` | needs implementation | Closes the gap in §1's "Discovered conflict"; touches WP4, not yet built |
+| Check `len(distinct reviewer_refs) >= 2` wherever a future "independently reviewed" claim is made, and label anything with fewer `single_reviewer_reviewed` | needs implementation | Closes the gap in §1's "Discovered conflict"; touches WP4, not yet built |
 | Refuse (or flag) `agreement()` output when both rating lists share a `reviewer_ref` | needs implementation | `agreement()` (`commissioning/agreement.py`) has no identity parameter today |
 | Compact decision-packet format (§4 table) | needs implementation | Part of WP4 review export/import, `not_started` per `docs/ACCEPTANCE.md` |
 | Local freeze manifest of in-scope fixtures and hashes before any review is recorded | needs implementation | New file/script; not created by this document |
@@ -336,7 +368,7 @@ filled here.** Freezing it (local hash first) is a later step, after the listed 
 | Public preregistration or release of any pilot result | needs a separate decision from Anthony | Explicitly NOT requested here; `PREREGISTRATION_DRAFT.md:54` stays "NOT GRANTED" |
 | Using pilot results to inform a later MOA/ESS decision | needs a separate decision from Anthony | Reserved by Anthony's own words; out of scope here and MOA/ESS repositories were not opened to produce this document |
 | Adopt the §8 prerequisite changes for the single-operator exploratory pilot only | needs a separate decision from Anthony | changes what a pilot launch may cite; confirmatory and independent requirements are unchanged |
-| A `single_operator_reviewed` semantic-commissioning status beside `pending_no_human_reviews` | needs implementation | `SEMANTIC_STATUSES` in `commissioning/contract.py` has only the pending value today |
+| A `single_reviewer_reviewed` semantic-commissioning status beside `pending_no_human_reviews` | needs implementation | `SEMANTIC_STATUSES` in `commissioning/contract.py` has only the pending value today |
 | Move corpus `rights_status` off `pending` for local use | needs a separate decision from Anthony | a rights decision, distinct from selecting a distribution license |
 | Pilot workload size, or a preregistered review sample (§4b) | needs a separate decision from Anthony | set in the frozen pilot plan, not here |
 | Freeze the §9 pilot plan (local hash) once its fields are filled | needs a separate decision from Anthony | the freeze follows the decisions its fields depend on |
@@ -346,16 +378,17 @@ filled here.** Freezing it (local hash first) is a later step, after the listed 
 
 There are two separate approvals. Anthony may grant, narrow or refuse each one on its own:
 
-> **(1) Rule:** "I approve Amendment A1 single-operator mode for an **exploratory pilot only**, as
-> written in A1_SINGLE_OPERATOR_PILOT.md §2, §3 and §8. My reviews are recorded as
-> `single_operator` and never count as two independent reviews. No inter-rater statistic is
+> **(1) Rule:** "I approve Amendment A1 single-reviewer mode for an **exploratory pilot only**, as
+> written in A1_SINGLE_OPERATOR_PILOT.md §2, §3 and §8 as conformed by §10 (ruling 06d942da). My reviews are recorded in my own
+> words with the case hash, labelled `single-reviewer`, and never count as two independent reviews. No inter-rater statistic is
 > computed from my reviews alone. Independent semantic review, formal commissioning and every
 > confirmatory requirement stay as they are."
 
-> **(2) Implementation:** "Implement the `single_operator` review label, the
-> `single_operator_reviewed` status, the distinct-reviewer check (§5), the `agreement()` refusal on
-> a shared `reviewer_ref`, and the decision-packet format (§4), with tests. No review is recorded
-> and no pilot is launched by this approval."
+> **(2) Implementation:** "Implement the `single-reviewer` label (§10), a `single_reviewer_reviewed` semantic-commissioning
+> status beside `pending_no_human_reviews`, verdict records in my own words bound to the case hash, the
+> distinct-reviewer check (§5), the `agreement()` refusal on a shared `reviewer_ref`, and the
+> decision-packet format (§4), with tests. No review is recorded and no pilot is launched by this
+> approval."
 
 Neither approval covers:
 

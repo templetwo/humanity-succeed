@@ -159,6 +159,23 @@ material it has never seen. This holds however the run went:
   the same custodian, writing genuinely new fixtures) with a fresh `CustodyRecord` -- not a second
   run against the same 40 trajectories.
 
+**The house record of exposure is the Stack's `exposure-ledger`** (Anthony's ruling `8ac7c661`,
+2026-09-28). This document points there rather than keeping a private copy.
+
+- **What gets recorded:** one chronicle entry per exposure event, in domain `exposure-ledger` plus
+  the project tags. Each entry names:
+  - who was exposed;
+  - the case set (for a holdback, its `holdback_suite_sha256`);
+  - what was seen;
+  - when;
+  - a receipt.
+- **Who records it, and when:** the seat or person that did the exposing, at the time.
+- **What it bars:** a model or human reviewer with recorded exposure to a set cannot be scored on
+  that set, and unknown exposure counts as exposed.
+- **The tool's own ledger:** the local ledger under the state root remains the tool's mechanical
+  refusal of reuse. Whether `commission run` should also file its Stack entry itself is a pending
+  implementation decision. Until it does, whoever runs a formal commission files the entry.
+
 Nothing in this process, this script, or its output certifies the evaluator, the instrument, or any
 model. It reports exactly which fixtures met their written expectations, under the custody
 guarantees described above, and no more (BUILD_SPEC §9; `contract.CLAIM_BOUNDARY`).

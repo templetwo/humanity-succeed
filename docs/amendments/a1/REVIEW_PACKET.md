@@ -93,29 +93,31 @@ These are facts about the current code and records. None was acted on.
 
 ## Decisions requested, in a workable order
 
-Each decision is independent; approving one approves nothing else. **Each row's prior-decisions line is in
-`PRIOR_DECISIONS.md`** (same numbering). In short:
+Each decision is independent; approving one approves nothing else. **Each row's prior-decisions line
+is in `PRIOR_DECISIONS.md`** (same numbering). Where a source document supplies approval wording, the
+index quotes it **verbatim**. Rows marked *(index wording)* have no quote in their source document.
 
-- #1 and the prospective-only part of #5 restate existing law.
-- #2, #9 and #11 have clear precedents in other rooms.
-- #10 has a strong precedent (the 2026-08-06 canary draw).
-- #3, #4 (beyond the control), #6, #7 and #8 are genuinely new.
- Where a source document
-supplies approval wording, the index quotes it **verbatim**. Rows marked *(index wording)* have no
-quote in their source document.
+**Status after Anthony's rulings of 2026-09-28** (`PRIOR_DECISIONS.md`, last section):
+
+- **Ruled.** #3's exposure part (the house exposure ledger, `8ac7c661`; this seat's nine events
+  are filed) and the Astra question (`149f1cfa`).
+- **Conformed and awaiting a yes or no.** #4, #6, #7 and #8, reworded to carry over the principles
+  of rulings `c96025ad`, `a764ada2` and `06d942da`, as Anthony directed.
+- **Restate existing law.** #1 and the prospective-only part of #5.
+- **Clear precedents in other rooms.** #2, #9, #10 and #11.
 
 | # | Decision | Exact words to approve | Source |
 |---|---|---|---|
 | 1 | Accept the reconciled WP3 state and its standing rules | *(index wording)* "I accept A1_WP3_RECONCILED_STATE.md and its three standing rules as a DECISIONS entry." | Reconciled §4 |
 | 2 | Merge `wp3/commissioning` into main | *(index wording)* "Merge wp3/commissioning at 0d85909 into main." Separate from #1 | Reconciled §1 |
-| 3 | Accept the MOA/ESS motivation and exposure record | "I accept A1_MOA_ESS_MOTIVATION_AND_EXPOSURE.md as documentation of the study's motivation and the initial exposure record. This does not authorize any MOA/ESS data use, repository connection or transfer study." | Exposure, end |
-| 4 | Adopt the measurement semantics | "Adopt the evidence-status × response matrix and the separate guard/abstention fields in §2 of `A1_MEASUREMENT_AMENDMENT.md` for a new evaluator version; implement and test them without rescoring suite v1." | Measurement, end |
+| 3 | Accept the MOA/ESS motivation (exposure is **ruled**: the Stack ledger) | "I accept A1_MOA_ESS_MOTIVATION_AND_EXPOSURE.md as documentation of the study's motivation, with exposure recorded on the Stack exposure-ledger. This does not authorize any MOA/ESS data use, repository connection or transfer study." | Exposure, end |
+| 4 | The grid as the reviewer's checklist, plus the evidence-status and guard/abstention fields (**conformed** to `c96025ad`) | "Adopt the evidence-status × response grid as the reviewer's checklist under §7 of `A1_MEASUREMENT_AMENDMENT.md` (conformed to ruling c96025ad), and the case evidence-status fields and separate guard/abstention report fields of §2 for a new evaluator version; implement and test them without rescoring suite v1." | Measurement §7, end |
 | 5 | Cut the new evaluator version | "Cut `hs-evaluator/0.3.0` per §5, applied prospectively only; all existing bundles continue to replay under their recorded evaluator version." | Measurement, end |
-| 6 | Build the measurement supplement | "Build `supplement_a1_measurement` per §3, with [N] groups per class Anthony names, as its own generator/suite/plan/report, never merged into `cases/commissioning_suite_v1/`." | Measurement, end |
-| 7 | The single-operator rule for an exploratory pilot | Pilot, permission (1), verbatim there | Pilot, end |
-| 8 | Implement the single-operator safeguards | Pilot, permission (2), verbatim there | Pilot, end |
+| 6 | Build the measurement supplement (**conformed** to `a764ada2`; figures set from his stance) | "Build `supplement_a1_measurement` per §3 and §8 (conformed to ruling a764ada2): 12 groups, 60 trajectories (48 assert/withhold plus 12 qualified), at most 12 judgment-heavy, grown only by a new freeze, as its own generator/suite/plan/report, never merged into `cases/commissioning_suite_v1/`." | Measurement §8, end |
+| 7 | Single-reviewer rule for an exploratory pilot (**conformed** to `06d942da`) | "I approve Amendment A1 single-reviewer mode for an **exploratory pilot only**, as written in A1_SINGLE_OPERATOR_PILOT.md §2, §3 and §8 as conformed by §10 (ruling 06d942da). My reviews are recorded in my own words with the case hash, labelled `single-reviewer`, and never count as two independent reviews. No inter-rater statistic is computed from my reviews alone. Independent semantic review, formal commissioning and every confirmatory requirement stay as they are." | Pilot §10, end |
+| 8 | Implement the single-reviewer safeguards | "Implement the `single-reviewer` label (§10), a `single_reviewer_reviewed` semantic-commissioning status beside `pending_no_human_reviews`, verdict records in my own words bound to the case hash, the distinct-reviewer check (§5), the `agreement()` refusal on a shared `reviewer_ref`, and the decision-packet format (§4), with tests. No review is recorded and no pilot is launched by this approval." | Pilot, end |
 | 9 | Corpus rights for local use (not a distribution license) | *(index wording)* "Corpus material may be marked approved_for_local_use; no distribution license is selected." | Pilot §8 |
-| 10 | Custody: authoring option, access-boundary type, run-output exposure boundary | Anthony's choice of option A, B or C, the boundary type, and what the builder may see (four questions listed at the end of the custody document) | Custody, end |
+| 10 | Custody: authoring option, access-boundary type, run-output exposure boundary | Anthony's choice of option A, B or C, the boundary type, and what the builder may see (four questions at the end of the custody document; house precedent: the 2026-08-06 canary draw) | Custody, end |
 | 11 | Name a model directory and machine | "Use [directory path] on [MacBook \| Mac Studio M4 Max 36GB \| other named machine] as the model root for `hs doctor --models`." `hs doctor --models` itself is not implemented yet (WP5), so this grants the location only. Tokenizer audit, inference, smoke test and training stay separate | Gates §3.4 |
 
 **Still pending and not requested in this packet:**
@@ -128,11 +130,14 @@ quote in their source document.
 - any MOA/ESS transfer study;
 - independent semantic validation;
 - specialist controls-engineer review;
-- **whether to ask GPT-6 Astra to disclose its MOA/ESS exposure** (exposure record §6.2: not recorded or verified);
+- **a send-record audit of what the house relayed to Astra** (Stack and Slack). Under ruling
+  `149f1cfa`, Astra is treated as exposed to MOA/ESS until that audit shows otherwise;
+- **whether `hs commission run` should file its own `exposure-ledger` entry** in formal mode
+  (`docs/HOLDBACK_CUSTODY.md`);
 - **how to separate the causes of a wrong or unsupported answer** (comprehension, policy mapping,
   domain knowledge, output construction, evaluator defect). This is an undecided design question.
-  It needs a subject model to be meaningful and is distinct from the evidence-status matrix
-  (Measurement §4). Only the evaluator-defect part has a working tool today: the sabotage controls.
+  It needs a subject model to be meaningful and is distinct from the grid (Measurement §4). Only the
+  evaluator-defect part has a working tool today: the sabotage controls.
 
 ## Stopping point
 
