@@ -42,8 +42,9 @@ Not pushed. WP3 stays held until Anthony decides.
 WP3 and review packet A1 are merged into main. Anthony approved #1, #2, #4–#8, #9, and custody
 Option A; see `docs/DECISIONS.md` B55–B63.
 
-- **Open:** #3 (the MOA/ESS motivation document) and #11 (the model directory and machine: his
-  reply carried the placeholders unfilled).
+- **Settled later the same day:** #3, accepted as motivation (B64). For #11, model work runs on the
+  Mac Studio, 36 GB (B65). **Still open:** the model directory on the Studio, which Anthony names;
+  read-only inventory is then the Studio seat's job.
 - **Authorized next build, not started at this note:**
   - the single-reviewer safeguards (B61);
   - the grid as the reviewer's checklist, plus the evidence-status and guard/abstention fields
