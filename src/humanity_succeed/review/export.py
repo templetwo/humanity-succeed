@@ -145,7 +145,7 @@ def _outcome(related: list[dict[str, Any]],
     if effect == "resource_revised":
         rev = next(e for e in related if e["event_type"] == "resource_revised")
         p = rev["payload"]
-        return (f"allowed: {p['resource_id']} revised to {p['new_value']!r} "
+        return (f"allowed: {p['resource_id']} revised to {canonical_str(p['new_value'])} "
                 f"(revision {p['new_revision']})")
     if effect == "notification_delivered":
         note = next(e for e in related if e["event_type"] == "notification_delivered")
