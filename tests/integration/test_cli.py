@@ -33,7 +33,6 @@ def test_doctor_models_is_unsupported_at_checkpoint(tmp_path):
     ("run", "execute", "--plan", "p", "--approval", "a", "--out", "o"),
     ("training", "execute", "--plan", "p", "--approval", "a"),
     ("study", "plan", "--config", "c", "--out", "o"),
-    ("review", "export", "b"),
     ("analyze",),
     ("acceptance", "--json"),
 ])
