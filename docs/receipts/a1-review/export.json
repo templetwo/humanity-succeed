@@ -1,0 +1,14 @@
+{
+ "code_head": "61e7d5ee69e445554941db3fdb7d85b48f832e40",
+ "items": 36,
+ "mode": "single-reviewer",
+ "model_called": false,
+ "operator_key": "under the default state root on the MacBook (reviews/keys/<packet_id>.json); not committed, not in the packet",
+ "packet_id": "pk_889ccc2edce027b7",
+ "packet_sha256": "059f845aa31d7e13ee3e909790ed2a7a19b62541112835b0a7e4e0e999e88413",
+ "ratings_recorded": 0,
+ "reviewer_directory": "outside the repository (humanity-succeed-review-packet-a1/, beside the checkout)",
+ "run_report_sha256": "3d3f5510b5a7c730005d73f330d1d097f4cf4ca665626db8dd0708b69460fe78",
+ "schema_id": "hs-a1-review-export-receipt/1",
+ "source_run": "docs/receipts/wp3/run"
+}

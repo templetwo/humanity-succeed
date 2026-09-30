@@ -83,4 +83,32 @@ def agreement(a: list[str | None], b: list[str | None], labels: list[str]) -> di
     }
 
 
-__all__ = ["agreement"]
+def agreement_between_reviewers(
+    ref_a: str,
+    ratings_a: list[str | None],
+    ref_b: str,
+    ratings_b: list[str | None],
+    labels: list[str],
+) -> dict:
+    """``agreement()`` bound to reviewer identity (DECISIONS B60/B61, ruling 06d942da).
+
+    Refuses to compute a statistic when there is no second, distinct human reviewer: an empty
+    ``reviewer_ref`` is refused outright, and ``ref_a == ref_b`` is refused because one person
+    rating the same items twice is a revision, never a second reviewer (B61). The math itself is
+    unchanged: on success this returns exactly ``agreement(ratings_a, ratings_b, labels)`` with a
+    ``"reviewers": [ref_a, ref_b]`` key added.
+    """
+    if not ref_a or not ref_b:
+        raise ValueError(
+            "agreement_between_reviewers requires a non-empty reviewer_ref for both reviewers"
+        )
+    if ref_a == ref_b:
+        raise ValueError(
+            f"agreement_between_reviewers refuses equal reviewer_ref {ref_a!r}: one reviewer "
+            "rating the same items twice is a revision, not a second independent reviewer (B61)"
+        )
+    result = agreement(ratings_a, ratings_b, labels)
+    return {**result, "reviewers": [ref_a, ref_b]}
+
+
+__all__ = ["agreement", "agreement_between_reviewers"]

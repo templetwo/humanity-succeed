@@ -123,7 +123,10 @@ class CustodyRecord(_Strict):
 MECHANICAL_STATUSES = ("development_all_expectations_met", "development_expectations_missed")
 FORMAL_STATUSES = ("blocked_no_independent_holdback", "blocked_holdback_exposed",
                    "blocked_custody_invalid", "passed", "failed")
-SEMANTIC_STATUSES = ("pending_no_human_reviews",)
+# A1 stage 1 (B61): review statuses computed after a run by `hs review status`. A commission run
+# report itself is written before any review exists, so it still says pending_no_human_reviews.
+SEMANTIC_STATUSES = ("pending_no_human_reviews", "single_reviewer_partial",
+                     "single_reviewer_reviewed", "independently_reviewed")
 # BUILD_SPEC §9 lifecycle; commissioning can reach at most instrument_commissioned, and only with
 # formal=passed AND semantic review complete. Without both it stays mechanically_validated or below.
 LIFECYCLE_STATES = ("draft", "mechanically_validated", "instrument_commissioned")

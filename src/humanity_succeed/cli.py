@@ -49,8 +49,6 @@ LATER_WORK_PACKAGES = {
     ("training", "execute"): "WP5",
     ("study", "plan"): "WP4",
     ("study", "execute"): "WP4",
-    ("review", "export"): "WP4",
-    ("review", "import"): "WP4",
     ("analyze", None): "WP6",
     ("acceptance", None): "WP7",
 }
@@ -307,6 +305,53 @@ def cmd_demo(a: argparse.Namespace) -> int:
                 EXIT_OK if ok else EXIT_INVALID)
 
 
+REVIEW_LIMITATION = ("single-reviewer semantic review of builder-constructed commissioning fixtures; a "
+                     "verdict is the reviewer's own judgment, not a model result and not an independent "
+                     "review (DECISIONS B60, B61)")
+
+
+def cmd_review_export(a: argparse.Namespace) -> int:
+    from .review.export import export_packet
+
+    root = state_root(a.state_root)
+    rep = export_packet(Path(a.run), Path(a.out), state_root=root, repo_root=_checkout_root())
+    if rep["status"] == "ok":
+        return emit(envelope("ok", {k: rep[k] for k in ("packet_id", "items", "paths")},
+                             artifacts=[a.out], limitations=[REVIEW_LIMITATION,
+                             "the operator key is kept under the state root; the reviewer should not "
+                             "open it before committing verdicts"]), EXIT_OK)
+    if rep["status"] == "blocked_leak":
+        return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+            "code": "blind_packet_leak",
+            "message": "the packet would reveal identifiers or evaluator fields; nothing written "
+                       "(BUILD_SPEC A19)"}), EXIT_PRECONDITION)
+    return emit(envelope("failed", {"problems": rep["problems"]}, error={
+        "code": rep["status"],
+        "message": "; ".join(rep["problems"]) or "unverifiable or invalid run input; nothing written"}),
+        EXIT_CORRUPT)
+
+
+def cmd_review_import(a: argparse.Namespace) -> int:
+    from .review.importer import import_ratings
+
+    root = state_root(a.state_root)
+    rep = import_ratings(Path(a.packet), Path(a.ratings), state_root=root)
+    if rep["status"] == "ok":
+        return emit(envelope("ok", {k: rep[k] for k in ("recorded", "votes", "secondary")},
+                             limitations=[REVIEW_LIMITATION]), EXIT_OK)
+    return emit(envelope("invalid", {"problems": rep["problems"]}, error={
+        "code": "ratings_refused",
+        "message": "; ".join(rep["problems"]) or "ratings refused; nothing recorded"}), EXIT_INVALID)
+
+
+def cmd_review_status(a: argparse.Namespace) -> int:
+    from .review.status import review_status
+
+    root = state_root(a.state_root)
+    rep = review_status(Path(a.packet), state_root=root)
+    return emit(envelope("ok", rep, limitations=[REVIEW_LIMITATION]), EXIT_OK)
+
+
 def cmd_unsupported(a: argparse.Namespace) -> int:
     sub = getattr(a, "sub", None)
     wp = LATER_WORK_PACKAGES.get((a.group, sub), "a later work package")
@@ -398,9 +443,24 @@ def build_parser() -> argparse.ArgumentParser:
     cr.add_argument("--state-root")
     cr.set_defaults(fn=cmd_commission_run)
 
+    review = g.add_parser("review").add_subparsers(dest="sub", required=True)
+    rx = review.add_parser("export", help="blind static review packet from a commission run")
+    rx.add_argument("run", help="a commission run output directory (report.json + bundles/)")
+    rx.add_argument("--out", required=True)
+    rx.add_argument("--state-root")
+    rx.set_defaults(fn=cmd_review_export)
+    ri = review.add_parser("import", help="append a reviewer's own-words ratings to the ledger")
+    ri.add_argument("--packet", required=True)
+    ri.add_argument("--ratings", required=True)
+    ri.add_argument("--state-root")
+    ri.set_defaults(fn=cmd_review_import)
+    rs = review.add_parser("status", help="semantic-review status for a packet (read-only)")
+    rs.add_argument("--packet", required=True)
+    rs.add_argument("--state-root")
+    rs.set_defaults(fn=cmd_review_status)
+
     for group, subs in (("training", ("audit-match", "plan",
-                        "execute")), ("study", ("plan", "execute")), ("review", ("export",
-                        "import"))):
+                        "execute")), ("study", ("plan", "execute"))):
         sp = g.add_parser(group).add_subparsers(dest="sub", required=True)
         for s in subs:
             x = sp.add_parser(s)
