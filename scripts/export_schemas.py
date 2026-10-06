@@ -12,6 +12,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from humanity_succeed.a1_supplement.contract import ReviewGrid, Supplement
+from humanity_succeed.a1_supplement.study import Plan
 from humanity_succeed.canonical import canonical_str
 from humanity_succeed.contracts.a1 import A1Evidence, A1Facts
 from humanity_succeed.contracts.actions import ActionEnvelope
@@ -30,6 +32,9 @@ def rendered() -> dict[str, str]:
         "implementation-case.schema.json": implementation_case_schema(),
         "a1-evidence.schema.json": A1Evidence.model_json_schema(),
         "a1-facts.schema.json": A1Facts.model_json_schema(),
+        "a1-supplement.schema.json": Supplement.model_json_schema(),
+        "a1-review-grid.schema.json": ReviewGrid.model_json_schema(),
+        "a1-supplement-plan.schema.json": Plan.model_json_schema(),
     }
     return {name: canonical_str(doc) + "\n" for name, doc in docs.items()}
 
