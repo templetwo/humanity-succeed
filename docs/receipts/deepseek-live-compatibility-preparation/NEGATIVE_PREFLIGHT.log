@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/vaquez/Desktop/🔬 Active_Research/humanity-succeed-deepseek-offline/docs/receipts/deepseek-live-compatibility-preparation/PREFLIGHT.py", line 87, in <module>
+    main()
+  File "/Users/vaquez/Desktop/🔬 Active_Research/humanity-succeed-deepseek-offline/docs/receipts/deepseek-live-compatibility-preparation/PREFLIGHT.py", line 36, in main
+    assert sha256_obj(decision) == args.decision_sha256, "decision plan changed"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: decision plan changed
