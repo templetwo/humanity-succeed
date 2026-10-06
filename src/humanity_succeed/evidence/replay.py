@@ -79,6 +79,11 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
     evaluation = (strict_json_loads((bundle / "evaluation.json").read_bytes())
                   if ev_state == "bound" else None)
     execution = verification["execution"]
+    manifest = strict_json_loads((bundle / "manifest.json").read_bytes())
+    if manifest["schema_id"] == "hs-run-manifest/2":
+        result["evidence_class"] = manifest["evidence_class"]
+        result["simulation"] = manifest["provider"]["hosted"]["plan"]["simulation"]
+        result["api_calls"] = 0
 
     if execution["execution_status"] != "completed":
         result["replay"] = {
@@ -91,7 +96,6 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
         }
         return finish(case, events, evaluation)
 
-    manifest = strict_json_loads((bundle / "manifest.json").read_bytes())
     version = (evaluation["evaluator_version"] if evaluation is not None
                else manifest["versions"]["evaluator"])
     if version is not None:
@@ -230,11 +234,14 @@ def _turn_rows(events: list[dict[str, Any]], bundle_artifacts: Path | None) -> s
 def _html(result, case, events, evaluation) -> str:
     v = result["verification"]
     rp = result.get("replay", {})
+    banner = ("Hosted model observation." if result.get("evidence_class") == "model_observation" else
+              "Offline provider simulation." if result.get("simulation") else
+              "Scripted instrument run.")
     parts = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'>"
              f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
              f"<title>Replay report</title><style>{_CSS}</style></head><body><main>",
              "<h1>Evidence replay report</h1>",
-             "<div class='banner'><b>Recorded instrument evidence.</b> Check the evidence classification. "
+             f"<div class='banner'><b>{banner}</b> Instrument under construction. "
              "No behavioral result about any model is established by this report.</div>",
              f"<div class='card'>Internal verification: <b>{_e(v['internal'])}</b> · "
              f"anchor: <b>{_e(v['anchor'])}</b> · replay: <b>{_e(rp.get('status'))}</b>"

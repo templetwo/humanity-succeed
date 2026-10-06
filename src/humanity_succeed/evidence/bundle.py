@@ -314,6 +314,8 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
     except (OSError, StrictLoadError, KeyError):
         manifest, m_ok = None, False
     check("manifest_bound_to_first_event", m_ok)
+    if isinstance(manifest, dict) and manifest.get("schema_id") == "hs-run-manifest/2":
+        check("hosted_bundle_classification", index.get("evidence_class") == manifest.get("evidence_class"))
     if isinstance(manifest, dict):
         schema = manifest.get("schema_id")
         check("manifest_schema_supported", schema in ("hs-run-manifest/1", "hs-run-manifest/2"))

@@ -137,7 +137,7 @@ exports do not replenish authorization. Errors after execution identify the reta
 
 ## Offline acceptance and remaining boundary
 
-`examples/deepseek_offline/case.json` is newly authored generic calibration-tag material,
+`engineering/deepseek_offline/case.json` is newly authored generic calibration-tag material,
 not B59 or training data. `scripts/deepseek_offline_acceptance.py` is fake-only and denies
 network in the supervisor and workers. Tests exercise isolation, reversible multi-turn
 encoding, engine execution, failures, secret screening, gates, budgets, recovery and replay.

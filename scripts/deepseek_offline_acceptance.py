@@ -57,7 +57,7 @@ def run(out: Path, state: Path) -> dict:
     make_new_dir(state)
     (out / "anchors").mkdir()
     (out / "verification").mkdir()
-    case, doc = load_case(REPO / "examples/deepseek_offline/case.json")
+    case, doc = load_case(REPO / "engineering/deepseek_offline/case.json")
     # Fresh dummy credential only; this command has no real credential argument/discovery path.
     secret = "dummy_acceptance_only_43109"
     key = state / "dummy-credential.txt"

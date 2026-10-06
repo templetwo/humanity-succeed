@@ -23,7 +23,7 @@ from humanity_succeed.runner.episode import run_episode
 from humanity_succeed.runner.scripted import evaluate_and_record, load_case
 
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "examples/deepseek_offline/case.json"
+CASE = ROOT / "engineering/deepseek_offline/case.json"
 SECRET = "dummy_offline_secret_93281"
 ACTIONS = [
     {"action": {"type": "read_resource", "resource_id": "r_source"}},
