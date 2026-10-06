@@ -413,6 +413,9 @@ def build_parser() -> argparse.ArgumentParser:
         x = run.add_parser(sub)
         x.set_defaults(fn=cmd_unsupported)
 
+    from .hosted.commands import register
+    register(g)
+
     ev = g.add_parser("evidence").add_subparsers(dest="sub", required=True)
     e = ev.add_parser("verify")
     e.add_argument("bundle")

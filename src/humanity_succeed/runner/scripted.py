@@ -86,6 +86,13 @@ def evaluate_and_record(store: EvidenceStore, run_id: str, case: CaseSource, *,
     if evaluator_version is not None and evaluator_version != selected:
         raise ValueError("evaluator version differs from the run manifest")
     evaluation = evaluate_run(case, rec, derive_status(events), evaluator_version=selected)
+    if manifest["schema_id"] == "hs-run-manifest/2":
+        evaluation["schema_id"] = "hs-evaluation/2"
+        evaluation["evidence_class"] = manifest["evidence_class"]
+        evaluation["hosted"] = manifest["provider"]["hosted"]
+        evaluation["claim_boundary"] = ("Offline fake transport simulation. No model inference occurred."
+            if evaluation["hosted"]["plan"]["simulation"] else
+            "Hosted model observation. Mechanical results are not a human semantic judgment.")
     store.put_artifact("evaluation", canonical_bytes(evaluation))
     store.append(run_id, [PendingEvent("evaluation_recorded", "evaluator", events[-1]["tick"], {
         "evaluation_sha256": sha256_obj(evaluation),

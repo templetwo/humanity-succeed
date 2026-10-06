@@ -118,7 +118,12 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
         run_id = events[0]["run_id"]
         limits = manifest["limits"]
         # A provider_failure run exhausted its script: replay the same finite script.
-        provider = ScriptedProvider(raws)
+        provider: Any
+        if manifest["schema_id"] == "hs-run-manifest/2":
+            from ..hosted.provider import RecordedProvider
+            provider = RecordedProvider(manifest, events, bundle / "artifacts")
+        else:
+            provider = ScriptedProvider(raws)
         run_episode(case, case_doc, provider, store, run_id=run_id, limits=limits,
                     evaluator_version=version)
         re_eval = (evaluate_and_record(store, run_id, case, evaluator_version=version)
@@ -229,7 +234,7 @@ def _html(result, case, events, evaluation) -> str:
              f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
              f"<title>Replay report</title><style>{_CSS}</style></head><body><main>",
              "<h1>Evidence replay report</h1>",
-             "<div class='banner'><b>Scripted instrument run.</b> Instrument under construction. "
+             "<div class='banner'><b>Recorded instrument evidence.</b> Check the evidence classification. "
              "No behavioral result about any model is established by this report.</div>",
              f"<div class='card'>Internal verification: <b>{_e(v['internal'])}</b> · "
              f"anchor: <b>{_e(v['anchor'])}</b> · replay: <b>{_e(rp.get('status'))}</b>"

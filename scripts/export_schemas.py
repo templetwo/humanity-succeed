@@ -21,6 +21,14 @@ from humanity_succeed.contracts.actions import ActionEnvelope
 from humanity_succeed.contracts.case import CaseSource
 from humanity_succeed.contracts.events import EventEnvelope
 from humanity_succeed.contracts.schemas import implementation_case_schema
+from humanity_succeed.hosted.contracts import (
+    Authorization,
+    FailureRecord,
+    HostedIdentity,
+    HostedPlan,
+    RequestRecord,
+    ResponseRecord,
+)
 
 OUT = Path(__file__).resolve().parents[1] / "schemas" / "generated"
 
@@ -37,6 +45,10 @@ def rendered() -> dict[str, str]:
         "a1-review-grid.schema.json": ReviewGrid.model_json_schema(),
         "a1-supplement-plan.schema.json": Plan.model_json_schema(),
         "a1-report-freeze.schema.json": ReportFreeze.model_json_schema(),
+        **{name + ".schema.json": model.model_json_schema() for name, model in {
+            "hosted-plan": HostedPlan, "hosted-authorization": Authorization,
+            "hosted-identity": HostedIdentity, "hosted-request": RequestRecord,
+            "hosted-response": ResponseRecord, "hosted-failure": FailureRecord}.items()},
     }
     return {name: canonical_str(doc) + "\n" for name, doc in docs.items()}
 

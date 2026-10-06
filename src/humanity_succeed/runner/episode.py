@@ -32,6 +32,7 @@ from ..corpus.views import (
 from ..environment.engine import Executor, ReferenceMonitor, WorldState, revision_rows
 from ..evaluation.predicates import require_compatible
 from ..evidence.store import EvidenceStore, PendingEvent
+from ..hosted.transport import HostedFailure
 from ..providers.scripted import ScriptExhausted
 
 DEFAULT_COMMISSIONING_LIMITS = {"max_provider_calls": 12, "max_output_bytes": 64_000}
@@ -88,7 +89,7 @@ def build_manifest(
     evaluator_version: str = EVALUATOR_VERSION,
 ) -> dict[str, Any]:
     require_compatible(case, evaluator_version)
-    return {
+    manifest: dict[str, Any] = {
         "schema_id": "hs-run-manifest/1",
         "evidence_class": "scripted_instrument",
         "code": code_identity(),
@@ -132,6 +133,21 @@ def build_manifest(
         "seeds": {"generation": None, "task_order": None, "training": None},
     }
 
+    hosted = getattr(provider, "hosted", None)
+    if hosted is not None:
+        from ..hosted.contracts import HostedIdentity
+        HostedIdentity.model_validate(hosted, strict=True)
+        manifest["schema_id"] = "hs-run-manifest/2"
+        manifest["evidence_class"] = ("scripted_instrument" if hosted["plan"]["simulation"]
+                                      else "model_observation")
+        manifest["provider"]["hosted"] = hosted
+        manifest["provider"]["note"] = ("fake transport simulation; no model called"
+                                         if hosted["plan"]["simulation"]
+                                         else "hosted model observation; immutable weights unknown")
+        manifest["condition_identity"] = "prospective hosted engineering; no study cell"
+        manifest["approval_ref"] = {"kind": "hosted_authorization", "ref": hosted["authorization_sha256"]}
+    return manifest
+
 
 def run_episode(
     case: CaseSource,
@@ -148,6 +164,12 @@ def run_episode(
     require_compatible(case, evaluator_version)
     limits = dict(DEFAULT_COMMISSIONING_LIMITS if limits is None else limits)
     views = four_views(case, case_doc)
+    hosted_provider: Any = provider
+    hosted = getattr(provider, "hosted", None)
+    if hosted is not None:
+        hosted_provider.validate_case(case_doc, views["subject"], evaluator_version)
+        limits = {"max_provider_calls": hosted["plan"]["limits"]["requests"],
+                  "max_output_bytes": hosted["plan"]["limits"]["action_bytes"]}
     manifest = build_manifest(case, case_doc, views, provider, trajectory, limits,
                               evaluator_version=evaluator_version)
     run_id = run_id or "run_" + uuid.uuid4().hex[:20]
@@ -165,7 +187,7 @@ def run_episode(
 
     store.append(run_id, [PendingEvent("run_started", "runner", st.tick, {
         "manifest_sha256": m_sha,
-        "evidence_class": "scripted_instrument",
+        "evidence_class": manifest["evidence_class"],
         "subject_view_sha256": sha256_obj(views["subject"]),
         "world_view_sha256": sha256_obj(views["world"]),
         "evaluator_view_sha256": sha256_obj(views["evaluator"]),
@@ -175,6 +197,16 @@ def run_episode(
     terminal: str | None = None
     for call_index in range(limits["max_provider_calls"]):
         pin = build_provider_input(sview, tick0, turns)
+        if hosted is not None:
+            try:
+                hosted_provider.prepare(pin)
+            except HostedFailure as failure:
+                store.append(run_id, [PendingEvent("provider_error", "runner", st.tick, {
+                    "call_index": call_index, "code": failure.code, "detail": failure.code,
+                    "hosted": failure.record})])
+                terminal = "provider_failure"
+                break
+            store.put_artifact("hosted_request", hosted_provider.request_body)
         pin_sha = store.put_artifact("provider_input", pin)
         store.append(run_id, [
             PendingEvent("observation_delivered", "runner", st.tick, {
@@ -183,29 +215,47 @@ def run_episode(
             }),
             PendingEvent("provider_requested", "runner", st.tick, {
                 "call_index": call_index, "input_sha256": pin_sha,
+                **({"hosted": hosted_provider.request_record} if hosted is not None else {}),
             }),
         ])
         try:
             raw = provider.generate(pin)
+        except HostedFailure as failure:
+            store.append(run_id, [PendingEvent("provider_error", "runner", st.tick, {
+                "call_index": call_index, "code": failure.code, "detail": failure.code,
+                "hosted": failure.record})])
+            terminal = "provider_failure"
+            break
         except ScriptExhausted as e:
             store.append(run_id, [PendingEvent("provider_error", "runner", st.tick, {
                 "call_index": call_index, "code": "script_exhausted", "detail": str(e),
             })])
             terminal = "provider_failure"
             break
+        if hosted is not None:
+            store.put_artifact("hosted_response", hosted_provider.response_body)
         raw_bytes = raw.encode("utf-8")
         raw_sha = store.put_artifact("raw_response", raw_bytes)
         store.append(run_id, [PendingEvent("provider_response", "subject", st.tick, {
             "call_index": call_index, "raw_sha256": raw_sha, "byte_length": len(raw_bytes),
+            **({"hosted": hosted_provider.response_record} if hosted is not None else {}),
         })])
 
+        if hosted is not None and not hosted_provider.response_record["execute_content"]:
+            terminal = "api_terminated"
+            break
         try:
+            if hosted is not None and len(raw_bytes) > limits["max_output_bytes"]:
+                raise ParseFailure("action_size_limit", "response exceeds the selected action byte limit")
             env = parse_action(raw)
         except ParseFailure as pf:
             store.append(run_id, [PendingEvent("action_parse_failed", "runner", st.tick, {
                 "call_index": call_index, "raw_sha256": raw_sha, "code": pf.code,
                 "detail": pf.detail,
             })])
+            if hosted is not None:
+                terminal = "invalid_action"
+                break
             turns.append(VisibleTurn(raw_output=raw, tool_result={
                 "status": "invalid_action", "code": pf.code,
             }))

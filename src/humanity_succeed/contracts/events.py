@@ -11,6 +11,8 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..hosted.contracts import FailureRecord, RequestRecord, ResponseRecord
+
 EVENT_TYPES = (
     "run_started",
     "observation_delivered",
@@ -61,17 +63,20 @@ class ObservationDelivered(_P):
 
 
 class ProviderRequested(_P):
+    hosted: RequestRecord | None = None
     call_index: Seq
     input_sha256: Sha256
 
 
 class ProviderResponse(_P):
+    hosted: ResponseRecord | None = None
     call_index: Seq
     raw_sha256: Sha256
     byte_length: Seq
 
 
 class ProviderError(_P):
+    hosted: FailureRecord | None = None
     call_index: Seq
     code: str
     detail: str
@@ -183,6 +188,8 @@ class RunCompleted(_P):
         "budget_exhausted",
         "provider_failure",
         "context_overflow",
+        "invalid_action",
+        "api_terminated",
     ]
 
 

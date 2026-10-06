@@ -154,7 +154,21 @@ def test_structure_old_evaluators_refuse_every_case(version):
 
 def test_freeze_bindings_and_no_drift():
     plan = study.Plan.model_validate(load_document(PLAN), strict=True)
-    report_freeze = preflight_report(PACKET / "freeze-report-v2/freeze.json")
+    # Historical B59 freeze pins d1645d8, rather than blessing this later provider source.
+    # Verify each frozen source byte against that recorded commit. Runtime preflight must
+    # continue refusing changed implementations, including the present extension.
+    import subprocess
+
+    from humanity_succeed.a1_supplement.report_v2 import ReportFreeze
+    from humanity_succeed.canonical import sha256_bytes
+    report_freeze = ReportFreeze.model_validate(
+        load_document(PACKET / "freeze-report-v2/freeze.json"), strict=True)
+    for path, digest in report_freeze.source_files.items():
+        original = subprocess.run(["git", "show", report_freeze.source_commit + ":" + path],
+                                  cwd=study.REPO, check=True, capture_output=True).stdout
+        assert sha256_bytes(original) == digest
+    with pytest.raises(ValueError, match="report freeze drift"):
+        preflight_report(PACKET / "freeze-report-v2/freeze.json")
     assert report_freeze.new_executions == 0
     assert report_freeze.corpus_files == plan.documents == study.hashes(ROOT)
     # Authorized report-only repair changes source: old preflight must refuse it.

@@ -96,6 +96,11 @@ def _referenced_artifacts(events: list[dict[str, Any]]) -> set[str]:
     refs = set()
     for e in events:
         p = e["payload"]
+        h = p.get("hosted")
+        if h and e["event_type"] == "provider_requested":
+            refs.add(h["request_sha256"])
+        if h and e["event_type"] == "provider_response":
+            refs.add(h["response_sha256"])
         if e["event_type"] == "observation_delivered":
             refs.add(p["observation_sha256"])
         elif e["event_type"] == "provider_response":
@@ -139,7 +144,17 @@ def _evaluation_shape_problem(doc: Any, binding: dict[str, Any] | None) -> str:
     missing = [k for k in _EVALUATION_KEYS if k not in doc]
     if missing:
         return "missing " + ", ".join(missing)
-    if doc["schema_id"] != "hs-evaluation/1":
+    hosted = doc["schema_id"] == "hs-evaluation/2"
+    if hosted:
+        try:
+            from ..hosted.contracts import HostedIdentity
+            identity = HostedIdentity.model_validate(doc.get("hosted"), strict=True)
+            expected_class = "scripted_instrument" if identity.plan.simulation else "model_observation"
+            if doc["evidence_class"] != expected_class or doc["evaluator_version"] != identity.plan.evaluator:
+                return "hosted evaluation identity mismatch"
+        except (ValidationError, ValueError):
+            return "invalid hosted evaluation identity"
+    if doc["schema_id"] not in ("hs-evaluation/1", "hs-evaluation/2"):
         return f"unknown evaluation schema {doc['schema_id']!r}"
     mech = doc["mechanical"]
     if not isinstance(mech, dict) or not {"verdict", "reason", "pass_if", "fail_if"} <= set(mech):
@@ -148,9 +163,11 @@ def _evaluation_shape_problem(doc: Any, binding: dict[str, Any] | None) -> str:
         return "evaluator_version differs from the evaluation_recorded event"
     if doc["evaluator_version"] == A1_EVALUATOR_VERSION:
         allowed = set(_EVALUATION_KEYS) | {"a1_evidence", "guard_withheld", "model_abstained"}
+        if hosted:
+            allowed.add("hosted")
         if set(doc) - allowed:
             return "unknown v0.3.0 evaluation fields"
-        if doc["evidence_class"] != "scripted_instrument":
+        if not hosted and doc["evidence_class"] != "scripted_instrument":
             return "v0.3.0 development runs must be scripted_instrument"
         try:
             A1Facts.model_validate({k: doc[k] for k in ("guard_withheld", "model_abstained")
@@ -297,6 +314,14 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
     except (OSError, StrictLoadError, KeyError):
         manifest, m_ok = None, False
     check("manifest_bound_to_first_event", m_ok)
+    if isinstance(manifest, dict):
+        schema = manifest.get("schema_id")
+        check("manifest_schema_supported", schema in ("hs-run-manifest/1", "hs-run-manifest/2"))
+        if schema != "hs-run-manifest/2":
+            has_hosted = any("hosted" in e["payload"] for e in wf)
+            declared_provider = manifest.get("provider")
+            has_hosted = has_hosted or (isinstance(declared_provider, dict) and "hosted" in declared_provider)
+            check("hosted_requires_prospective_manifest", not has_hosted)
 
     # 4. artifacts (KIMI-03). Two dimensions: every artifact file holds the bytes its name
     #    claims, and every artifact the record requires (event references and the four views
@@ -314,6 +339,11 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
     check("artifact_content_addresses_match", not corrupt, ", ".join(corrupt))
     extra = sorted(set(on_disk) - refs - set(views.values()))
     check("no_unaccounted_artifacts", not extra, ", ".join(extra))
+
+    if isinstance(manifest, dict) and manifest.get("schema_id") == "hs-run-manifest/2":
+        from ..hosted.evidence import validate_hosted_bundle
+        problem = validate_hosted_bundle(bundle, manifest, wf)
+        check("hosted_transport_bindings", not problem, problem)
 
     # 5. case source, views
     case = None
@@ -383,6 +413,14 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
         else:
             check("evaluation_readable", True)
             shape = _evaluation_shape_problem(ev_doc, binding)
+            if isinstance(manifest, dict) and manifest.get("schema_id") == "hs-run-manifest/2":
+                declared_provider = manifest.get("provider")
+                declared_hosted = (declared_provider.get("hosted")
+                                   if isinstance(declared_provider, dict) else None)
+                if (not isinstance(ev_doc, dict) or ev_doc.get("schema_id") != "hs-evaluation/2" or
+                    ev_doc.get("hosted") != declared_hosted or
+                    ev_doc.get("evidence_class") != manifest.get("evidence_class")):
+                    shape = "hosted evaluation differs from manifest"
             check("evaluation_well_formed", not shape, shape)
             if (isinstance(ev_doc, dict) and ev_doc.get("evaluator_version") == A1_EVALUATOR_VERSION
                     or _manifest_evaluator(manifest) == A1_EVALUATOR_VERSION):
