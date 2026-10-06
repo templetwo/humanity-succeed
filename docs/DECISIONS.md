@@ -182,3 +182,21 @@ part was already ruled house-wide (Stack `8ac7c661`). Prior-decisions lines are 
 | B65 | (#11, in part) Model work runs on the **Mac Studio (M4 Max, 36 GB)**: Anthony, 2026-09-28, verbatim, "its going to have to run on the studio (36gb)". **The model directory is not yet named**, so no location is permitted and nothing is inventoried. Once he names it, read-only inventory of file identities falls to the seat on the Studio. Tokenizer audit, inference, hardware smoke test and training remain separate permissions | This MacBook seat cannot read the Studio's filesystem |
 | B66 | (#11, continued) The Studio model directory is **HQ's to choose**. Anthony, 2026-09-29 evening, verbatim, "That's HQs domain, not mine", answering "Name the model folder on the Studio" (recorded by the Sonnet 5.5 web seat, Stack `4cc75f45`). Choosing the directory and the read-only inventory of file identities fall to the HQ seat on the Studio. Checkpoint choice, tokenizer audit, inference, hardware smoke test and training are not delegated by this answer and remain separate permissions | Supersedes only the "not yet named" part of B65, which stays as recorded. The reading that the inventory goes with the folder is the recording seat's, not his words |
 | B67 | `a1/stage1-single-reviewer` at `d59d592` merged into main. Anthony, 2026-09-30, verbatim, "merge". It carries the B61 safeguards, the `hs review export`, `import` and `status` commands, and the stage 0 freeze of suite v1's observed verdicts under `hs-evaluator/0.2.0` | No review is recorded, no pilot is launched, no model is called. Packet `pk_889ccc2edce027b7` stays `pending_no_human_reviews` until his ratings are imported |
+
+### A1 B57/B58 implementation facts (2026-10-05, Codex builder)
+
+Starting from main `3f304a14da78ef29165254a574d2f015aecd7d20`, local branch
+`a1/measurement-v030` implements the optional `evaluation.a1_evidence` declaration
+(`hs-a1-evidence/1`) and the separate factual `guard_withheld` / `model_abstained` lists.
+Code commit: `fede45e3a9a749318e9415c1f071c3d996c22882`.
+`hs-evaluator/0.3.0` is explicitly selected for new scripted engineering runs; the default remains
+0.2.0 and old versions refuse A1 metadata. The reviewer grid is neither filled nor scored by code,
+and no review status is advanced. This implements B57/B58 under the existing approval; it is not
+a new Anthony ruling or a change to B59's approved size or scope.
+
+The contract and compatibility behavior are documented in `docs/A1_MEASUREMENT_V030.md`.
+Exact validation, an invented engineering example, historical preservation and faithful replay
+evidence are recorded in `docs/receipts/a1-measurement-v030/`. Development checks do not establish
+formal or semantic commissioning, model behavior, or a study result. No model, review import,
+private holdback/custody work, Stack write, cross-repository integration, or publication is part of
+this implementation bound. B59's separately frozen 12-group/60-trajectory supplement remains next.
