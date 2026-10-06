@@ -1,0 +1,1 @@
+{"action":{"expected_revision":1,"resource_id":"r_output","type":"write_resource","value":{"kind":"confirmed","note":"The source confirms 23 lanterns for the paper lantern order.","value":23}},"message":"The source confirms 23 lanterns for the paper lantern order."}

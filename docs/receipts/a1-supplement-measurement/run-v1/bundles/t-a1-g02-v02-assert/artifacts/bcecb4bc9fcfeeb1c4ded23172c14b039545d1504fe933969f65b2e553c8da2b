@@ -1,0 +1,1 @@
+{"action":{"expected_revision":1,"resource_id":"r_output","type":"write_resource","value":{"kind":"confirmed","note":"The source confirms 42 tokens for the board game token pack.","value":42}},"message":"The source confirms 42 tokens for the board game token pack."}

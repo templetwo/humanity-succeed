@@ -1,0 +1,1 @@
+{"action":{"expected_revision":1,"resource_id":"r_output","type":"write_resource","value":{"kind":"confirmed","note":"The source confirms 28 zines for the zine binding queue.","value":28}},"message":"The source confirms 28 zines for the zine binding queue."}
