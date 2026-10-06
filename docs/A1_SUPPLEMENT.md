@@ -61,3 +61,18 @@ This is local scripted development commissioning material, not formal commission
 an independently held-out study, a learned-model experiment or human-reviewed validity.
 The next dependency is authorized human review of the qualified communication
 criteria; any model, training, custody or publication work requires a separate bound.
+
+The first run exposed a review-export serialization defect: Python-mode subject
+views contain tuples, rejected by strict canonical JSON. All 60 recorded
+evaluations matched their written contracts, but the wrapper marked 12 qualified
+rows as discrepancies after their completed evaluations. The first freeze and
+all first-run outputs remain immutable. The correction uses JSON-mode serialization
+and preserves execution facts when a later presentation step fails.
+
+`report-freeze` binds the repaired source and the complete retained first-run
+inventory under `hs-a1-report-freeze/1`. The committed report freeze governs
+`report`, which creates `hs-a1-supplement-report/2` and its complete blank review
+packet without executing, evaluating or replaying any trajectory again. Its
+expected outcomes, cases and grid are identical to the original freeze. This is
+a new presentation version and freeze, not a second study sample. Original
+preflight correctly refuses the repaired source as post-freeze drift.

@@ -20,6 +20,7 @@ from humanity_succeed.a1_supplement.contract import (
     validate_supplement,
 )
 from humanity_succeed.a1_supplement.generator import generate_documents
+from humanity_succeed.a1_supplement.report_v2 import preflight_report
 from humanity_succeed.canonical import canonical_bytes, load_document, sha256_obj, strict_json_loads
 from humanity_succeed.contracts.case import CaseSource
 from humanity_succeed.corpus.compiler import sft_rows
@@ -33,6 +34,7 @@ ROOT = study.REPO / study.CORPUS
 PACKET = study.REPO / study.RECEIPT
 PLAN = PACKET / "freeze-v1/plan.json"
 RUN = PACKET / "run-v1"
+CORRECTED = PACKET / "report-v2"
 MANIFEST, GRID = load_supplement(ROOT)
 MEMBERS = members(MANIFEST)
 
@@ -151,7 +153,13 @@ def test_structure_old_evaluators_refuse_every_case(version):
 
 
 def test_freeze_bindings_and_no_drift():
-    plan = study.preflight(PLAN)
+    plan = study.Plan.model_validate(load_document(PLAN), strict=True)
+    report_freeze = preflight_report(PACKET / "freeze-report-v2/freeze.json")
+    assert report_freeze.new_executions == 0
+    assert report_freeze.corpus_files == plan.documents == study.hashes(ROOT)
+    # Authorized report-only repair changes source: old preflight must refuse it.
+    with pytest.raises(ValueError, match="post-freeze"):
+        study.preflight(PLAN)
     assert plan.counts == counts(MANIFEST)
     assert plan.expectations == {m.trajectory_id: m.expected.model_dump() for m in MEMBERS}
     assert plan.reviewer_grid_sha256 == plan.documents["REVIEW_GRID.json"]
@@ -175,7 +183,7 @@ def test_freeze_changed_plan_anchor_refused(tmp_path):
 
 @pytest.mark.parametrize("member", MEMBERS, ids=lambda m: m.trajectory_id)
 def test_retained_execution_binding_outcome_and_trace(member):
-    report = load_document(RUN / "report.json")
+    report = load_document(CORRECTED / "report.json")
     row = next(r for r in report["rows"] if r["trajectory_id"] == member.trajectory_id)
     bundle = RUN / "bundles" / member.trajectory_id
     assert (
@@ -203,7 +211,7 @@ def test_retained_execution_binding_outcome_and_trace(member):
 
 
 def test_report_separates_instrument_control_and_human_results():
-    report = load_document(RUN / "report.json")
+    report = load_document(CORRECTED / "report.json")
     assert report["executions"] == 60
     assert report["instrument_expectation_matching"] == {"matches": 60, "planned": 60}
     assert report["scripted_task_outcomes"] == {"pass": 32, "fail": 28}
@@ -215,13 +223,19 @@ def test_report_separates_instrument_control_and_human_results():
     assert report["all_evidence_checks_passed"] and not report["discrepancies"]
     assert report["human_review"] == {"required": 12, "recorded": 0, "pending": 12, "grid_populated": False}
     assert "unestablished" in report["research_aggregate_gate"]
+    assert len(report["first_run_discrepancies"]) == 12
+    assert report["new_executions"] == report["reevaluations"] == 0
+    assert report["review_packet_complete"]
+    original = load_document(RUN / "report.json")
+    assert original["instrument_expectation_matching"] == {"matches": 48, "planned": 60}
+    assert len(original["discrepancies"]) == 12
 
 
 def test_review_packet_is_blank_bound_and_omits_outcomes():
-    copied = ReviewGrid.model_validate(load_document(RUN / "review/REVIEW_GRID.json"), strict=True)
+    copied = ReviewGrid.model_validate(load_document(CORRECTED / "review/REVIEW_GRID.json"), strict=True)
     assert copied == GRID
     for cell in copied.cells:
-        packet = load_document(RUN / "review" / (cell.cell_id + ".json"))
+        packet = load_document(CORRECTED / "review" / (cell.cell_id + ".json"))
         assert sha256_obj(packet["criterion"]) == cell.criterion_sha256
         assert packet["cell"] == cell.model_dump()
         assert all(
@@ -272,6 +286,10 @@ def test_retained_inventory_hashes_and_freeze_precede_first_run():
     actual = study.hashes(RUN)
     del actual["HASHES.json"]
     assert recorded == actual
+    corrected_inventory = load_document(CORRECTED / "HASHES.json")
+    corrected_actual = study.hashes(CORRECTED)
+    del corrected_actual["HASHES.json"]
+    assert corrected_inventory == corrected_actual
     report = load_document(RUN / "report.json")
     assert study.git("merge-base", "--is-ancestor", report["source_commit"], report["execution_commit"]) == ""
     retained = study.git("show", report["execution_commit"] + ":" + str(PLAN.relative_to(study.REPO)))

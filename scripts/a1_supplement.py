@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from humanity_succeed.a1_supplement.contract import validate_supplement
+from humanity_succeed.a1_supplement.report_v2 import correct_report, freeze_report
 from humanity_succeed.a1_supplement.study import enactment_check, freeze, generate, preflight, run
 from humanity_succeed.canonical import canonical_bytes
 
@@ -22,6 +23,10 @@ def main() -> int:
     for name in ("preflight", "run"):
         sub = commands.add_parser(name)
         sub.add_argument("--plan", type=Path, required=True)
+    report_freeze = commands.add_parser("report-freeze")
+    report_freeze.add_argument("--out", type=Path, required=True)
+    report_cmd = commands.add_parser("report")
+    report_cmd.add_argument("--freeze", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "generate":
         report = generate(args.out)
@@ -32,6 +37,10 @@ def main() -> int:
     elif args.command == "preflight":
         plan = preflight(args.plan)
         report = {"status": "valid", "evaluator": plan.evaluator, "source_commit": plan.source_commit}
+    elif args.command == "report-freeze":
+        report = freeze_report(args.out)
+    elif args.command == "report":
+        report = correct_report(args.freeze)
     else:
         report = run(args.plan)
         print(canonical_bytes({k: v for k, v in report.items() if k != "rows"}).decode())

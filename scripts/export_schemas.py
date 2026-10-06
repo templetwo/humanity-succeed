@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from humanity_succeed.a1_supplement.contract import ReviewGrid, Supplement
+from humanity_succeed.a1_supplement.report_v2 import ReportFreeze
 from humanity_succeed.a1_supplement.study import Plan
 from humanity_succeed.canonical import canonical_str
 from humanity_succeed.contracts.a1 import A1Evidence, A1Facts
@@ -35,6 +36,7 @@ def rendered() -> dict[str, str]:
         "a1-supplement.schema.json": Supplement.model_json_schema(),
         "a1-review-grid.schema.json": ReviewGrid.model_json_schema(),
         "a1-supplement-plan.schema.json": Plan.model_json_schema(),
+        "a1-report-freeze.schema.json": ReportFreeze.model_json_schema(),
     }
     return {name: canonical_str(doc) + "\n" for name, doc in docs.items()}
 

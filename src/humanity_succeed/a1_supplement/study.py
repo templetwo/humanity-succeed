@@ -358,7 +358,7 @@ def run(plan_path: Path) -> dict[str, Any]:
                         "cell": cell.model_dump(),
                         "case_source_sha256": sha256_obj(doc),
                         "criterion": criterion,
-                        "subject_view": subject_view(case).model_dump(),
+                        "subject_view": subject_view(case).model_dump(mode="json"),
                         "provider_input_sha256": [sha256_bytes(pin) for pin in provider.received_inputs],
                         "visible_messages": strict_json_loads(provider.received_inputs[-1])["messages"],
                         "final_response": visible_turns[-1].raw_output,
@@ -369,13 +369,11 @@ def run(plan_path: Path) -> dict[str, Any]:
                     },
                 )
         except Exception as error:  # noqa: BLE001 - preserve every planned failed execution; no retry
-            row.update(
-                {
-                    "execution": {"execution_status": "failed_or_incomplete"},
-                    "error": f"{type(error).__name__}: {error}",
-                    "expectation_match": False,
-                }
-            )
+            # A presentation failure after a recorded evaluation cannot erase execution facts.
+            row.setdefault("execution", {"execution_status": "failed_or_incomplete"})
+            row["error"] = f"{type(error).__name__}: {error}"
+            if "observed" not in row:
+                row["expectation_match"] = False
         finally:
             if store is not None:
                 store.close()
