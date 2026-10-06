@@ -1,0 +1,1 @@
+{"all_diagnostics_preexisting":true,"baseline_commit":"d1645d8012568f5dcdc0af21e6e3a9614121b125","baseline_diagnostics":44,"baseline_errors":40,"current_diagnostics":44,"current_errors":40,"identity":["path","severity","full message including error code","source-line content"],"new":[],"resolved":[],"schema_id":"hs-typecheck-comparison/1"}

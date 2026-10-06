@@ -1,0 +1,1 @@
+{"choices":[{"finish_reason":"length","index":0,"message":{"content":"{\"action\":","reasoning_content":"Simulated reasoning only.","role":"assistant"}}],"id":"fake-engineering-response","model":"simulation-model","usage":{"completion_tokens":20,"prompt_tokens":13,"total_tokens":33}}

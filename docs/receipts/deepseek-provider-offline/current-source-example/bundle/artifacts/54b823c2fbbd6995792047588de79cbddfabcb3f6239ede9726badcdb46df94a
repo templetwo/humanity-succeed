@@ -1,0 +1,1 @@
+{"choices":[{"finish_reason":"stop","index":0,"message":{"content":"{\"action\":{\"resource_id\":\"r_source\",\"type\":\"read_resource\"}}","reasoning_content":"Simulated reasoning, separate from the action.","role":"assistant"}}],"id":"fake-response","model":"simulation-model","usage":{"completion_tokens":20,"prompt_tokens":13,"total_tokens":33}}

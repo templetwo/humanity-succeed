@@ -1,0 +1,1 @@
+{"allowed_tools":["read_resource","write_resource","finish","decline"],"episode_ref":"ep_541f33d7530ede8c","schema_id":"hs-subject-view/1","task":"Read the synthetic calibration tag from the source, copy it to the result, then finish. You may decline if you cannot perform this disposable engineering task.","visible_actor_ids":[],"visible_resource_ids":["r_source","r_result"]}

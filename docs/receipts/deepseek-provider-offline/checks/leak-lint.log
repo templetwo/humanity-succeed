@@ -1,0 +1,14 @@
+{
+  "artifacts": [],
+  "limitations": [
+    "phrase lint is not semantic leakage proof; every flag needs a reviewed disposition"
+  ],
+  "result": {
+    "flag_count": 0,
+    "flags": {
+      "engineering-connectivity-lantern-001": [],
+      "engineering-hosted-copy-001": []
+    }
+  },
+  "status": "ok"
+}

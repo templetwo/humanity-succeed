@@ -1,0 +1,1 @@
+{"actors":[],"clarification_reply":null,"initial_tick":0,"permissions":{"notifiable_actor_ids":[],"readable_ids":["r_source","r_result"],"writable_ids":["r_result"]},"resources":{"r_result":{"revision":1,"value":{"tag":null}},"r_source":{"revision":1,"value":{"tag":"CAL-7"}}},"scheduled_observations":[],"schema_id":"hs-world-view/1"}

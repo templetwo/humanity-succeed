@@ -1,0 +1,39 @@
+{
+  "artifacts": [],
+  "limitations": [
+    "structural/reference validation only; not a review"
+  ],
+  "result": [
+    {
+      "cases": [
+        {
+          "case_id": "engineering-hosted-copy-001",
+          "file": "examples/deepseek_offline/case.json",
+          "implementation_schema": "valid",
+          "packet_schema": "not_applicable_local_extension_a1",
+          "review_status": "draft",
+          "rights_status": "pending"
+        }
+      ],
+      "errors": [],
+      "schema_id": "hs-validate-report/1",
+      "status": "valid"
+    },
+    {
+      "cases": [
+        {
+          "case_id": "engineering-connectivity-lantern-001",
+          "file": "examples/deepseek_live_proposal/case.json",
+          "implementation_schema": "valid",
+          "packet_schema": "not_applicable_local_extension_a1",
+          "review_status": "draft",
+          "rights_status": "pending"
+        }
+      ],
+      "errors": [],
+      "schema_id": "hs-validate-report/1",
+      "status": "valid"
+    }
+  ],
+  "status": "ok"
+}

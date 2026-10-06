@@ -1,0 +1,130 @@
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 34%]
+.......F................................................................ [ 43%]
+........................................................................ [ 52%]
+..........F............................................................. [ 60%]
+.................................F...................................... [ 69%]
+........................................................................ [ 78%]
+........................................................................ [ 86%]
+........................................................................ [ 95%]
+....................FF..............                                     [100%]
+=================================== FAILURES ===================================
+_________________________ test_wp2_behaviour_is_frozen _________________________
+
+    def test_wp2_behaviour_is_frozen():
+>       now = measure()
+              ^^^^^^^^^
+
+tests/golden/test_wp3_stage0_freeze.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/golden/capture_wp3_stage0.py:63: in measure
+    compile_many(list(CASE_DIRS), tmp / "compiled")
+src/humanity_succeed/corpus/compiler.py:306: in compile_many
+    return compile_cases(stage, out, principles, evaluator_version=evaluator_version)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/humanity_succeed/corpus/compiler.py:169: in compile_cases
+    require_compatible(case, evaluator_version)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+case = CaseSource(schema_version='1.0', case_id='engineering-connectivity-lantern-001', root_scenario_id='engineering-connect...inding', finding='The readable ticket supplies the lantern label.', evidence_status='supported')])), demonstrations=[])
+evaluator_version = 'hs-evaluator/0.2.0'
+
+    def require_compatible(case: CaseSource, evaluator_version: str) -> None:
+        newer = ops_unavailable(case, evaluator_version)
+        if newer:
+>           raise UnsupportedEvaluatorVersion(
+                f"{evaluator_version} cannot evaluate extension(s) {', '.join(newer)}")
+E           humanity_succeed.evaluation.predicates.UnsupportedEvaluatorVersion: hs-evaluator/0.2.0 cannot evaluate extension(s) evaluation.a1_evidence (hs-a1-evidence/1)
+
+src/humanity_succeed/evaluation/predicates.py:62: UnsupportedEvaluatorVersion
+_____________________________ test_demo_end_to_end _____________________________
+
+tmp_path = PosixPath('/private/var/folders/m3/93dz__bx387249x2qyglb2sw0000gn/T/pytest-of-vaquez/pytest-319/test_demo_end_to_end0')
+
+    def test_demo_end_to_end(tmp_path):
+        code, env, _ = hs("demo", "--repo", REPO, "--out", tmp_path / "demo",
+                          "--state-root", tmp_path / "state")
+>       assert code == 0 and env["result"]["all_assertions_hold"] is True
+E       assert (4 == 0)
+
+tests/integration/test_cli.py:93: AssertionError
+___________________ test_replay_is_read_only_and_reproduces ____________________
+
+bundle = PosixPath('/private/var/folders/m3/93dz__bx387249x2qyglb2sw0000gn/T/pytest-of-vaquez/pytest-319/test_replay_is_read_only_and_r0/bundle-t-correction-actual')
+tmp_path = PosixPath('/private/var/folders/m3/93dz__bx387249x2qyglb2sw0000gn/T/pytest-of-vaquez/pytest-319/test_replay_is_read_only_and_r0')
+
+    def test_replay_is_read_only_and_reproduces(bundle, tmp_path):
+        before = _digest(bundle)
+        rep = replay_bundle(bundle, tmp_path / "replay")
+        assert rep["replay"]["status"] == "reproduced"
+        assert _digest(bundle) == before
+        html = (tmp_path / "replay" / "report.html").read_text()
+        assert "http://" not in html and "https://" not in html  # no network dependency
+>       assert "Scripted instrument run" in html
+E       assert 'Scripted instrument run' in "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-...l_status&quot;: &quot;finished&quot;,\n &quot;status&quot;: &quot;reproduced&quot;\n}</pre></div></main></body></html>"
+
+tests/integration/test_evidence.py:139: AssertionError
+______________ test_compile_is_deterministic_and_separates_views _______________
+
+tmp_path = PosixPath('/private/var/folders/m3/93dz__bx387249x2qyglb2sw0000gn/T/pytest-of-vaquez/pytest-319/test_compile_is_deterministic_0')
+
+    def test_compile_is_deterministic_and_separates_views(tmp_path):
+        srcs = [EXAMPLES, DEV_CASES]
+>       r1 = compile_many(srcs, tmp_path / "a")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_splits_and_compiler.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/humanity_succeed/corpus/compiler.py:306: in compile_many
+    return compile_cases(stage, out, principles, evaluator_version=evaluator_version)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/humanity_succeed/corpus/compiler.py:169: in compile_cases
+    require_compatible(case, evaluator_version)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+case = CaseSource(schema_version='1.0', case_id='engineering-connectivity-lantern-001', root_scenario_id='engineering-connect...inding', finding='The readable ticket supplies the lantern label.', evidence_status='supported')])), demonstrations=[])
+evaluator_version = 'hs-evaluator/0.2.0'
+
+    def require_compatible(case: CaseSource, evaluator_version: str) -> None:
+        newer = ops_unavailable(case, evaluator_version)
+        if newer:
+>           raise UnsupportedEvaluatorVersion(
+                f"{evaluator_version} cannot evaluate extension(s) {', '.join(newer)}")
+E           humanity_succeed.evaluation.predicates.UnsupportedEvaluatorVersion: hs-evaluator/0.2.0 cannot evaluate extension(s) evaluation.a1_evidence (hs-a1-evidence/1)
+
+src/humanity_succeed/evaluation/predicates.py:62: UnsupportedEvaluatorVersion
+_____________________ test_compile_refuses_existing_output _____________________
+
+tmp_path = PosixPath('/private/var/folders/m3/93dz__bx387249x2qyglb2sw0000gn/T/pytest-of-vaquez/pytest-319/test_compile_refuses_existing_0')
+
+    def test_compile_refuses_existing_output(tmp_path):
+        (tmp_path / "out").mkdir()
+        with pytest.raises(FileExistsError):
+>           compile_cases(EXAMPLES, tmp_path / "out")
+
+tests/unit/test_splits_and_compiler.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/humanity_succeed/corpus/compiler.py:169: in compile_cases
+    require_compatible(case, evaluator_version)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+case = CaseSource(schema_version='1.0', case_id='engineering-connectivity-lantern-001', root_scenario_id='engineering-connect...inding', finding='The readable ticket supplies the lantern label.', evidence_status='supported')])), demonstrations=[])
+evaluator_version = 'hs-evaluator/0.2.0'
+
+    def require_compatible(case: CaseSource, evaluator_version: str) -> None:
+        newer = ops_unavailable(case, evaluator_version)
+        if newer:
+>           raise UnsupportedEvaluatorVersion(
+                f"{evaluator_version} cannot evaluate extension(s) {', '.join(newer)}")
+E           humanity_succeed.evaluation.predicates.UnsupportedEvaluatorVersion: hs-evaluator/0.2.0 cannot evaluate extension(s) evaluation.a1_evidence (hs-a1-evidence/1)
+
+src/humanity_succeed/evaluation/predicates.py:62: UnsupportedEvaluatorVersion
+=========================== short test summary info ============================
+FAILED tests/golden/test_wp3_stage0_freeze.py::test_wp2_behaviour_is_frozen
+FAILED tests/integration/test_cli.py::test_demo_end_to_end - assert (4 == 0)
+FAILED tests/integration/test_evidence.py::test_replay_is_read_only_and_reproduces
+FAILED tests/unit/test_splits_and_compiler.py::test_compile_is_deterministic_and_separates_views
+FAILED tests/unit/test_splits_and_compiler.py::test_compile_refuses_existing_output
+5 failed, 823 passed in 153.37s (0:02:33)

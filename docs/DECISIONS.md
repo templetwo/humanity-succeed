@@ -229,3 +229,29 @@ tests pass, schemas/lint pass, historical artifacts remain unchanged, and all
 40 Mypy errors match the retained baseline by diagnostic content and source line.
 These are implementation facts under existing B59 approval, not a new Anthony
 ruling, an independent experiment, or evidence of learned model conduct.
+
+### Optional DeepSeek offline extension implementation facts (2026-10-06, Codex builder)
+
+Under Anthony's separately assigned optional-provider/offline bound, branch
+`provider/deepseek-offline` extends fixed B59 receipt
+`677949fd07aebd0c852beb10de5d9887b081f344`. Final tested code
+`18c090a188b6904d6f50e4e0f0f0f2296554e867` adds explicit hosted plan/authorization,
+a separate bounded worker, reversible versioned observation transport, prospective
+manifest/evaluation provenance and recorded-response replay. Default offline paths,
+0.3.0 grading, six study conditions and human judgment boundaries are unchanged.
+
+The offline receipt is `docs/receipts/deepseek-provider-offline/`: 55 new provider tests,
+189 targeted tests and 828 final offline tests pass. Initial five regression failures
+are retained and resolved by separating new engineering fixtures from the legacy
+example tree and restoring historical scripted report labels. All 250 retained bundles
+verify and replay under recorded versions; B57/B58 and B59 receipts, freezes and blank
+human packets remain unchanged. Mypy retains 40 baseline errors by diagnostic identity
+and source content, with none new. Eleven initial fake scenarios retain their actual
+execution source; the final-source complete example was exported from its existing test
+store without another execution or request.
+
+No real credential access, authenticated request, model inference, training or human rating
+occurred. The optional DeepSeek provider passed offline transport and end-to-end integration
+tests; live compatibility and behavioral evaluation remain untested. A separate connectivity
+proposal is unexecuted and lacks model, credential and authorization selections. These are
+implementation facts, not a new Anthony ruling, formal commissioning or cloud-study approval.
