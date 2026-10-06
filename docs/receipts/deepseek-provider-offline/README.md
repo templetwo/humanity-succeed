@@ -15,7 +15,8 @@ Branch: `provider/deepseek-offline`, isolated worktree
 - Final tested code: **`18c090a188b6904d6f50e4e0f0f0f2296554e867`**.
 - Receipt commit: resolve the local commit introducing this file with
   `git log -1 --format=%H -- docs/receipts/deepseek-provider-offline/acceptance.json`;
-  its full SHA is provided in the handoff. A receipt cannot embed its own Git commit hash.
+  its full SHA is provided in the handoff. The final seal is the last commit changing the
+  top-level SHA256SUMS. A receipt cannot embed its own Git commit hash.
 
 The receipt commit changes only this receipt material and appended implementation facts
 in DECISIONS. No push, merge, publication, Stack write, real credential access, subject
@@ -142,3 +143,8 @@ usage and billing remain unknown. Credential screening is not proof against ever
 secret transformation. No human grid or semantic verdict was filled, and no formal
 commissioning or learned conduct was established. B59 remains fixed at 677949fd…;
 its qualified-review packet is unchanged and pending the separate human step.
+
+The first root checksum inventory omitted the twelve nested bundle inventories because of
+a filename filter. `FINALIZATION.json` records the seal correction and retains that first
+inventory. The final root inventory includes all packet files except itself. No code,
+execution, evaluation or bundle bytes changed during sealing.
