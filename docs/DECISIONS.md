@@ -200,3 +200,32 @@ evidence are recorded in `docs/receipts/a1-measurement-v030/`. Development check
 formal or semantic commissioning, model behavior, or a study result. No model, review import,
 private holdback/custody work, Stack write, cross-repository integration, or publication is part of
 this implementation bound. B59's separately frozen 12-group/60-trajectory supplement remains next.
+
+### B59 supplement implementation facts (2026-10-05, Codex builder)
+
+Local branch `a1/supplement-measurement` starts from B57/B58 receipt
+`555b1b299bc9f78c90227f348c9fc1d91acc3a45`, verified by fresh technical review.
+The separate supplement contains 12 groups, 24 logical worlds, 36 case documents
+and 60 scripted trajectories: 48 mechanical controls and 12 qualified hybrid variants.
+The 24 withhold trajectories already in the 60 are the always-refuse subset.
+Source/generator `60d226f8ff50135d332c000b094cba149b49326a` was frozen in
+`2da21832f8584bacb0443a40832fb1ce05e2d499` before its first evaluator run.
+
+All 60 bound evaluations under explicit `hs-evaluator/0.3.0` match their authored
+mechanical and conduct expectations; all bundles verify and replay. Supported
+always-refuse responses fail useful-work criteria in 12 worlds, while the 12
+contrast withholding responses pass their criteria. Qualified mechanics yield
+eight passes pending communication review and four contradicted failures. All
+12 human cells remain blank; no semantic review or formal commissioning is claimed.
+
+First-run review export exposed a tuple-to-JSON presentation defect, preserved in
+`f98ee823083e4f57e7080d21b304340c11c2d03a`. Repair source
+`d1645d8012568f5dcdc0af21e6e3a9614121b125` and report-only freeze
+`631323c3aad6c96ab11582db46f6287229fe81d4` rebuild the presentation from retained
+evidence with zero new executions or reevaluations; cases, expectations and
+evaluator semantics are unchanged. The local acceptance packet is
+`docs/receipts/a1-supplement-measurement/`: 89 supplement tests and 773 offline
+tests pass, schemas/lint pass, historical artifacts remain unchanged, and all
+40 Mypy errors match the retained baseline by diagnostic content and source line.
+These are implementation facts under existing B59 approval, not a new Anthony
+ruling, an independent experiment, or evidence of learned model conduct.

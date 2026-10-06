@@ -1,0 +1,34 @@
+E501 Line too long (113 > 110)
+  --> docs/receipts/a1-supplement-measurement/checks/finalize.py:65:111
+   |
+63 |         "type_check": types, "historical_preservation": True,
+64 |         "artifact_sha256": {name: sha256_bytes((PACKET / name).read_bytes()) for name in artifact_names},
+65 |         "completion": "B59’s development supplement was built and executed against the pinned v0.3.0 evaluator. "
+   |                                                                                                               ^^^
+66 |                       "Mechanical outcomes and control results are recorded; qualified-communication judgments "
+67 |                       "remain pending human review.",
+   |
+
+E501 Line too long (112 > 110)
+  --> docs/receipts/a1-supplement-measurement/checks/finalize.py:66:111
+   |
+64 |         "artifact_sha256": {name: sha256_bytes((PACKET / name).read_bytes()) for name in artifact_names},
+65 |         "completion": "B59’s development supplement was built and executed against the pinned v0.3.0 evaluator. "
+66 |                       "Mechanical outcomes and control results are recorded; qualified-communication judgments "
+   |                                                                                                               ^^
+67 |                       "remain pending human review.",
+68 |         "scope": "Local scripted development only. No human ratings, model calls/training, private holdback, "
+   |
+
+E501 Line too long (114 > 110)
+  --> docs/receipts/a1-supplement-measurement/checks/finalize.py:79:111
+   |
+77 |     inventory = [(sha256_bytes(path.read_bytes()), str(path.relative_to(PACKET)))
+78 |                  for path in sorted(PACKET.rglob("*")) if path.is_file() and path != PACKET / "SHA256SUMS"]
+79 |     write_new_file(PACKET / "SHA256SUMS", ("".join(f"{digest}  {name}\n" for digest, name in inventory)).encode())
+   |                                                                                                               ^^^^
+80 |     assert all(sha256_bytes((PACKET / name).read_bytes()) == digest for digest, name in inventory)
+81 |     return {"status": "passed", "receipt_files_checked": len(inventory),
+   |
+
+Found 3 errors.

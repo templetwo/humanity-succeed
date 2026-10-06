@@ -1,0 +1,12 @@
+E501 Line too long (117 > 110)
+  --> docs/receipts/a1-supplement-measurement/checks/check_retained.py:55:111
+   |
+53 |               "golden_hashes": {name: digest(REPO / name) for name in OLD["golden_files"]},
+54 |               "reuse": "All 190 prior faithful replay/verification receipts reused; actual hashes and "
+55 |                        "frozen historical tree equality checked. New B59 evidence verified and replayed separately."}
+   |                                                                                                               ^^^^^^^
+56 |     report["passed"] = (not diff and not extension_diff and not untracked and len(checksums) == 41
+57 |                         and all(row["matches"] for row in checksums) and len(historical) == 190
+   |
+
+Found 1 error.
