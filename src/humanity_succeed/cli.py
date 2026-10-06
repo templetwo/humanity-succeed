@@ -32,8 +32,9 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from . import __version__
+from . import EVALUATOR_VERSION, SUPPORTED_EVALUATOR_VERSIONS, __version__
 from .canonical import StrictLoadError, canonical_bytes, load_document, sha256_obj, write_new_file
+from .evaluation.predicates import UnsupportedEvaluatorVersion
 
 EXIT_OK, EXIT_INVALID, EXIT_PRECONDITION, EXIT_UNSUPPORTED, EXIT_CORRUPT, EXIT_INTERRUPTED = (
     0, 2, 3, 4, 5, 6)
@@ -147,7 +148,7 @@ def cmd_cases_compile(a: argparse.Namespace) -> int:
     from .corpus.lint import extract_principles_text
 
     principles = extract_principles_text(Path(a.principles).read_text()) if a.principles else None
-    rep = compile_many(_paths(a.path), Path(a.out), principles)
+    rep = compile_many(_paths(a.path), Path(a.out), principles, evaluator_version=a.evaluator_version)
     if rep["status"] == "blocked":
         return emit(envelope("blocked", rep), EXIT_INVALID)
     return emit(envelope("ok", rep, artifacts=[rep["out_dir"]],
@@ -175,7 +176,8 @@ def cmd_run_scripted(a: argparse.Namespace) -> int:
     # The store name derives from a hash, never from a user-supplied ID.
     store_name = f"traj-{sha256_obj(traj['trajectory_id'])[:16]}-{uuid.uuid4().hex[:8]}.sqlite"
     store_path = root / "runs" / store_name
-    bundle, evaluation = run_scripted(case, doc, traj, store_path, Path(a.out))
+    bundle, evaluation = run_scripted(case, doc, traj, store_path, Path(a.out),
+                                      evaluator_version=a.evaluator_version)
     return emit(envelope("ok", {
         "bundle": str(bundle),
         "store": str(store_path),
@@ -183,6 +185,7 @@ def cmd_run_scripted(a: argparse.Namespace) -> int:
         "mechanical_verdict": evaluation["mechanical"]["verdict"],
         "conduct_outcome": evaluation["conduct_outcome"],
         "containment": evaluation["containment"]["denied_proposals"],
+        "evaluator_version": evaluation["evaluator_version"],
     }, limitations=[SCRIPTED_LIMITATION], artifacts=[str(bundle), str(store_path)]), EXIT_OK)
 
 
@@ -391,6 +394,8 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("path", nargs="+")
     c.add_argument("--out", required=True)
     c.add_argument("--principles")
+    c.add_argument("--evaluator-version", choices=SUPPORTED_EVALUATOR_VERSIONS,
+                   default=EVALUATOR_VERSION)
     c.set_defaults(fn=cmd_cases_compile)
 
     run = g.add_parser("run").add_subparsers(dest="sub", required=True)
@@ -401,6 +406,8 @@ def build_parser() -> argparse.ArgumentParser:
     src.add_argument("--demo")
     r.add_argument("--out", required=True)
     r.add_argument("--state-root")
+    r.add_argument("--evaluator-version", choices=SUPPORTED_EVALUATOR_VERSIONS,
+                   default=EVALUATOR_VERSION)
     r.set_defaults(fn=cmd_run_scripted)
     for sub in ("plan", "execute"):
         x = run.add_parser(sub)
@@ -485,6 +492,9 @@ def main(argv: list[str] | None = None) -> int:
     except FileExistsError as e:
         return emit(envelope("invalid", None, error={"code": "refuse_overwrite",
                                                      "message": str(e)}), EXIT_INVALID)
+    except UnsupportedEvaluatorVersion as e:
+        return emit(envelope("unsupported", None, error={"code": "unsupported_evaluator_version",
+                                                        "message": str(e)}), EXIT_UNSUPPORTED)
     except (ValueError, FileNotFoundError) as e:  # StrictLoadError is a ValueError
         return emit(envelope("invalid", None, error={"code": "invalid_input",
                                                      "message": str(e)}), EXIT_INVALID)

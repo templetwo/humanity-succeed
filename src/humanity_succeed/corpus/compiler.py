@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .. import COMPILER_VERSION
+from .. import COMPILER_VERSION, EVALUATOR_VERSION
 from ..canonical import (
     StrictLoadError,
     canonical_bytes,
@@ -34,6 +34,7 @@ from ..contracts.schemas import implementation_case_schema, packet_schema, schem
 from ..corpus.lint import lint_case
 from ..corpus.splits import audit_splits
 from ..corpus.views import VisibleTurn, build_messages, four_views, subject_view
+from ..evaluation.predicates import require_compatible
 
 SFT_SPLITS = {"train": "train.jsonl", "dev": "valid.jsonl"}
 TOKENIZER_IDENTITY = None  # no model selected; token/label audits are blocked, not guessed
@@ -96,6 +97,7 @@ def validate_path(path: Path) -> dict[str, Any]:
             "file": str(f),
             "case_id": case.case_id,
             "packet_schema": "valid" if not packet_errs else (
+                "not_applicable_local_extension_a1" if case.evaluation.a1_evidence is not None else
                 "not_applicable_local_extension_b03" if uses_local_extension(case) else "invalid"
             ),
             "implementation_schema": "valid",
@@ -106,7 +108,8 @@ def validate_path(path: Path) -> dict[str, Any]:
             "status": "invalid" if errors else "valid", "cases": cases, "errors": errors}
 
 
-def replay_demonstration(case: CaseSource, case_doc: dict[str, Any], demo_id: str):
+def replay_demonstration(case: CaseSource, case_doc: dict[str, Any], demo_id: str, *,
+                         evaluator_version: str = EVALUATOR_VERSION):
     """Run a demonstration through the real engine. Returns (evaluation, visible turns)."""
     from ..evidence.store import EvidenceStore
     from ..providers.scripted import ScriptedProvider
@@ -117,7 +120,8 @@ def replay_demonstration(case: CaseSource, case_doc: dict[str, Any], demo_id: st
     store = EvidenceStore(Path(":memory:"), clock=lambda: "1970-01-01T00:00:00.000000Z")
     try:
         provider = ScriptedProvider(traj["raw_outputs"])
-        res = run_episode(case, case_doc, provider, store, run_id="run_compile_replay")
+        res = run_episode(case, case_doc, provider, store, run_id="run_compile_replay",
+                          evaluator_version=evaluator_version)
         evaluation = evaluate_and_record(store, res.run_id, case)
         turns = _visible_turns_from_store(store, res.run_id)
     finally:
@@ -157,9 +161,12 @@ def sft_rows(case: CaseSource, turns: list[VisibleTurn]) -> list[dict[str, Any]]
     return rows
 
 
-def compile_cases(path: Path, out_dir: Path, principles_text: str | None = None) -> dict[str, Any]:
+def compile_cases(path: Path, out_dir: Path, principles_text: str | None = None, *,
+                  evaluator_version: str = EVALUATOR_VERSION) -> dict[str, Any]:
     loaded, errors = load_cases(path)
     cases = [c for _, c, _ in loaded]
+    for case in cases:
+        require_compatible(case, evaluator_version)
     audit = audit_splits(cases)
     lint = {c.case_id: lint_case(c, principles_text) for c in cases}
     blocked: list[dict[str, Any]] = list(errors)
@@ -181,7 +188,8 @@ def compile_cases(path: Path, out_dir: Path, principles_text: str | None = None)
             reasons.append(f"{len(lint[case.case_id])} unreviewed lint flag(s)")
         demo_results = []
         for d in case.demonstrations:
-            evaluation, turns = replay_demonstration(case, doc, d.demo_id)
+            evaluation, turns = replay_demonstration(case, doc, d.demo_id,
+                                                     evaluator_version=evaluator_version)
             actual = evaluation["mechanical"]["verdict"]
             demo_results.append({"demo_id": d.demo_id, "training_role": d.training_role,
                                  "expected": d.expected_mechanical_outcome, "actual": actual})
@@ -268,19 +276,23 @@ def compile_cases(path: Path, out_dir: Path, principles_text: str | None = None)
         "outputs": outputs,
         "training_eligibility": eligibility,
     }
+    if evaluator_version != EVALUATOR_VERSION:
+        # Explicit version selection is recorded without changing any legacy compiled bytes.
+        manifest["demonstration_evaluator_version"] = evaluator_version
     write_new_file(out / "manifest.json", canonical_bytes(manifest))
     report["out_dir"] = str(out)
     report["manifest_sha256"] = sha256_obj(manifest)
     return report
 
 
-def compile_many(paths: list[Path], out: Path, principles: str | None = None) -> dict[str, Any]:
+def compile_many(paths: list[Path], out: Path, principles: str | None = None, *,
+                 evaluator_version: str = EVALUATOR_VERSION) -> dict[str, Any]:
     """Compile several source roots as one lineage universe (derivations may cross roots)."""
     import shutil
     import tempfile
 
     if len(paths) == 1:
-        return compile_cases(paths[0], out, principles)
+        return compile_cases(paths[0], out, principles, evaluator_version=evaluator_version)
     with tempfile.TemporaryDirectory(prefix="hs-compile-") as td:
         stage = Path(td) / "sources"
         stage.mkdir()
@@ -291,4 +303,4 @@ def compile_many(paths: list[Path], out: Path, principles: str | None = None) ->
                 shutil.copy2(p, dest / Path(p).name)
             else:
                 shutil.copytree(p, dest)
-        return compile_cases(stage, out, principles)
+        return compile_cases(stage, out, principles, evaluator_version=evaluator_version)

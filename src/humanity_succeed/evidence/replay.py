@@ -91,7 +91,9 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
         }
         return finish(case, events, evaluation)
 
-    version = evaluation["evaluator_version"] if evaluation is not None else None
+    manifest = strict_json_loads((bundle / "manifest.json").read_bytes())
+    version = (evaluation["evaluator_version"] if evaluation is not None
+               else manifest["versions"]["evaluator"])
     if version is not None:
         try:
             newer = ops_unavailable(case, version)
@@ -114,13 +116,13 @@ def replay_bundle(bundle: Path, out_dir: Path) -> dict[str, Any]:
     store = EvidenceStore(Path(":memory:"))
     try:
         run_id = events[0]["run_id"]
-        manifest = strict_json_loads((bundle / "manifest.json").read_bytes())
         limits = manifest["limits"]
         # A provider_failure run exhausted its script: replay the same finite script.
         provider = ScriptedProvider(raws)
-        run_episode(case, case_doc, provider, store, run_id=run_id, limits=limits)
+        run_episode(case, case_doc, provider, store, run_id=run_id, limits=limits,
+                    evaluator_version=version)
         re_eval = (evaluate_and_record(store, run_id, case, evaluator_version=version)
-                   if version is not None else None)
+                   if evaluation is not None else None)
         re_events = store.events(run_id)
     finally:
         store.close()
@@ -271,6 +273,10 @@ def _html(result, case, events, evaluation) -> str:
             "<h2>Scope limitations</h2><div class='card'><ul>"
             + "".join(f"<li>{_e(s)}</li>" for s in ev["scope_limitations"]) + "</ul></div>",
         ]
+        if "guard_withheld" in ev:
+            a1 = {k: ev[k] for k in ("a1_evidence", "guard_withheld", "model_abstained") if k in ev}
+            parts += ["<h2>A1 declarations and recorded facts (no reviewer judgment)</h2>",
+                      f"<div class='card'><pre>{_j(a1)}</pre></div>"]
     parts += ["<h2>Verification checks</h2><div class='card scroll'><table>"
               + "".join(f"<tr><td>{_e(c['check'])}</td><td class='{'pass' if c['passed'] else 'fail'}'>"
                         f"{'pass' if c['passed'] else 'fail'}</td><td>{_e(c['detail'])}</td></tr>"

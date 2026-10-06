@@ -14,6 +14,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
+from .. import A1_EVALUATOR_VERSION
 from ..canonical import (
     StrictLoadError,
     canonical_bytes,
@@ -23,6 +26,7 @@ from ..canonical import (
     strict_json_loads,
     write_new_file,
 )
+from ..contracts.a1 import A1Evidence, A1Facts
 from ..contracts.case import CaseSource
 from ..contracts.events import (
     GENESIS_PREV_HASH,
@@ -142,6 +146,19 @@ def _evaluation_shape_problem(doc: Any, binding: dict[str, Any] | None) -> str:
         return "mechanical block is incomplete"
     if binding is not None and doc["evaluator_version"] != binding["payload"]["evaluator_version"]:
         return "evaluator_version differs from the evaluation_recorded event"
+    if doc["evaluator_version"] == A1_EVALUATOR_VERSION:
+        allowed = set(_EVALUATION_KEYS) | {"a1_evidence", "guard_withheld", "model_abstained"}
+        if set(doc) - allowed:
+            return "unknown v0.3.0 evaluation fields"
+        if doc["evidence_class"] != "scripted_instrument":
+            return "v0.3.0 development runs must be scripted_instrument"
+        try:
+            A1Facts.model_validate({k: doc[k] for k in ("guard_withheld", "model_abstained")
+                                    if k in doc}, strict=True)
+            if "a1_evidence" in doc:
+                A1Evidence.model_validate(doc["a1_evidence"], strict=True)
+        except ValidationError as e:
+            return f"invalid v0.3.0 fields: {e}"
     return ""
 
 
@@ -151,6 +168,11 @@ def _execution_state(events: list[dict[str, Any]]) -> dict[str, Any]:
     if not events:
         return {"execution_status": "unknown", "terminal_status": None}
     return derive_status(events)
+
+
+def _manifest_evaluator(manifest: Any) -> str | None:
+    versions = manifest.get("versions") if isinstance(manifest, dict) else None
+    return versions.get("evaluator") if isinstance(versions, dict) else None
 
 
 def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
@@ -312,6 +334,8 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
     except Exception:  # noqa: BLE001
         v_ok = False
     check("case_and_views_bound", v_ok)
+    if case is not None and case.evaluation.a1_evidence is not None:
+        check("a1_case_requires_v030", _manifest_evaluator(manifest) == A1_EVALUATOR_VERSION)
 
     # 6. revision history corresponds to resource_revised events
     rev_ok, rdetail = True, ""
@@ -360,6 +384,25 @@ def verify_bundle(bundle: Path, anchor: dict[str, Any] | None = None,
             check("evaluation_readable", True)
             shape = _evaluation_shape_problem(ev_doc, binding)
             check("evaluation_well_formed", not shape, shape)
+            if (isinstance(ev_doc, dict) and ev_doc.get("evaluator_version") == A1_EVALUATOR_VERSION
+                    or _manifest_evaluator(manifest) == A1_EVALUATOR_VERSION):
+                # New-version invariants do not retroactively tighten old bundle shapes.
+                version_ok = (isinstance(ev_doc, dict) and
+                              ev_doc.get("evaluator_version") == _manifest_evaluator(manifest))
+                check("a1_evaluator_matches_manifest", version_ok)
+                expected = (case.evaluation.a1_evidence.model_dump(mode="json")
+                            if case is not None and case.evaluation.a1_evidence is not None else None)
+                check("a1_declarations_match_case", isinstance(ev_doc, dict) and
+                      ev_doc.get("a1_evidence") == expected and
+                      ("a1_evidence" in ev_doc) == (expected is not None))
+                from ..evaluation.predicates import RunRecord, a1_facts
+                try:
+                    facts = a1_facts(RunRecord(wf, [], {}))
+                    a1_records_ok = not shape and all(ev_doc[k] == v for k, v in facts.items())
+                except (KeyError, TypeError, ValueError):
+                    a1_records_ok = False
+                check("a1_facts_match_events", a1_records_ok,
+                      "recorded denials and executed declines only; no reviewer judgments")
             bound = binding is not None and (
                 binding["payload"]["evaluation_sha256"] == sha256_obj(ev_doc))
             check("evaluation_bound_to_chain", bound,

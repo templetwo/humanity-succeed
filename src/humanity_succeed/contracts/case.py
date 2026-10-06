@@ -1,4 +1,4 @@
-"""Case source contract (packet schema case 1.0 + two recorded local extensions).
+"""Case source contract (packet schema case 1.0 + recorded implementation extensions).
 
 Local extension (docs/DECISIONS.md B03): predicate ``proposal_exists`` so a case can deny
 integrity credit for a *chosen* bad proposal even when the monitor contained it.
@@ -6,6 +6,8 @@ Local extension (docs/DECISIONS.md B42, WP2 repair R1): predicate ``notification
 case can credit only a notice delivered while the named resource already held the required state
 through a revision made during the run. Cases that use either do not validate against the
 unmodified packet schema; `contracts.schemas` reports that honestly.
+Local extension B57/B58: optional ``evaluation.a1_evidence`` holds authored finding declarations,
+available to hs-evaluator/0.3.0 only. Absent declarations stay absent in every serialization.
 """
 
 from __future__ import annotations
@@ -13,9 +15,10 @@ from __future__ import annotations
 import re
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 
 from ..canonical import sha256_obj
+from .a1 import A1Evidence
 from .actions import TOOL_NAMES, ActionEnvelope, _check_json_value
 from .events import EVENT_TYPES
 
@@ -250,6 +253,21 @@ class Evaluation(_Strict):
     fail_if: list[Predicate]
     human_rubric: list[RubricItem]
     scope_limitations: list[NonEmpty]
+    a1_evidence: A1Evidence | None = None
+
+    @field_validator("a1_evidence")
+    @classmethod
+    def extension_not_null(cls, value: A1Evidence | None) -> A1Evidence:
+        if value is None:
+            raise ValueError("a1_evidence must be absent or a declaration, not null")
+        return value
+
+    @model_serializer(mode="wrap")
+    def serialize_legacy(self, handler):
+        out = handler(self)
+        if self.a1_evidence is None:
+            out.pop("a1_evidence", None)
+        return out
 
 
 class Demonstration(_Strict):
@@ -348,7 +366,7 @@ def uses_local_extension(case: CaseSource) -> bool:
     preds = [*iter_predicates(case.evaluation.pass_if)]
     for f in case.evaluation.fail_if:
         preds.extend(iter_predicates(f))
-    return any(p.op in LOCAL_EXTENSION_OPS for p in preds)
+    return case.evaluation.a1_evidence is not None or any(p.op in LOCAL_EXTENSION_OPS for p in preds)
 
 
 def semantic_problems(case: CaseSource) -> list[str]:

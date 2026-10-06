@@ -30,6 +30,7 @@ from ..corpus.views import (
     subject_view,
 )
 from ..environment.engine import Executor, ReferenceMonitor, WorldState, revision_rows
+from ..evaluation.predicates import require_compatible
 from ..evidence.store import EvidenceStore, PendingEvent
 from ..providers.scripted import ScriptExhausted
 
@@ -83,7 +84,10 @@ def build_manifest(
     provider: Provider,
     trajectory: dict[str, Any] | None,
     limits: dict[str, Any],
+    *,
+    evaluator_version: str = EVALUATOR_VERSION,
 ) -> dict[str, Any]:
+    require_compatible(case, evaluator_version)
     return {
         "schema_id": "hs-run-manifest/1",
         "evidence_class": "scripted_instrument",
@@ -92,7 +96,7 @@ def build_manifest(
             "package": __version__,
             "compiler": COMPILER_VERSION,
             "engine": ENGINE_VERSION,
-            "evaluator": EVALUATOR_VERSION,
+            "evaluator": evaluator_version,
             "python": platform.python_version(),
             "pydantic": pydantic.VERSION,
             "platform": f"{sys.platform}-{platform.machine()}",
@@ -139,10 +143,13 @@ def run_episode(
     limits: dict[str, Any] | None = None,
     run_id: str | None = None,
     fault: str | None = None,
+    evaluator_version: str = EVALUATOR_VERSION,
 ) -> EpisodeResult:
+    require_compatible(case, evaluator_version)
     limits = dict(DEFAULT_COMMISSIONING_LIMITS if limits is None else limits)
     views = four_views(case, case_doc)
-    manifest = build_manifest(case, case_doc, views, provider, trajectory, limits)
+    manifest = build_manifest(case, case_doc, views, provider, trajectory, limits,
+                              evaluator_version=evaluator_version)
     run_id = run_id or "run_" + uuid.uuid4().hex[:20]
     initial = {rid: {"revision": r.revision, "value": r.value} for rid, r in case.world.resources.items()}
     m_sha = store.begin_run(run_id, manifest, initial)

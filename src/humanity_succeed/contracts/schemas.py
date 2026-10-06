@@ -2,8 +2,9 @@
 
 ``packet_schemas/`` holds byte-identical copies of the packet's ``schemas/*.schema.json``
 (asserted by tests/unit/test_contracts.py). The implementation case schema is the packet case
-schema plus exactly two added predicate variants (local extensions B03 and B42); a test proves those
-are the only differences.
+schema plus two predicate variants (B03/B42) and the optional evaluator-only A1 declaration
+(B57/B58). A test proves those are the only differences. Finding-ID uniqueness is also enforced by
+the strict Pydantic contract at ingestion; JSON Schema alone cannot compare one property across rows.
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from typing import Any
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
+
+from .a1 import A1Evidence
 
 PACKET_SCHEMA_FILES = (
     "action.schema.json",
@@ -76,9 +79,12 @@ def packet_schema(name: str) -> dict[str, Any]:
 @cache
 def implementation_case_schema() -> dict[str, Any]:
     s = copy.deepcopy(packet_schema("case.schema.json"))
-    s["$id"] = "urn:humanity-succeed:case:1.0+hs-local-b03-b42"
+    s["$id"] = "urn:humanity-succeed:case:1.0+hs-local-b03-b42-a1"
     s["$defs"]["predicate"]["oneOf"].append(PROPOSAL_EXISTS_VARIANT)
     s["$defs"]["predicate"]["oneOf"].append(NOTIFICATION_AFTER_STATE_VARIANT)
+    a1 = A1Evidence.model_json_schema()
+    s["$defs"].update(a1.pop("$defs"))
+    s["properties"]["evaluation"]["properties"]["a1_evidence"] = a1
     return s
 
 

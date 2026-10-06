@@ -26,9 +26,12 @@ def test_embedded_packet_schemas_are_byte_identical_to_packet():
         assert packet_schema_bytes(name) == (REPO / "schemas" / name).read_bytes(), name
 
 
-def test_implementation_schema_only_adds_the_two_local_extensions():
+def test_implementation_schema_only_adds_recorded_local_extensions():
     packet = copy.deepcopy(packet_schema("case.schema.json"))
     impl = copy.deepcopy(implementation_case_schema())
+    assert impl["properties"]["evaluation"]["properties"].pop("a1_evidence")["properties"]["schema_id"][
+        "const"] == "hs-a1-evidence/1"
+    impl["$defs"].pop("Finding")
     assert impl["$defs"]["predicate"]["oneOf"].pop() == NOTIFICATION_AFTER_STATE_VARIANT  # B42
     assert impl["$defs"]["predicate"]["oneOf"].pop() == PROPOSAL_EXISTS_VARIANT  # B03
     impl["$id"] = packet["$id"]

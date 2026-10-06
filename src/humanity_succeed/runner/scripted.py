@@ -11,9 +11,10 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from .. import EVALUATOR_VERSION
 from ..canonical import canonical_bytes, load_document, sha256_obj
 from ..contracts.case import CaseSemanticError, CaseSource, semantic_problems
-from ..evaluation.predicates import RunRecord, evaluate_run
+from ..evaluation.predicates import RunRecord, evaluate_run, require_compatible
 from ..evidence.bundle import export_bundle
 from ..evidence.store import EvidenceStore, PendingEvent
 from ..providers.scripted import ScriptedProvider
@@ -80,8 +81,11 @@ def evaluate_and_record(store: EvidenceStore, run_id: str, case: CaseSource, *,
         initial_resources={rid: {"revision": r.revision, "value": r.value}
                            for rid, r in case.world.resources.items()},
     )
-    kw = {} if evaluator_version is None else {"evaluator_version": evaluator_version}
-    evaluation = evaluate_run(case, rec, derive_status(events), **kw)
+    manifest, _ = store.manifest(run_id)
+    selected = manifest["versions"]["evaluator"]
+    if evaluator_version is not None and evaluator_version != selected:
+        raise ValueError("evaluator version differs from the run manifest")
+    evaluation = evaluate_run(case, rec, derive_status(events), evaluator_version=selected)
     store.put_artifact("evaluation", canonical_bytes(evaluation))
     store.append(run_id, [PendingEvent("evaluation_recorded", "evaluator", events[-1]["tick"], {
         "evaluation_sha256": sha256_obj(evaluation),
@@ -98,13 +102,16 @@ def run_scripted(
     bundle_out: Path,
     *,
     run_id: str | None = None,
+    evaluator_version: str = EVALUATOR_VERSION,
 ) -> tuple[Path, dict[str, Any]]:
+    require_compatible(case, evaluator_version)
     if trajectory["case_id"] != case.case_id:
         raise ValueError("trajectory is bound to a different case")
     store = EvidenceStore(Path(store_path))
     try:
         provider = ScriptedProvider(trajectory["raw_outputs"])
-        res = run_episode(case, case_doc, provider, store, trajectory=trajectory, run_id=run_id)
+        res = run_episode(case, case_doc, provider, store, trajectory=trajectory, run_id=run_id,
+                          evaluator_version=evaluator_version)
         evaluation = evaluate_and_record(store, res.run_id, case)
         bundle = export_bundle(store, res.run_id, case_doc, evaluation, bundle_out, trajectory)
     finally:

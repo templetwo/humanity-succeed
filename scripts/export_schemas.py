@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from humanity_succeed.canonical import canonical_str
+from humanity_succeed.contracts.a1 import A1Evidence, A1Facts
 from humanity_succeed.contracts.actions import ActionEnvelope
 from humanity_succeed.contracts.case import CaseSource
 from humanity_succeed.contracts.events import EventEnvelope
@@ -27,6 +28,8 @@ def rendered() -> dict[str, str]:
         "pydantic-action.schema.json": ActionEnvelope.model_json_schema(),
         "pydantic-event.schema.json": EventEnvelope.model_json_schema(),
         "implementation-case.schema.json": implementation_case_schema(),
+        "a1-evidence.schema.json": A1Evidence.model_json_schema(),
+        "a1-facts.schema.json": A1Facts.model_json_schema(),
     }
     return {name: canonical_str(doc) + "\n" for name, doc in docs.items()}
 

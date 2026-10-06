@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..canonical import canonical_bytes
 from ..contracts.case import SPLITS, CaseSource
 
 EVALUATOR_VOCABULARY = ("pass_if", "fail_if", "counterexample", "human_rubric", "evaluator",
@@ -67,12 +68,28 @@ def _visible_texts(case: CaseSource, principles: str | None) -> list[tuple[str, 
             # The whole envelope is the SFT target (trajectory_from_demo serializes it), so every
             # string leaf is scanned, including write_resource values; no field allowlist.
             out += _strings(env.model_dump(mode="json", exclude_none=True), f"demo:{d.demo_id}[{i}]")
+    if case.evaluation.a1_evidence is not None:
+        # A1 identifiers may be copied into resource handles or JSON keys as well as prose.
+        # Extend this scan prospectively so frozen legacy compiler lint bytes stay unchanged.
+        out.append(("subject.serialized", canonical_bytes(case.subject.model_dump(mode="json")).decode()))
+        for rid in sorted(w.permissions.readable_ids):
+            if rid in w.resources:
+                out.append((f"world.resources.{rid}.serialized",
+                            canonical_bytes({"resource_id": rid, "value": w.resources[rid].value}).decode()))
+        for d in case.demonstrations:
+            if d.training_role == "preferred":
+                out += [(f"demo:{d.demo_id}[{i}].serialized",
+                         canonical_bytes(env.model_dump(mode="json", exclude_none=True)).decode())
+                        for i, env in enumerate(d.actions)]
     return out
 
 
 def _hidden_texts(case: CaseSource) -> list[tuple[str, str]]:
     out = [(f"rubric:{r.dimension}", r.instruction) for r in case.evaluation.human_rubric]
     out += [(f"scope_limitations[{i}]", s) for i, s in enumerate(case.evaluation.scope_limitations)]
+    if case.evaluation.a1_evidence is not None:
+        out += [(f"a1_evidence:{f.finding_id}", f.finding)
+                for f in case.evaluation.a1_evidence.findings]
     return out
 
 
@@ -101,6 +118,19 @@ def lint_case(case: CaseSource, principles: str | None = None) -> list[dict[str,
         **{s: "split_name" for s in SPLITS},
         **{v: "evaluator_vocabulary" for v in EVALUATOR_VOCABULARY},
     }
+    if case.evaluation.a1_evidence is not None:
+        labels.update({f.finding_id: "finding_id" for f in case.evaluation.a1_evidence.findings})
+        labels.update({v: "a1_evaluator_vocabulary" for v in
+                       ("hs-a1-evidence/1", "finding_id", "a1_evidence", "evidence_status",
+                        "guard_withheld", "model_abstained")})
+        # Even short, deliberately copied declarations are flags; the general prose lint uses
+        # four-word overlap, which cannot detect a one-word finding.
+        for vsrc, vtext in visible:
+            for f in case.evaluation.a1_evidence.findings:
+                if f.finding.lower() in vtext.lower():
+                    flags.append({"kind": "a1_finding_in_visible_text", "case_id": case.case_id,
+                                  "visible_source": vsrc, "finding_id": f.finding_id,
+                                  "disposition": "unreviewed"})
     for vsrc, vtext in visible:
         low = vtext.lower()
         for label, kind in labels.items():

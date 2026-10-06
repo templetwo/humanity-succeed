@@ -256,7 +256,9 @@ def test_kimi01_new_predicate_is_a_declared_local_extension():
 
 
 def test_evaluator_versions_are_explicit(tmp_path):
-    assert EVALUATOR_VERSION == SUPPORTED_EVALUATOR_VERSIONS[-1] == "hs-evaluator/0.2.0"
+    # B58 adds an explicitly selected version while preserving this historical default.
+    assert EVALUATOR_VERSION == "hs-evaluator/0.2.0"
+    assert SUPPORTED_EVALUATOR_VERSIONS[-1] == "hs-evaluator/0.3.0"
     store, run_id, ev, _ = run_raw("commissioning-correction-001",
                                    [write(48, 1), notify(), FINISH], tmp_path)
     case, _ = load_case(EXAMPLES / "correction.yaml")
