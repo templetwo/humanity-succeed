@@ -1,0 +1,114 @@
+
+==============================================================================
+A2a: 'anthony' rev1 pass, then 'Anthony' rev1 fail (later line, same revision)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+
+==============================================================================
+A2b: then 'anthony' rev2 pass (later line, higher revision)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'pass'}})
+
+==============================================================================
+A2c: then 'Anthony' rev2 fail -- chronologically newest, ties rev 2
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+
+==============================================================================
+A2d: then 'ANTHONY' rev1 pass -- chronologically newest, LOWER revision (per-literal numbering)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["ANTHONY", "Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+  -> the newest ledger line (ANTHONY rev1 pass) does NOT win; rev2 fail stands
+
+==============================================================================
+A2e: duplicate (literal, revision) lines with contradicting verdicts: 'bob' rev1 pass, 'bob' rev1 fail
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: [["ANTHONY", "Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=1 n_paired=1 raw=0.0 kappa=0.0
+  item0: (['anthony', 'bob'], {'anthony': {'truthful_notification': 'fail'}, 'bob': {'truthful_notification': 'pass'}})
+
+==============================================================================
+A2f: import 'anthony' again via CLI now that the ledger holds anthony/Anthony/ANTHONY
+==============================================================================
+
+$ import 'anthony' (exact literal present)
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony' collides with recorded reviewer_ref 'ANTHONY', 'Anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony' collides with recorded reviewer_ref 'ANTHONY', 'Anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import 'AnThOnY' (new literal)
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'AnThOnY' collides with recorded reviewer_ref 'ANTHONY', 'Anthony', 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'AnThOnY' collides with recorded reviewer_ref 'ANTHONY', 'Anthony', 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+==============================================================================
+A2g: legacy non-ASCII look-alike: ledger holds Cyrillic 'аnthony' (U+0430) covering ALL items; then import ASCII 'anthony'
+==============================================================================
+
+$ import ASCII 'anthony'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "\u0430nthony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'аnthony'] n_items=36 n_paired=36 raw=1.0 kappa=None
+  distinct refs (repr): ["'anthony'", "'аnthony'"]

@@ -1,0 +1,58 @@
+
+$ import anthony (36/36)
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import bob (2/36)
+  exit 0
+  recorded: 2
+  votes: 2
+  secondary: 0
+  problems: null
+
+==============================================================================
+A22a: status on the real packet
+==============================================================================
+
+$ status (real packet.json)
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=2 n_paired=2 raw=1.0 kappa=None
+
+==============================================================================
+A22b: status on a trimmed packet.json: same packet_id, only the 2 items bob covered
+==============================================================================
+
+$ status (trimmed packet.json, 2 items)
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=2 n_paired=2 raw=1.0 kappa=None
+  output mentions packet_sha256? False
+  output keys: ['agreement', 'distinct_human_reviewers', 'items', 'label', 'packet_id', 'reason', 'reviewer_ref_collisions', 'schema_id', 'secondary_ratings', 'status']
+
+==============================================================================
+A22c: status on a packet.json with a FOREIGN item swapped in (item id not in the ledger)
+==============================================================================
+
+$ status (one foreign item)
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=1 n_paired=1 raw=1.0 kappa=None

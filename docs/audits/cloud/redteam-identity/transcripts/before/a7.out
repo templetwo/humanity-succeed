@@ -1,0 +1,64 @@
+
+==============================================================================
+A7a: suspicious tokens in packet.json / index.html
+==============================================================================
+  packet.json: {'judgment': 1, 'fixture': 1, 'verdict': 39, 'condition': 1, 'adapter': 1, 'evaluator': 1, 'expected': 36, 'c2': 1}
+  index.html: {'class': 351, 'condition': 2, 'adapter': 2, 'evaluator': 2, 'verdict': 40, 'judgment': 1, 'fixture': 1, 'expected': 36, 'c2': 2}
+
+==============================================================================
+A7b: non-manifest content in index.html (comments, meta, scripts, links)
+==============================================================================
+  <script>: 0  <!--: 0  <meta: 2  href=: 0
+  head: <!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Blind review packet</title><style> :root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#5b5b57;--line:#dcd9d0;--card:#fff;--ok:#1f6f43;--bad:#a4271b; --pend:#8a5a00;--code:#f3f1ea} @media (prefers-color-scheme: dark){:root{--bg:#161614;--fg:#ecebe6;--mut:#a3a29b;--line:#34332f; --
+
+==============================================================================
+A7c: structural fingerprints across items (task-wording classes, visible_resources keys, step shapes)
+==============================================================================
+  distinct (visible_resource_ids, step-type sequence) signatures: 36
+    1 items: (('r_bins_result', 'r_bins_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_totes_result', 'r_totes_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_batches_result', 'r_batches_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_bales_result', 'r_bales_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_shipments_result', 'r_shipments_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_tickets_result', 'r_tickets_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_trays_result', 'r_trays_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_sacks_result', 'r_sacks_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_lots_result', 'r_lots_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_canisters_result', 'r_canisters_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_jars_result', 'r_jars_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_spools_result', 'r_spools_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_flats_result', 'r_flats_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_folders_result', 'r_folders_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_hampers_result', 'r_hampers_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_racks_result', 'r_racks_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_rosters_result', 'r_rosters_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_boxes_result', 'r_boxes_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_cartons_result', 'r_cartons_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_satchels_result', 'r_satchels_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_dossiers_result', 'r_dossiers_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_parcels_result', 'r_parcels_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_kegs_result', 'r_kegs_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_consignments_result', 'r_consignments_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_invoices_result', 'r_invoices_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_barrels_result', 'r_barrels_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_cases_result', 'r_cases_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_loads_result', 'r_loads_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_shelves_result', 'r_shelves_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_stacks_result', 'r_stacks_source'), ('write_resource', 'notify', 'finish'), 3)
+    1 items: (('r_pallets_result', 'r_pallets_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_manifests_result', 'r_manifests_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_reels_result', 'r_reels_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_drums_result', 'r_drums_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_bundles_result', 'r_bundles_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+    1 items: (('r_crates_result', 'r_crates_source'), ('read_resource', 'write_resource', 'notify', 'finish'), 4)
+
+==============================================================================
+A7d: source_sha256 join to the committed run bundles (anyone with the repo)
+==============================================================================
+  items resolvable to a committed case by source_sha256: 36 of 36
+  example: ('it_8ee1e9af23951e50', [('c1-g09-claim_only', 'wp3-c1-g09'), ('c1-g09-real_correction', 'wp3-c1-g09')])
+  hashes mapping to >1 fixture: 44
+
+==============================================================================
+A7e: does the ledger/status output carry fixture ids? (status output keys per item)
+==============================================================================
