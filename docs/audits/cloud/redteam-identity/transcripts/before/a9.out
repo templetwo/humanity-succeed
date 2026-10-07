@@ -1,0 +1,70 @@
+
+==============================================================================
+A9a: agreement_between_reviewers on punctuation-only variants
+==============================================================================
+  'anthony' vs 'anthony.': ACCEPTED raw_agreement=1.0
+  'anthony' vs 'anthony-': ACCEPTED raw_agreement=1.0
+  'anthony' vs 'anthony 2': ACCEPTED raw_agreement=1.0
+  'a.vasquez' vs 'a-vasquez': ACCEPTED raw_agreement=1.0
+  'anthony' vs 'Anthony': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  'anthony' vs 'anthony ': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  '.' vs '..': ACCEPTED raw_agreement=1.0
+  'anthony' vs 'anthony2': ACCEPTED raw_agreement=1.0
+
+==============================================================================
+A9b: canonical forms and problems for admitted references
+==============================================================================
+  'anthony'            canonical='anthony'            problem=None
+  'anthony.'           canonical='anthony.'           problem=None
+  'anthony-'           canonical='anthony-'           problem=None
+  'anthony_'           canonical='anthony_'           problem=None
+  'anthony 2'          canonical='anthony 2'          problem=None
+  '.'                  canonical='.'                  problem=None
+  '-'                  canonical='-'                  problem=None
+  '0'                  canonical='0'                  problem=None
+  'anthony vasquez'    canonical='anthony vasquez'    problem=None
+  'anthonyvasquez'     canonical='anthonyvasquez'     problem=None
+
+==============================================================================
+A9c: two refs, byte-identical ratings (same words, same timestamp): any signal?
+==============================================================================
+
+$ import anthony
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer-two, same words/timestamp
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "reviewer-two"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'reviewer-two'] n_items=36 n_paired=36 raw=1.0 kappa=None
+  items where both refs have identical (verdict, words, rated_at): 36/36; status reports nothing about it
+
+==============================================================================
+A9d: manifest copy with one item's source_sha256 changed (rubric 'edited' after rating): status still reports the verdict
+==============================================================================
+
+$ status (source_sha256 of item0 altered in the manifest)
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "reviewer-two"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'reviewer-two'] n_items=36 n_paired=36 raw=1.0 kappa=None
+  item0 reviewers reported: ['anthony', 'reviewer-two'] (ledger records carry the ORIGINAL hash)

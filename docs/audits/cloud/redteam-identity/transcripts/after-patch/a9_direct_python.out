@@ -1,0 +1,74 @@
+
+==============================================================================
+A9a: agreement_between_reviewers on punctuation-only variants
+==============================================================================
+  'anthony' vs 'anthony.': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  'anthony' vs 'anthony-': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  'anthony' vs 'anthony 2': ACCEPTED raw_agreement=1.0
+  'a.vasquez' vs 'a-vasquez': refused (agreement_between_reviewers refuses reviewer_ref 'a.vasquez'...)
+  'anthony' vs 'Anthony': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  'anthony' vs 'anthony ': refused (agreement_between_reviewers refuses reviewer_ref 'anthony' a...)
+  '.' vs '..': refused (agreement_between_reviewers refuses reviewer_ref '.' and '.....)
+  'anthony' vs 'anthony2': ACCEPTED raw_agreement=1.0
+
+==============================================================================
+A9b: canonical forms and problems for admitted references
+==============================================================================
+  'anthony'            canonical='anthony'            problem=None
+  'anthony.'           canonical='anthony'            problem=None
+  'anthony-'           canonical='anthony'            problem=None
+  'anthony_'           canonical='anthony'            problem=None
+  'anthony 2'          canonical='anthony2'           problem=None
+  '.'                  canonical=''                   problem=reviewer_ref '.' has no letter or digit; separators alone cannot name a reviewer (B61)
+  '-'                  canonical=''                   problem=reviewer_ref '-' has no letter or digit; separators alone cannot name a reviewer (B61)
+  '0'                  canonical='0'                  problem=None
+  'anthony vasquez'    canonical='anthonyvasquez'     problem=None
+  'anthonyvasquez'     canonical='anthonyvasquez'     problem=None
+
+==============================================================================
+A9c: two refs, byte-identical ratings (same words, same timestamp): any signal?
+==============================================================================
+
+$ import anthony
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer-two, same words/timestamp
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "reviewer-two"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'reviewer-two'] n_items=36 n_paired=36 raw=1.0 kappa=None
+  items where both refs have identical (verdict, words, rated_at): 36/36; status reports nothing about it
+
+==============================================================================
+A9d: manifest copy with one item's source_sha256 changed (rubric 'edited' after rating): status still reports the verdict
+==============================================================================
+
+$ status (source_sha256 of item0 altered in the manifest)
+  exit 2
+  status: null
+  label: null
+  distinct_human_reviewers: null
+  reviewer_ref_collisions: null
+  secondary_ratings: null
+  reason: null
+  error: packet.json sha256 f0e5ec84372e969eabeda8af8d8727474506e79651e23606ae093a3f9958baf5 != operator key packet_sha256 7a2345d2c9c8e94434f0dd93c49c4dacc5698356436e6b52f8263b28936b32b6 for packet pk_df2c307d7ee94e7b: not the manifest the ledger's records were imported against
+Traceback (most recent call last):
+  File "/home/user/humanity-succeed/docs/audits/cloud/redteam-identity/a9_direct_python.py", line 40, in <module>
+    print("  item0 reviewers reported:", res["items"][0]["human_reviewers"], "(ledger records carry the ORIGINAL hash)")
+                                         ~~~^^^^^^^^^
+KeyError: 'items'

@@ -1,0 +1,58 @@
+
+$ import anthony (36/36)
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import bob (2/36)
+  exit 0
+  recorded: 2
+  votes: 2
+  secondary: 0
+  problems: null
+
+==============================================================================
+A22a: status on the real packet
+==============================================================================
+
+$ status (real packet.json)
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=2 n_paired=2 raw=1.0 kappa=None
+
+==============================================================================
+A22b: status on a trimmed packet.json: same packet_id, only the 2 items bob covered
+==============================================================================
+
+$ status (trimmed packet.json, 2 items)
+  exit 2
+  status: null
+  label: null
+  distinct_human_reviewers: null
+  reviewer_ref_collisions: null
+  secondary_ratings: null
+  reason: null
+  error: packet.json sha256 88f20b67bde29baf5dd605d8cd023002e322b0550118378f714bd4da24b9b495 != operator key packet_sha256 2c6add1938b42b0259605d93d261485dfc789e1d22d311a62da99c5bac4de804 for packet pk_7030c5f70bdddc19: not the manifest the ledger's records were imported against
+  output mentions packet_sha256? False
+  output keys: []
+
+==============================================================================
+A22c: status on a packet.json with a FOREIGN item swapped in (item id not in the ledger)
+==============================================================================
+
+$ status (one foreign item)
+  exit 2
+  status: null
+  label: null
+  distinct_human_reviewers: null
+  reviewer_ref_collisions: null
+  secondary_ratings: null
+  reason: null
+  error: packet.json sha256 763fa468b2934e81db3fafda8a9302db847a6e80b7cfb15ad4534b348be63cb4 != operator key packet_sha256 2c6add1938b42b0259605d93d261485dfc789e1d22d311a62da99c5bac4de804 for packet pk_7030c5f70bdddc19: not the manifest the ledger's records were imported against

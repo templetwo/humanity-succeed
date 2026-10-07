@@ -1,0 +1,121 @@
+
+==============================================================================
+A6a: 'anthony' covers 36/36, 'bob' covers 1/36
+==============================================================================
+
+$ import anthony (36)
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import bob (1)
+  exit 0
+  recorded: 1
+  votes: 1
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony", "bob"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=1 n_paired=1 raw=0.0 kappa=0.0
+  items with >=2 reviewers: 1 of 36
+
+==============================================================================
+A6b: three partial humans whose union covers everything but no pair covers all: bob 1-18, carol 19-36
+==============================================================================
+
+$ import carol (18-36)
+  exit 0
+  recorded: 18
+  votes: 18
+  secondary: 0
+  problems: null
+
+$ import bob (1-18)
+  exit 0
+  recorded: 18
+  votes: 18
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "bob", "carol"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'bob'] n_items=18 n_paired=18 raw=1.0 kappa=None
+  items with >=2 reviewers: 36 of 36
+  -> every item now has two distinct covering humans; no single pair covers the packet
+
+==============================================================================
+A6c: synthetic 2-dimension item: A rates both dims; B rates dim1 only; C rates dim2 only
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["A", "B", "C"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item: ['A'] {'A': {'d1': 'pass', 'd2': 'pass'}}
+
+==============================================================================
+A6d: legacy colliding literals jointly cover: 'B' rated d1 (above), 'b' rated d2 (one person, two spellings)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["A", "B", "C"]
+  reviewer_ref_collisions: [["B", "b"]]
+  secondary_ratings: 0
+  reason: null
+  agreement[d1]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  agreement[d2]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  item: ['A', 'B'] {'A': {'d1': 'pass', 'd2': 'pass'}, 'B': {'d1': 'pass', 'd2': 'pass'}}
+
+==============================================================================
+A6e: model-kind record with counts_as_vote=True (hand-edited ledger), ref 'M', covering both dims
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["A", "B", "C"]
+  reviewer_ref_collisions: [["B", "b"]]
+  secondary_ratings: 2
+  reason: null
+  agreement[d1]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  agreement[d2]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  item: ['A', 'B']
+
+==============================================================================
+A6f: human-kind record with counts_as_vote=False (hand-edited), ref 'H2'
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["A", "B", "C"]
+  reviewer_ref_collisions: [["B", "b"]]
+  secondary_ratings: 2
+  reason: null
+  agreement[d1]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  agreement[d2]: reviewers=['A', 'B'] n_items=1 n_paired=1 raw=1.0 kappa=None
+  item: ['A', 'B']

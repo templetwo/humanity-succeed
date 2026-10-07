@@ -1,0 +1,258 @@
+diff --git a/src/humanity_succeed/cli.py b/src/humanity_succeed/cli.py
+index 9b718d6..97282c8 100644
+--- a/src/humanity_succeed/cli.py
++++ b/src/humanity_succeed/cli.py
+@@ -345,10 +345,14 @@ def cmd_review_import(a: argparse.Namespace) -> int:
+ 
+ 
+ def cmd_review_status(a: argparse.Namespace) -> int:
+-    from .review.status import review_status
++    from .review.status import PacketUnbound, review_status
+ 
+     root = state_root(a.state_root)
+-    rep = review_status(Path(a.packet), state_root=root)
++    try:
++        rep = review_status(Path(a.packet), state_root=root)
++    except PacketUnbound as e:
++        return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
++                    EXIT_INVALID)
+     return emit(envelope("ok", rep, limitations=[REVIEW_LIMITATION]), EXIT_OK)
+ 
+ 
+diff --git a/src/humanity_succeed/review/identity.py b/src/humanity_succeed/review/identity.py
+index b3d5568..93d59b9 100644
+--- a/src/humanity_succeed/review/identity.py
++++ b/src/humanity_succeed/review/identity.py
+@@ -27,9 +27,14 @@ import unicodedata
+ 
+ 
+ def canonical_reviewer_ref(ref: str) -> str:
+-    """The comparison form of a reviewer reference: NFKC, casefolded, whitespace collapsed."""
++    """The comparison form of a reviewer reference: NFKC, casefolded, then only letters and digits.
++
++    Separators and punctuation (space, ``-``, ``_``, ``.``) are dropped, not just collapsed: the
++    2026-10-07 red-team measured ``"anthony"`` and ``"anthony."`` reaching ``independently_reviewed``
++    under the earlier whitespace-only rule (``docs/audits/cloud/redteam-identity/REPORT.md`` D1).
++    """
+     folded = unicodedata.normalize("NFKC", ref).casefold()
+-    return " ".join(folded.split())
++    return "".join(c for c in folded if c.isalnum())
+ 
+ 
+ def same_reviewer(ref_a: str, ref_b: str) -> bool:
+@@ -61,6 +66,9 @@ def reviewer_ref_problem(ref: str) -> str | None:
+         return (f"reviewer_ref {ref!r} contains characters outside ASCII letters, digits, space, "
+                 f"'-', '_' and '.' ({shown}); look-alike characters would let one reviewer count "
+                 "as two (B61)")
++    if not canonical_reviewer_ref(ref):
++        return (f"reviewer_ref {ref!r} has no letter or digit; separators alone cannot name a "
++                "reviewer (B61)")
+     return None
+ 
+ 
+diff --git a/src/humanity_succeed/review/importer.py b/src/humanity_succeed/review/importer.py
+index 00b96fc..d8a570b 100644
+--- a/src/humanity_succeed/review/importer.py
++++ b/src/humanity_succeed/review/importer.py
+@@ -23,6 +23,7 @@ matching it exactly, is refused before anything is appended. The 2026-10-07 audi
+ 
+ from __future__ import annotations
+ 
++import re
+ from datetime import datetime
+ from pathlib import Path
+ from typing import Any
+@@ -43,6 +44,9 @@ from .identity import reviewer_ref_problem, same_reviewer
+ from .ledger import LedgerCorrupt, append_records, read_records
+ 
+ 
++_RATED_AT_UTC = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z")
++
++
+ def _refused(problems: list[str]) -> dict[str, Any]:
+     return {"status": "refused", "recorded": 0, "votes": 0, "secondary": 0, "problems": list(problems)}
+ 
+@@ -92,7 +96,11 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
+     ref_problem = reviewer_ref_problem(ratings.reviewer_ref)
+     if ref_problem:
+         problems.append(ref_problem)
++    # The field is named _utc: a UTC instant in one written form, not any ISO 8601 string (an offset,
++    # a date alone, a week date and a 24-hour tolerance all parsed before the 2026-10-07 red-team).
+     try:
++        if not _RATED_AT_UTC.fullmatch(ratings.rated_at_utc):
++            raise ValueError(ratings.rated_at_utc)
+         datetime.fromisoformat(ratings.rated_at_utc)
+     except ValueError:
+         problems.append(
+@@ -180,6 +188,16 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
+         if rec.reviewer_ref != ratings.reviewer_ref
+         and same_reviewer(rec.reviewer_ref, ratings.reviewer_ref)
+     })
++    other_kind = sorted({
++        rec.reviewer_kind for rec in all_records
++        if rec.reviewer_ref == ratings.reviewer_ref and rec.reviewer_kind != ratings.reviewer_kind
++    })
++    if other_kind:
++        return _refused([
++            f"reviewer_ref {ratings.reviewer_ref!r} is already recorded with reviewer_kind "
++            f"{', '.join(repr(k) for k in other_kind)}; one reference is one reviewer of one kind, "
++            "and a model's reference never becomes a human vote (B61, PROTOCOL §9)"
++        ])
+     if colliding:
+         return _refused([
+             f"reviewer_ref {ratings.reviewer_ref!r} collides with recorded reviewer_ref "
+diff --git a/src/humanity_succeed/review/ledger.py b/src/humanity_succeed/review/ledger.py
+index 7f389b5..307a0af 100644
+--- a/src/humanity_succeed/review/ledger.py
++++ b/src/humanity_succeed/review/ledger.py
+@@ -25,6 +25,7 @@ def read_records(state_root: Path, packet_id: str | None = None) -> list[ReviewR
+     if not p.exists():
+         return []
+     out: list[ReviewRecord] = []
++    seen: dict[tuple[str, str, str, str, int], int] = {}
+     for n, line in enumerate(p.read_bytes().split(b"\n"), start=1):
+         if not line.strip():
+             continue
+@@ -32,6 +33,12 @@ def read_records(state_root: Path, packet_id: str | None = None) -> list[ReviewR
+             rec = ReviewRecord.model_validate(strict_json_loads(line), strict=True)
+         except Exception as e:  # noqa: BLE001 - any failure is corruption of evidence
+             raise LedgerCorrupt(f"{p}: line {n}: {e}") from e
++        ident = (rec.packet_id, rec.item_id, rec.dimension, rec.reviewer_ref, rec.revision)
++        if ident in seen:
++            raise LedgerCorrupt(f"{p}: line {n}: revision {rec.revision} of {rec.reviewer_ref!r} on "
++                                f"{rec.item_id}/{rec.dimension} already appears at line {seen[ident]}; "
++                                "two lines with equal authority cannot both be the latest verdict")
++        seen[ident] = n
+         if packet_id is None or rec.packet_id == packet_id:
+             out.append(rec)
+     return out
+diff --git a/src/humanity_succeed/review/status.py b/src/humanity_succeed/review/status.py
+index 08db6e7..2029554 100644
+--- a/src/humanity_succeed/review/status.py
++++ b/src/humanity_succeed/review/status.py
+@@ -24,10 +24,12 @@ from __future__ import annotations
+ 
+ from pathlib import Path
+ 
+-from ..canonical import strict_json_loads
++from ..canonical import sha256_bytes, strict_json_loads
+ from ..commissioning.agreement import agreement_between_reviewers
+ from .contract import (
++    KEY_DIR,
+     PACKET_FILE,
++    PacketKey,
+     REVIEW_MODE_SINGLE,
+     STATUS_INDEPENDENT,
+     STATUS_PARTIAL,
+@@ -39,24 +41,47 @@ from .contract import (
+     PacketManifest,
+     ReviewRecord,
+ )
+-from .identity import canonical_reviewer_ref
++from .identity import canonical_reviewer_ref, reviewer_ref_problem
+ from .ledger import read_records
+ 
+ 
++class PacketUnbound(ValueError):
++    """The packet.json handed to ``review_status`` is not the one the operator key under the state
++    root was written for (missing key, or a hash mismatch). A status is only ever reported for the
++    exact manifest the ledger's records were imported against (red-team 2026-10-07, D2)."""
++
++
+ def _packet_file(packet_path: Path) -> Path:
+     p = Path(packet_path)
+     return p / PACKET_FILE if p.is_dir() else p
+ 
+ 
+-def _load_packet(packet_path: Path) -> PacketManifest:
++def _load_packet(packet_path: Path) -> tuple[PacketManifest, str]:
+     p = _packet_file(packet_path)
+-    data = strict_json_loads(p.read_bytes())
+-    return PacketManifest.model_validate(data, strict=True)
++    raw = p.read_bytes()
++    data = strict_json_loads(raw)
++    return PacketManifest.model_validate(data, strict=True), sha256_bytes(raw)
++
++
++def _bind_to_key(state_root: Path, manifest: PacketManifest, packet_sha256: str) -> None:
++    """Refuse a manifest whose bytes are not the ones the operator key records for its packet_id.
++    Without this, a trimmed copy of packet.json (same packet_id, fewer items) was reported as
++    ``independently_reviewed`` from a ledger in which the second reviewer covered 2 of 36 items."""
++    key_path = Path(state_root).joinpath(*KEY_DIR, f"{manifest.packet_id}.json")
++    try:
++        key = PacketKey.model_validate(strict_json_loads(key_path.read_bytes()), strict=True)
++    except OSError as e:
++        raise PacketUnbound(f"no operator key for packet {manifest.packet_id} under the state root "
++                            f"({key_path}): {e.strerror or e}") from e
++    if key.packet_sha256 != packet_sha256:
++        raise PacketUnbound(f"packet.json sha256 {packet_sha256} != operator key packet_sha256 "
++                            f"{key.packet_sha256} for packet {manifest.packet_id}: not the manifest "
++                            "the ledger's records were imported against")
+ 
+ 
+ def _latest_human_votes(
+     records: list[ReviewRecord],
+-) -> tuple[dict[tuple[str, str, str], ReviewRecord], list[list[str]]]:
++) -> tuple[dict[tuple[str, str, str], ReviewRecord], list[list[str]], dict[str, str]]:
+     """(item_id, reviewer, dimension) -> the highest-revision human, counts-as-vote record, plus
+     the list of ``reviewer_ref`` collisions found.
+ 
+@@ -75,9 +100,16 @@ def _latest_human_votes(
+     latest: dict[tuple[str, str, str], ReviewRecord] = {}
+     display: dict[str, str] = {}
+     literals: dict[str, set[str]] = {}
++    problems: dict[str, str] = {}
+     for rec in records:
+         if rec.reviewer_kind != "human" or not rec.counts_as_vote:
+             continue
++        # A ledger written before the charset rule may hold a reference the importer would now
++        # refuse (a Cyrillic look-alike, say). It is reported and never counted: fail closed.
++        problem = reviewer_ref_problem(rec.reviewer_ref)
++        if problem:
++            problems[rec.reviewer_ref] = problem
++            continue
+         canon = canonical_reviewer_ref(rec.reviewer_ref)
+         name = display.setdefault(canon, rec.reviewer_ref)
+         literals.setdefault(canon, set()).add(rec.reviewer_ref)
+@@ -90,7 +122,7 @@ def _latest_human_votes(
+         ):
+             latest[key] = rec
+     collisions = sorted(sorted(refs) for refs in literals.values() if len(refs) > 1)
+-    return latest, collisions
++    return latest, collisions, problems
+ 
+ 
+ def _item_coverage(
+@@ -158,10 +190,11 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
+     ``LedgerCorrupt`` (from ``review.ledger.read_records``) is never caught here: a malformed
+     ledger line is a refusal, not something this function papers over into an empty result.
+     """
+-    manifest = _load_packet(packet_path)
++    manifest, packet_sha256 = _load_packet(packet_path)
++    _bind_to_key(state_root, manifest, packet_sha256)
+     records = read_records(state_root, packet_id=manifest.packet_id)
+ 
+-    latest, collisions = _latest_human_votes(records)
++    latest, collisions, ref_problems = _latest_human_votes(records)
+     secondary_ratings = sum(1 for rec in records if rec.reviewer_kind == "model")
+ 
+     items_report = []
+@@ -207,10 +240,12 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
+     return {
+         "schema_id": STATUS_SCHEMA,
+         "packet_id": manifest.packet_id,
++        "packet_sha256": packet_sha256,
+         "status": status,
+         "label": label,
+         "distinct_human_reviewers": distinct_human_reviewers,
+         "reviewer_ref_collisions": collisions,
++        "reviewer_ref_problems": ref_problems,
+         "secondary_ratings": secondary_ratings,
+         "items": items_report,
+         "agreement": agreement_result,
+@@ -218,4 +253,4 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
+     }
+ 
+ 
+-__all__ = ["review_status"]
++__all__ = ["PacketUnbound", "review_status"]
