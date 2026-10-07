@@ -14,10 +14,16 @@ manifest bytes would be caught here rather than silently accepted.
 Revisions are numbered per ``(packet_id, item_id, dimension, reviewer_ref)`` from what the ledger
 already holds; nothing here rewrites or removes an existing line. A corrupt ledger line is a named
 refusal, never a silent skip past the evidence.
+
+Reviewer identity (B61, ``review/identity.py``): a ``reviewer_ref`` with stray whitespace, or one
+that names an already-recorded reviewer under case/whitespace/Unicode normalisation without
+matching it exactly, is refused before anything is appended. The 2026-10-07 audit measured that
+``"anthony"`` followed by ``"Anthony "`` reached ``independently_reviewed``; this closes that.
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +39,7 @@ from .contract import (
     RatingsFile,
     ReviewRecord,
 )
+from .identity import is_tidy_reviewer_ref, same_reviewer
 from .ledger import LedgerCorrupt, append_records, read_records
 
 
@@ -82,6 +89,18 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         return _refused([f"invalid ratings file {ratings_path}: {e}"])
 
     problems: list[str] = []
+    if not is_tidy_reviewer_ref(ratings.reviewer_ref):
+        problems.append(
+            f"reviewer_ref {ratings.reviewer_ref!r} has leading, trailing or repeated whitespace; "
+            "type the stable identity reference exactly (B61)"
+        )
+    try:
+        datetime.fromisoformat(ratings.rated_at_utc)
+    except ValueError:
+        problems.append(
+            f"rated_at_utc {ratings.rated_at_utc!r} is not an ISO 8601 timestamp "
+            "(for example 2026-10-07T14:03:00Z)"
+        )
     if ratings.packet_id != manifest.packet_id:
         problems.append(
             f"ratings packet_id {ratings.packet_id!r} != packet manifest packet_id "
@@ -148,9 +167,28 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     # 5. Existing ledger state for this packet, to number revisions. A corrupt line anywhere in
     #    the ledger is a named refusal, never a silent skip (ledger.py: "do not guess past it").
     try:
-        existing = read_records(state_root, packet_id=manifest.packet_id)
+        all_records = read_records(state_root)
     except LedgerCorrupt as e:
         return _refused([f"ledger corrupt: {e}"])
+    existing = [rec for rec in all_records if rec.packet_id == manifest.packet_id]
+
+    # 5b. Reviewer identity is ledger-wide, not per packet (B61). A reference that names an
+    #     already-recorded reviewer once case, whitespace and Unicode form are normalised, without
+    #     matching it byte for byte, is ambiguous: refuse it and name the collision. The operator
+    #     reuses the recorded reference or chooses a clearly distinct one; nothing is merged for
+    #     them (review/identity.py).
+    colliding = sorted({
+        rec.reviewer_ref for rec in all_records
+        if rec.reviewer_ref != ratings.reviewer_ref
+        and same_reviewer(rec.reviewer_ref, ratings.reviewer_ref)
+    })
+    if colliding:
+        return _refused([
+            f"reviewer_ref {ratings.reviewer_ref!r} collides with recorded reviewer_ref "
+            f"{', '.join(repr(c) for c in colliding)}: the same reviewer once case, whitespace and "
+            "Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly "
+            "distinct one (B61)"
+        ])
 
     counts_as_vote = ratings.reviewer_kind == "human"
     records: list[ReviewRecord] = []

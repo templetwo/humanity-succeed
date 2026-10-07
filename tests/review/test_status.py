@@ -357,3 +357,66 @@ def test_agreement_between_reviewers_shape_bug_distinguishable_from_refusal():
             "anthony", ["pass", "fail"], "maria", ["pass"], ["pass", "fail"]
         )
     assert "refuses equal reviewer_ref" not in str(exc_info.value)
+
+
+# ------------------------------------------------- reviewer identity (B61; audit of 2026-10-07)
+
+
+def test_case_and_whitespace_variants_of_one_reviewer_never_become_independent(tmp_path):
+    """Measured on 2026-10-07 against the real packet: a ledger holding 'anthony' and 'Anthony '
+    reported independently_reviewed with no label and an agreement block. Colliding references are
+    one reviewer here, the status stays single-reviewer, and the collision is reported, not hidden."""
+    manifest = _manifest(
+        [_item(ITEM_1, ["truthful_notification"]), _item(ITEM_2, ["truthful_notification"])]
+    )
+    packet_dir = _write_packet(tmp_path, manifest)
+    state_root = tmp_path / "state"
+    ledger.append_records(
+        state_root,
+        [
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_2, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="fail",
+                     reviewer_ref="Anthony "),
+            _record(item_id=ITEM_2, dimension="truthful_notification", verdict="fail",
+                     reviewer_ref="ANTHONY"),
+        ],
+    )
+
+    result = review_status(packet_dir, state_root=state_root)
+
+    assert result["status"] == STATUS_SINGLE
+    assert result["label"] == REVIEW_MODE_SINGLE
+    assert result["distinct_human_reviewers"] == ["anthony"]
+    assert result["agreement"] is None
+    assert result["reviewer_ref_collisions"] == [["ANTHONY", "Anthony ", "anthony"]]
+    # the later ledger line wins a same-revision tie between colliding literals, under the first name
+    item1 = next(r for r in result["items"] if r["item_id"] == ITEM_1)
+    assert item1["human_reviewers"] == ["anthony"]
+    assert item1["verdicts"]["anthony"]["truthful_notification"] == "fail"
+
+
+def test_distinct_reviewers_report_no_collisions(tmp_path):
+    manifest = _manifest([_item(ITEM_1, ["truthful_notification"])])
+    packet_dir = _write_packet(tmp_path, manifest)
+    state_root = tmp_path / "state"
+    ledger.append_records(
+        state_root,
+        [
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="maria"),
+        ],
+    )
+    result = review_status(packet_dir, state_root=state_root)
+    assert result["status"] == STATUS_INDEPENDENT
+    assert result["reviewer_ref_collisions"] == []
+
+
+@pytest.mark.parametrize("variant", ["Anthony", "anthony ", "ANTHONY", "Ａnthony"])
+def test_agreement_between_reviewers_refuses_canonically_equal_reviewer_refs(variant):
+    with pytest.raises(ValueError, match="same reviewer"):
+        agreement_between_reviewers("anthony", ["pass"], variant, ["pass"], ["pass", "fail"])

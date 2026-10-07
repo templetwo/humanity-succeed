@@ -13,6 +13,11 @@ reviewer count, or an agreement calculation.
 
 The output uses item ids only: no fixture id, class id, group id, or anything from ``evaluation.json``
 ever reaches this module or its result.
+
+Distinctness is decided on the comparison form of ``reviewer_ref`` (``review/identity.py``): two
+references that differ only in case, whitespace or Unicode form are ONE reviewer here, counted once,
+and reported under ``reviewer_ref_collisions`` so the operator can see them. The importer refuses
+new collisions; this handles any that a ledger already carries, always in the stricter direction.
 """
 
 from __future__ import annotations
@@ -34,6 +39,7 @@ from .contract import (
     PacketManifest,
     ReviewRecord,
 )
+from .identity import canonical_reviewer_ref
 from .ledger import read_records
 
 
@@ -48,24 +54,43 @@ def _load_packet(packet_path: Path) -> PacketManifest:
     return PacketManifest.model_validate(data, strict=True)
 
 
-def _latest_human_votes(records: list[ReviewRecord]) -> dict[tuple[str, str, str], ReviewRecord]:
-    """(item_id, reviewer_ref, dimension) -> the highest-revision human, counts-as-vote record.
+def _latest_human_votes(
+    records: list[ReviewRecord],
+) -> tuple[dict[tuple[str, str, str], ReviewRecord], list[list[str]]]:
+    """(item_id, reviewer, dimension) -> the highest-revision human, counts-as-vote record, plus
+    the list of ``reviewer_ref`` collisions found.
 
     Model ratings (``reviewer_kind == "model"``) and any record with ``counts_as_vote`` false are
     excluded here entirely, so they can never contribute to coverage or the reviewer count.
     "Latest" is decided strictly by the ``revision`` integer -- never by ``rated_at_utc`` -- because
     that is the field the ledger schema defines as authoritative (review/contract.py: "1 for the
     first record of (reviewer, item, dimension)").
+
+    The reviewer in the key is the FIRST literal ``reviewer_ref`` seen for its comparison form
+    (``canonical_reviewer_ref``), so ``"anthony"`` and a later ``"Anthony "`` share one key and are
+    never two reviewers (B61). Revisions are numbered per literal reference by the importer, so
+    when two colliding literals tie on revision the later ledger line wins; a collision is reported,
+    never hidden.
     """
     latest: dict[tuple[str, str, str], ReviewRecord] = {}
+    display: dict[str, str] = {}
+    literals: dict[str, set[str]] = {}
     for rec in records:
         if rec.reviewer_kind != "human" or not rec.counts_as_vote:
             continue
-        key = (rec.item_id, rec.reviewer_ref, rec.dimension)
+        canon = canonical_reviewer_ref(rec.reviewer_ref)
+        name = display.setdefault(canon, rec.reviewer_ref)
+        literals.setdefault(canon, set()).add(rec.reviewer_ref)
+        key = (rec.item_id, name, rec.dimension)
         current = latest.get(key)
-        if current is None or rec.revision > current.revision:
+        if (
+            current is None
+            or rec.revision > current.revision
+            or (rec.revision == current.revision and rec.reviewer_ref != current.reviewer_ref)
+        ):
             latest[key] = rec
-    return latest
+    collisions = sorted(sorted(refs) for refs in literals.values() if len(refs) > 1)
+    return latest, collisions
 
 
 def _item_coverage(
@@ -136,7 +161,7 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
     manifest = _load_packet(packet_path)
     records = read_records(state_root, packet_id=manifest.packet_id)
 
-    latest = _latest_human_votes(records)
+    latest, collisions = _latest_human_votes(records)
     secondary_ratings = sum(1 for rec in records if rec.reviewer_kind == "model")
 
     items_report = []
@@ -166,7 +191,7 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
     else:
         status = STATUS_INDEPENDENT
 
-    distinct_human_reviewers = sorted({rec.reviewer_ref for rec in latest.values()})
+    distinct_human_reviewers = sorted({name for (_item_id, name, _dimension) in latest})
     # The label must track whether the STATUS itself reflects independent review (every item
     # covered by >=2 distinct humans), not merely whether a second reviewer_ref appears anywhere
     # in the ledger: a second reviewer who only partially rated an item (never achieving full
@@ -185,6 +210,7 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
         "status": status,
         "label": label,
         "distinct_human_reviewers": distinct_human_reviewers,
+        "reviewer_ref_collisions": collisions,
         "secondary_ratings": secondary_ratings,
         "items": items_report,
         "agreement": agreement_result,
