@@ -43,4 +43,25 @@ def is_tidy_reviewer_ref(ref: str) -> bool:
     return bool(ref) and ref == " ".join(ref.split())
 
 
-__all__ = ["canonical_reviewer_ref", "same_reviewer", "is_tidy_reviewer_ref"]
+# A reviewer_ref is an identity REFERENCE the operator types, not a display name. Restricting it to
+# plain ASCII letters, digits, space and ``- _ .`` closes what normalisation cannot: NFKC does not
+# fold a Cyrillic "а" onto a Latin "a", and a zero-width joiner survives casefold. Either would make
+# one person two reviewers again. Names in other scripts belong in the words, not in the reference.
+_ALLOWED = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -_.")
+
+
+def reviewer_ref_problem(ref: str) -> str | None:
+    """Why ``ref`` is unusable as an identity reference, or ``None`` when it is acceptable."""
+    if not is_tidy_reviewer_ref(ref):
+        return (f"reviewer_ref {ref!r} is empty or has leading, trailing or repeated whitespace; "
+                "type the stable identity reference exactly (B61)")
+    bad = sorted({c for c in ref if c not in _ALLOWED})
+    if bad:
+        shown = ", ".join(f"U+{ord(c):04X}" for c in bad)
+        return (f"reviewer_ref {ref!r} contains characters outside ASCII letters, digits, space, "
+                f"'-', '_' and '.' ({shown}); look-alike characters would let one reviewer count "
+                "as two (B61)")
+    return None
+
+
+__all__ = ["canonical_reviewer_ref", "same_reviewer", "is_tidy_reviewer_ref", "reviewer_ref_problem"]

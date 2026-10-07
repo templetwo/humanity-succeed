@@ -39,7 +39,7 @@ from .contract import (
     RatingsFile,
     ReviewRecord,
 )
-from .identity import is_tidy_reviewer_ref, same_reviewer
+from .identity import reviewer_ref_problem, same_reviewer
 from .ledger import LedgerCorrupt, append_records, read_records
 
 
@@ -89,11 +89,9 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         return _refused([f"invalid ratings file {ratings_path}: {e}"])
 
     problems: list[str] = []
-    if not is_tidy_reviewer_ref(ratings.reviewer_ref):
-        problems.append(
-            f"reviewer_ref {ratings.reviewer_ref!r} has leading, trailing or repeated whitespace; "
-            "type the stable identity reference exactly (B61)"
-        )
+    ref_problem = reviewer_ref_problem(ratings.reviewer_ref)
+    if ref_problem:
+        problems.append(ref_problem)
     try:
         datetime.fromisoformat(ratings.rated_at_utc)
     except ValueError:

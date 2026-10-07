@@ -464,7 +464,7 @@ def test_case_or_unicode_variant_of_a_recorded_reviewer_is_refused_not_a_second_
                           state_root=env.state_root)["status"] == "ok"
     before = _ledger_bytes(env)
 
-    for n, variant in enumerate(("Anthony", "ANTHONY", "Ａnthony")):
+    for n, variant in enumerate(("Anthony", "ANTHONY")):
         ratings = _ratings(env, [Rating(item_id=ITEM_B, dimension=DIM_B, verdict="pass", words="again")],
                            reviewer_ref=variant)
         result = import_ratings(env.export_dir, _write_ratings(env, ratings, f"variant{n}.json"),
@@ -472,6 +472,15 @@ def test_case_or_unicode_variant_of_a_recorded_reviewer_is_refused_not_a_second_
         assert result["status"] == "refused", variant
         assert result["recorded"] == 0
         assert any("collides" in p and "'anthony'" in p for p in result["problems"]), result["problems"]
+    # look-alikes that normalisation cannot fold are refused by the character rule instead:
+    # a fullwidth A, a Cyrillic a, a zero-width joiner inside the name
+    for n, variant in enumerate(("\uff21nthony", "\u0430nthony", "anth\u200dony")):
+        ratings = _ratings(env, [Rating(item_id=ITEM_B, dimension=DIM_B, verdict="pass", words="again")],
+                           reviewer_ref=variant)
+        result = import_ratings(env.export_dir, _write_ratings(env, ratings, f"lookalike{n}.json"),
+                                state_root=env.state_root)
+        assert result["status"] == "refused", variant
+        assert any("outside ASCII" in p for p in result["problems"]), result["problems"]
     assert _ledger_bytes(env) == before
 
     # the exact recorded reference is still accepted, as a revision

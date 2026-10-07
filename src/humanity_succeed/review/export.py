@@ -119,10 +119,13 @@ def _judgment_heavy_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _outcome(related: list[dict[str, Any]],
-             values: dict[tuple[str, int], Any] | None = None) -> str:
+             values: dict[tuple[str, int], Any] | None = None,
+             told: dict[str, Any] | None = None) -> str:
     """Plain-English description of what happened to one proposal, built only from its later
     events (never from evaluation.json). Mirrors evidence.replay._turn_rows' grouping of a
-    proposal with its permission/execution/effect events by proposal_seq."""
+    proposal with its permission/execution/effect events by proposal_seq. ``told`` carries the
+    case world's ``clarification_reply`` and ``scheduled_observations`` texts, which the events
+    reference by hash and index."""
     perm = next((e for e in related if e["event_type"] == "permission_decided"), None)
     if perm is not None and perm["payload"]["decision"] == "deny":
         return f"denied: {perm['payload']['reason_code']}"
@@ -152,11 +155,29 @@ def _outcome(related: list[dict[str, Any]],
         p = note["payload"]
         return f'allowed: notified {p["actor_id"]}: "{p["text"]}"'
     if effect == "clarification_delivered":
-        return "allowed: clarification delivered"
+        # What the subject was told is part of the "actual visible sequence" BUILD_SPEC §11 keeps
+        # intact for the reviewer. The event carries only the reply's hash
+        # (environment/engine.py); the text is the case's world.clarification_reply, shown only
+        # when it hashes to what the event recorded. Before the 2026-10-07 audit this branch
+        # dropped the text entirely.
+        ev = next((e for e in related if e["event_type"] == "clarification_delivered"), None)
+        reply = (told or {}).get("reply")
+        if ev is None or reply is None or sha256_obj(reply) != ev["payload"].get("reply_sha256"):
+            return "allowed: clarification delivered (reply text not recoverable from the bundle)"
+        return f'allowed: clarification delivered -- the subject was told: "{reply}"'
     if effect == "awaiting_input":
         return "allowed: awaiting input"
     if effect == "clock_advanced":
-        return "allowed: clock advanced"
+        # Likewise the observations a wait released to the subject (same audit): the executed
+        # action's detail names the released indices into world.scheduled_observations.
+        d = executed["payload"]["detail"]
+        scheduled = (told or {}).get("scheduled") or []
+        released = [scheduled[i] for i in d.get("released", []) if 0 <= i < len(scheduled)]
+        if not released:
+            return f"allowed: clock advanced to tick {d.get('to_tick')} -- nothing new was observed"
+        shown = "; ".join(f'"{o}"' for o in released)
+        return (f"allowed: clock advanced to tick {d.get('to_tick')} -- the subject then observed: "
+                f"{shown}")
     if effect == "task_finished":
         fin = next(e for e in related if e["event_type"] == "task_finished")
         return f"allowed: task finished -- {fin['payload']['summary']}"
@@ -169,7 +190,8 @@ def _outcome(related: list[dict[str, Any]],
 
 
 def _steps(events: list[dict[str, Any]],
-           values: dict[tuple[str, int], Any] | None = None) -> list[VisibleStep]:
+           values: dict[tuple[str, int], Any] | None = None,
+           told: dict[str, Any] | None = None) -> list[VisibleStep]:
     by_prop: dict[int, list[dict[str, Any]]] = {}
     for e in events:
         payload = e["payload"] if isinstance(e["payload"], dict) else {}
@@ -187,7 +209,7 @@ def _steps(events: list[dict[str, Any]],
             related = by_prop.get(e["sequence"], [])
             steps.append(VisibleStep(
                 turn=e["payload"]["call_index"], proposed=e["payload"]["action"],
-                message=e["payload"]["message"], outcome=_outcome(related, values),
+                message=e["payload"]["message"], outcome=_outcome(related, values, told),
             ))
     return steps
 
@@ -205,13 +227,17 @@ def _build_item(bundle_dir: Path, item_id: str) -> PacketItem:
     rubric_src = case_doc["evaluation"]["human_rubric"]
     if not rubric_src:
         raise _EmptyRubric(case_doc.get("case_id", "<unknown case_id>"))
+    told = {
+        "reply": world.get("clarification_reply"),
+        "scheduled": [o["observation"] for o in world.get("scheduled_observations", [])],
+    }
     return PacketItem(
         item_id=item_id,
         task=subject["task"],
         visible_resources={
             rid: world["resources"][rid]["value"] for rid in subject["visible_resource_ids"]
         },
-        steps=_steps(events, values),
+        steps=_steps(events, values, told),
         rubric=[
             RubricLine(dimension=r["dimension"], instruction=r["instruction"]) for r in rubric_src
         ],

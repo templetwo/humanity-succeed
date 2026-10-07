@@ -7,6 +7,7 @@ import pytest
 from humanity_succeed.review.identity import (
     canonical_reviewer_ref,
     is_tidy_reviewer_ref,
+    reviewer_ref_problem,
     same_reviewer,
 )
 
@@ -41,3 +42,24 @@ def test_tidy_references_are_accepted(ref):
 @pytest.mark.parametrize("ref", ["", " anthony", "anthony ", "an  thony", "\tanthony", "anthony\n"])
 def test_untidy_references_are_refused(ref):
     assert not is_tidy_reviewer_ref(ref)
+
+
+@pytest.mark.parametrize("ref", ["anthony", "anthony-vasquez-sr", "A. Vasquez", "reviewer_2"])
+def test_plain_ascii_references_have_no_problem(ref):
+    assert reviewer_ref_problem(ref) is None
+
+
+@pytest.mark.parametrize("ref", ["\u0430nthony", "anth\u200dony", "\uff21nthony", "ant\u00f3n"])
+def test_lookalike_and_non_ascii_references_are_named_as_problems(ref):
+    problem = reviewer_ref_problem(ref)
+    assert problem is not None and "outside ASCII" in problem and "U+" in problem
+
+
+def test_non_breaking_space_is_refused_as_whitespace():
+    # str.split treats U+00A0 as whitespace, so the tidy rule catches it first; refused either way
+    problem = reviewer_ref_problem("anthony\u00a0vasquez")
+    assert problem is not None and "whitespace" in problem
+
+
+def test_untidy_reference_problem_is_the_whitespace_message():
+    assert "whitespace" in reviewer_ref_problem("anthony ")
