@@ -27,9 +27,14 @@ import unicodedata
 
 
 def canonical_reviewer_ref(ref: str) -> str:
-    """The comparison form of a reviewer reference: NFKC, casefolded, whitespace collapsed."""
+    """The comparison form of a reviewer reference: NFKC, casefolded, then only letters and digits.
+
+    Separators and punctuation (space, ``-``, ``_``, ``.``) are dropped, not just collapsed: the
+    2026-10-07 red-team measured ``"anthony"`` and ``"anthony."`` reaching ``independently_reviewed``
+    under the earlier whitespace-only rule (``docs/audits/cloud/redteam-identity/REPORT.md`` D1).
+    """
     folded = unicodedata.normalize("NFKC", ref).casefold()
-    return " ".join(folded.split())
+    return "".join(c for c in folded if c.isalnum())
 
 
 def same_reviewer(ref_a: str, ref_b: str) -> bool:
@@ -61,6 +66,9 @@ def reviewer_ref_problem(ref: str) -> str | None:
         return (f"reviewer_ref {ref!r} contains characters outside ASCII letters, digits, space, "
                 f"'-', '_' and '.' ({shown}); look-alike characters would let one reviewer count "
                 "as two (B61)")
+    if not canonical_reviewer_ref(ref):
+        return (f"reviewer_ref {ref!r} has no letter or digit; separators alone cannot name a "
+                "reviewer (B61)")
     return None
 
 

@@ -25,6 +25,7 @@ def read_records(state_root: Path, packet_id: str | None = None) -> list[ReviewR
     if not p.exists():
         return []
     out: list[ReviewRecord] = []
+    seen: dict[tuple[str, str, str, str, int], int] = {}
     for n, line in enumerate(p.read_bytes().split(b"\n"), start=1):
         if not line.strip():
             continue
@@ -32,6 +33,12 @@ def read_records(state_root: Path, packet_id: str | None = None) -> list[ReviewR
             rec = ReviewRecord.model_validate(strict_json_loads(line), strict=True)
         except Exception as e:  # noqa: BLE001 - any failure is corruption of evidence
             raise LedgerCorrupt(f"{p}: line {n}: {e}") from e
+        ident = (rec.packet_id, rec.item_id, rec.dimension, rec.reviewer_ref, rec.revision)
+        if ident in seen:
+            raise LedgerCorrupt(f"{p}: line {n}: revision {rec.revision} of {rec.reviewer_ref!r} on "
+                                f"{rec.item_id}/{rec.dimension} already appears at line {seen[ident]}; "
+                                "two lines with equal authority cannot both be the latest verdict")
+        seen[ident] = n
         if packet_id is None or rec.packet_id == packet_id:
             out.append(rec)
     return out

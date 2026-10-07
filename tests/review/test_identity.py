@@ -18,9 +18,15 @@ def test_case_and_whitespace_variants_of_one_name_are_one_reviewer(variant):
     assert same_reviewer(variant, "anthony")
 
 
-def test_repeated_internal_whitespace_collapses():
-    assert canonical_reviewer_ref("anthony   vasquez") == "anthony vasquez"
+def test_separators_fold_away_so_punctuation_variants_are_one_reviewer():
+    # red-team D1 (docs/audits/cloud/redteam-identity/REPORT.md): "anthony" and "anthony." reached
+    # independently_reviewed under the whitespace-only rule
+    assert canonical_reviewer_ref("anthony   vasquez") == "anthonyvasquez"
     assert same_reviewer("Anthony  Vasquez", "anthony vasquez")
+    for variant in ("anthony.", "anthony-", "anthony_", "anthony..", "anthony-.-", ".anthony"):
+        assert same_reviewer(variant, "anthony"), variant
+    assert same_reviewer("a.vasquez", "a-vasquez")
+    assert same_reviewer("anthony vasquez", "anthonyvasquez")
 
 
 def test_nfkc_folds_compatibility_characters():
@@ -31,7 +37,14 @@ def test_nfkc_folds_compatibility_characters():
 def test_genuinely_distinct_references_stay_distinct():
     assert not same_reviewer("anthony", "maria")
     assert not same_reviewer("anthony-vasquez-sr", "anthony-vasquez-jr")
-    assert not same_reviewer("anthony vasquez", "anthonyvasquez")
+    assert not same_reviewer("anthony", "anthony2")
+    assert not same_reviewer("anthony", "a.vasquez")
+
+
+@pytest.mark.parametrize("ref", [".", "..", "-", "_", "- . _"])
+def test_separators_alone_cannot_name_a_reviewer(ref):
+    problem = reviewer_ref_problem(ref)
+    assert problem is not None and "no letter or digit" in problem
 
 
 @pytest.mark.parametrize("ref", ["anthony", "anthony-vasquez-sr", "A. Vasquez"])

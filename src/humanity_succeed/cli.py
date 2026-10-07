@@ -345,10 +345,14 @@ def cmd_review_import(a: argparse.Namespace) -> int:
 
 
 def cmd_review_status(a: argparse.Namespace) -> int:
-    from .review.status import review_status
+    from .review.status import PacketUnbound, review_status
 
     root = state_root(a.state_root)
-    rep = review_status(Path(a.packet), state_root=root)
+    try:
+        rep = review_status(Path(a.packet), state_root=root)
+    except PacketUnbound as e:
+        return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
+                    EXIT_INVALID)
     return emit(envelope("ok", rep, limitations=[REVIEW_LIMITATION]), EXIT_OK)
 
 

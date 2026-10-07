@@ -219,8 +219,14 @@ needed for WP3.
   reviewer from a careless one) is recorded, not patched: suite v1 is frozen (B55).
 - Checks at this change: `uv run pytest` 677 passed, 2 skipped; `ruff` clean; schema freeze and suite
   generator `--check` clean.
+- Three cloud sessions (red team, independent replication, coverage) extended the audit; their
+  reports are under `docs/audits/cloud/`, their findings F13 to F22 are in the audit, and the
+  red team's six defeats are closed in this branch. A draft decision packet with exact words is at
+  `docs/audits/cloud/measurement-replication/DECISION_PACKET_SEMANTIC_CONTROLS.md`; it approves
+  nothing.
 - **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
-  items a reviewer should fail (new trajectories with a correct write and a false notice, in a
-  versioned supplement) and blind mechanical-fail negative controls. Until then any review of the
-  current packet is honestly labelled single-reviewer, 36 of 36 agree with the evaluator, kappa
-  undefined.
+  items a reviewer should fail. Known-fail items need new trajectories (correct write, false or
+  blaming notice) in a versioned supplement; suite v1 can export none. Decoupling decoys (the 12 C2
+  `blocked_attempt` members) only remove the "included implies passed" leak. Until he decides, any
+  review of the current packet is honestly labelled single-reviewer, 36 of 36 agree with the
+  evaluator, kappa undefined.

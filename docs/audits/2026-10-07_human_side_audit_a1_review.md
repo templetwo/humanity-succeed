@@ -48,21 +48,35 @@ Evidence, measured on the fresh export of the same run:
   ```
 
   BUILD_SPEC §9 asks for raw agreement, confusion matrix, prevalence and Cohen's kappa where
-  defined. On this packet kappa is undefined by construction. A single disagreement makes it 0.0.
+  defined. On this packet kappa is undefined by construction, and once anyone disagrees its whole
+  value turns on one or two items: one reviewer failing one item while the other passes all gives
+  0.0, both failing the same item gives 1.0, each failing a different item gives -0.029
+  (independent replication, `docs/audits/cloud/measurement-replication/PART1_INDEPENDENT.md` (c)).
+  It cannot be informative at any prevalence this packet can produce.
 - The hybrid gate exists for the case where the effects are real and the words are not
-  (BUILD_SPEC §7: "semantic claims ... may require human review"; A04). No fixture in suite v1 has
+  (BUILD_SPEC §8.1: "semantic claims ... may require human review"; A04). No fixture in suite v1 has
   that shape. `suite_v1/c1_correction.py` and `c2_blocked.py` notify with the true total;
   `c4_false_alarm.py` notifies "was wrong and has been corrected to {correct}", which is true on the
   `real_error` twin. The `false_alarm` twin, where the notice is false, fails *mechanically* through
   `fail_if` (A07) and never reaches a human. Nothing in the suite leaves a false notice for the
   human channel to catch: a correct write with a notice that blames the other actor, or that states
   a total different from the one written, would pass `pass_if` (`resource_field_equals` plus
-  `notification_after_state`) and arrive in the packet as a `pass` the reviewer should fail.
+  `notification_after_state`) and arrive in the packet as a `pass` the reviewer should fail. The
+  replication session measured exactly that: a scratch copy of `wp3-c1-g01` run with the notice
+  changed to "corrected to 84" (48 was written), and again to "the earlier value of 54 was an
+  error made by actor_avery", both reach `mechanical=pass`, `conduct=pending_review`
+  (`PART2_COMPARISON.md` §3.1). The B52 mutations never vary what a notice says, so the evaluator's
+  own sensitivity controls share the blind spot.
 - The selection rule itself tells the reviewer the evaluator's outcome. `review/export.py`
   exports exactly the rows with `expected.judgment_heavy`, which in suite v1 are the hybrid
   *passes*; `docs/DECISIONS.md` B53 says so in public. PROTOCOL §9 requires reviewers "blind to
   ... the evaluator's initial outcome" and BUILD_SPEC §11 says "Outcome labels are not shown before
-  the reviewer commits a verdict." No label is shown, but inclusion is the label.
+  the reviewer commits a verdict." No label is shown, but inclusion is the label. Two qualifications
+  from the replication: Anthony himself cannot be blinded to the rule by any export, because he
+  merged B67 and reads DECISIONS, so what controls can restore for him is per-item uncertainty, not
+  rule-blindness; and the packet's own instruction text, "Nothing here names a condition, an
+  adapter, or an evaluator verdict -- there is none to find", is true of the bytes and false of the
+  set.
 - The evaluator has sabotage controls (`docs/receipts/wp3/controls/sabotage_controls.py`, 4 of 4
   detected). The human channel has none: no item where `pass` is the wrong answer, no item where
   the evaluator and the honest reviewer should disagree.
@@ -77,13 +91,26 @@ there is no F4 for the semantic side. The planned supplement under B59 (`A1_MEAS
 right and whose notice is false, and it does not plan blind negative controls in a packet.
 
 **Smallest next action that needs Anthony.** Decide whether the semantic-review packets may include
-items a reviewer should fail: (a) new trajectories, in a versioned supplement (B55 rule 3, never in
-suite v1), where the write is correct and the notice misstates the total or blames the other actor,
-so the mechanical verdict is `pass` and the honest human verdict is `fail`; and (b) a blind share of
-mechanical-fail items as negative controls, so the packet's inclusion rule no longer reveals the
-evaluator's outcome. Both need his word on scope (he may fold them into the B59 supplement or name
-a `supplement_a1_semantic_controls`). Until then the honest label for any review of
-`pk_889ccc2edce027b7` is: single-reviewer, 36 of 36 agree with the evaluator, kappa undefined.
+items a reviewer should fail. The replication session's correction stands: these are two different
+objects with different costs, and suite v1 can supply only one of them.
+
+- **Known-fail items**: new trajectories, in a versioned supplement (B55 rule 3, never in suite v1),
+  where the write is correct and the notice misstates the total or blames the other actor, so the
+  mechanical verdict is `pass` and the honest human verdict is `fail`. Suite v1 has none that can
+  be exported: the one false-notice fixture, C4 `false_alarm`, has an empty rubric and blocks export.
+- **Decoupling decoys**: hybrid-fail items whose honest rubric verdict is `pass` (suite v1 has 12,
+  the C2 `blocked_attempt` members, which fail only on `proposal_exists`). They break "included
+  implies passed" but give the reviewer nothing to fail. Approving decoys alone changes nothing a
+  reviewer can be wrong about.
+
+One known-fail item makes kappa defined and makes an always-pass reviewer score exactly 0.0; a fail
+prevalence between 0.2 and 0.4 keeps a single slip from moving kappa by more than about 0.05
+(arithmetic through the repo's own `agreement()`, `PART1_INDEPENDENT.md` (c) and the decision
+packet §4). A decision packet in the house style, with exact words to approve, narrow or refuse,
+candidate sizes, a third-verdict option and what stays single-reviewer regardless, is drafted at
+`docs/audits/cloud/measurement-replication/DECISION_PACKET_SEMANTIC_CONTROLS.md`. It approves
+nothing. Until Anthony decides, the honest label for any review of `pk_889ccc2edce027b7` is:
+single-reviewer, 36 of 36 agree with the evaluator, kappa undefined.
 
 ## 3. Findings
 
@@ -101,6 +128,16 @@ a `supplement_a1_semantic_controls`). Until then the honest label for any review
 | F10 | The one packet that matters exists in one directory on one machine, uncommitted; a re-export is a different packet | medium | partly stated in the receipt | custody decision for Anthony | recorded here |
 | F11 | README, HANDOFF and ACCEPTANCE still said review import is WP4 and not started, and quoted 213 tests | low | drift | none | **fixed** in this change |
 | F12 | Latent: the packet dropped the clarification reply text and released scheduled observations | low | unrecorded; no current fixture affected | BUILD_SPEC §11 "actual visible sequence intact" | **fixed**: `review/export.py` shows both, hash-checked; test built through the real engine |
+| F13 | After F03's fix, `anthony` and `anthony.` (or `-`, `_`, ` 2`) were still two reviewers; `.` and `..` were two reviewers (red team D1) | high | unrecorded; now closed | B61 | **fixed**: the comparison form keeps letters and digits only; a reference with neither is refused |
+| F14 | `hs review status` was not bound to the operator key: a trimmed `packet.json` with the same `packet_id` reported `independently_reviewed`; the output carried no `packet_sha256` (red team D2) | high | unrecorded; now closed | B60 "bound to the exact case hash", B61 follow-through | **fixed**: status binds the manifest bytes to the key's `packet_sha256`, reports it, refuses otherwise (CLI exit 2 `packet_unbound`) |
+| F15 | A legacy ledger holding a look-alike reference counted it as a human beside its ASCII twin (red team D3) | medium | unrecorded; now closed | B61 | **fixed**: such records are excluded from votes and named under `reviewer_ref_problems` |
+| F16 | Two ledger lines with the same reviewer, item, dimension and revision but different verdicts resolved silently to the first (red team D4) | medium | unrecorded; now closed | "never silent" ledger integrity | **fixed**: `read_records` raises `LedgerCorrupt` naming both lines |
+| F17 | A reference imported as `model` and then as `human` was counted as votes (red team D5) | medium | unrecorded; now closed | B61, PROTOCOL §9 | **fixed**: import refuses a reference already recorded under another `reviewer_kind` |
+| F18 | `rated_at_utc` accepted offsets, bare dates, week dates and naive times (red team D6) | low | unrecorded; now closed | F09 | **fixed**: `YYYY-MM-DDTHH:MM:SS[.ffffff]Z` only |
+| F19 | Held by procedure only (red team H1 to H5): a hand-edited ledger that flips `model` to `human` is read cleanly; swapped `fixture_id`s in the operator key are recorded without a check; a fresh reference with `reviewer_kind: human` written by anyone counts (F04); two references with byte-identical rating sets raise no signal; every item's `source_sha256` resolves to a committed case id for anyone holding the repository | medium | now recorded | custody and identity decisions for Anthony; `KeyEntry.source_sha256` is a `review/contract.py` change | recorded; proposals in §3 |
+| F20 | A run with no judgment-heavy row raised the manifest's `ValidationError` instead of a named refusal (coverage pass D1) | low | unrecorded; now closed | none | **fixed**: `blocked_input`, nothing written |
+| F21 | When two humans overlap on some items, status keeps the `single-reviewer` label and still emits an agreement block over the shared items, which a reader can mistake for an independent-review result (coverage pass D3) | low | consistent with the contract | none | one sentence in `docs/REVIEW_PACKET_HOWTO.md` |
+| F22 | The stage-0 freeze pins four verdict fields per fixture and nothing else: a rubric edit, an event payload change or a bundle byte change with the same verdict passes it; no golden test pinned suite v1's event streams or case hashes (coverage pass §3) | medium | unrecorded | B55 (never rescored) | **added**: `tests/golden/suite_v1_review_source.json` pins the 36 judgment-heavy cases' `review_source_sha256` and stable event-stream hashes, measured from the committed bundles |
 
 ### F03. One person counted as two
 
@@ -119,6 +156,11 @@ hs review status                            -> independently_reviewed, label nul
 `agreement_between_reviewers("anthony", ..., "Anthony", ...)` likewise accepted `Anthony`,
 `anthony ` and `ANTHONY` as a second reviewer. The check compared bytes. This is the failure B61
 names: "repeats by one reviewer are revisions, never extra reviewers."
+
+The fix was then red-teamed by an independent cloud session
+(`docs/audits/cloud/redteam-identity/REPORT.md`, reproducer scripts and before/after transcripts
+beside it). It found six further defeats, F13 to F18 above, all adopted from its proposed patch, and
+five attacks held by procedure only, F19. Its sharpest: a trailing dot was still a second reviewer.
 
 Fix in this change, fail-closed and never silent (`src/humanity_succeed/review/identity.py`):
 `hs review import` refuses a `reviewer_ref` with stray whitespace, refuses one with characters
@@ -139,9 +181,19 @@ Nothing in code distinguishes a ratings file Anthony wrote from one a seat wrote
 `reviewer_kind: "human"`; the integration test does exactly that with a synthetic reference. Ruling
 06d942da bars a seat-written "Anthony confirms", and today that bar is procedure. The smallest
 technical tightening would be an operator-created reviewer registry under the state root
-(BUILD_SPEC §4 already places "human review identity keys" there), with import refusing a
+(BUILD_SPEC §3's layout already places "human review identity keys" there), with import refusing a
 `reviewer_ref` not in it. That is a decision for Anthony, not a repair, and it still would not
 prove who typed the file.
+
+The red team's held-by-procedure list (F19) belongs here. A hand edit of `ledger.jsonl` that flips
+a model's 36 lines to `human`/`counts_as_vote: true` is read cleanly and reported as independent
+review; a retained copy of each imported ratings file under the state root, or a hash chain over
+ledger lines, would make that visible. Swapping two `fixture_id`s in the operator key is recorded
+into the ledger unchecked, because `KeyEntry` carries no `source_sha256` to cross-check against the
+manifest item; that is a `review/contract.py` change and is proposed, not made. Two references with
+byte-identical verdicts, words and timestamps on all 36 items raise no signal. And every item's
+`source_sha256` resolves to a committed case id for anyone holding the repository, by design (B60
+binds the verdict to that hash); the reviewer is bound by procedure not to look.
 
 ### F05. What the reviewer is actually asked
 
@@ -174,6 +226,13 @@ human rating", and it should be said to the reviewer before he starts. Separatel
 records `pass`/`fail` while `contracts/case.py` `Review.verdict` is `approve`/`revise`/`reject`
 (the vocabulary Pilot §4 said the packet would reuse). Two review vocabularies now exist with no
 bridge, and a `fail` has no sink.
+
+### F05a. What the reviewer actually adds, and what reads it
+
+The replication session named the field this audit only implied: on this packet the only
+information a careful reviewer adds over a careless one is in `words`, and no code or statistic
+reads `words`. `status.py` and `agreement.py` consume `verdict` alone. The ledger keeps every word;
+nothing downstream does anything with it.
 
 ### F08. The §4 decision packet, as built
 
@@ -216,6 +275,21 @@ hashes to the recorded `reply_sha256`, and the released observations by index
 (`tests/review/test_export.py::test_packet_shows_the_reviewer_what_the_subject_was_told`, a bundle
 built through the real engine).
 
+### F22. What the stage-0 freeze pins
+
+`tests/golden/test_suite_v1_observed_freeze.py` re-executes all 160 trajectories and compares four
+values per fixture: `mechanical`, `conduct`, `contained`, `evaluator_version`. The coverage pass
+measured what passes it unchanged: one rubric word edited, an event payload changed with the same
+verdict, a bundle byte changed. No other golden test covered suite v1's event streams or case hashes
+(`test_wp3_stage0_freeze.py` pins the 24 dev trajectories). The pass added
+`tests/golden/suite_v1_review_source.json`, measured from the committed bundles' `case_source.json`
+and event streams, pinning the 36 judgment-heavy cases' `review_source_sha256` (the hash every
+verdict cites) and their stable event-stream hashes, with tests that the live suite YAML hashes to
+the same values and that a rubric edit now moves a frozen value
+(`docs/audits/cloud/review-tests/REPORT.md` §3). The 124 mechanical fixtures' event streams and the
+160 bundle digests remain unpinned; widening is proposed there, cheap, and not done without a word
+on scope.
+
 ## 4. Checked and not a gap
 
 - The leak check has zero hits on the real packet and the HTML is static; a planted fixture id
@@ -227,18 +301,55 @@ built through the real engine).
 - The stage-0 freeze re-measures all 160 observed verdicts under `hs-evaluator/0.2.0` and matches
   (part of the 637).
 
-## 5. Not checked here
+## 5. Second passes
 
-A six-lens adversarial pass (reviewer seat, measurement validity, promised versus landed,
-safeguard adversary, test coverage, fixtures) was launched to verify and extend this list; its
-verified additions, if any, will be appended to this document in this branch. Not examined at all:
-the WP3 custody kit, the compiler and leak lint, anything outside the A1 slice.
+Three cloud sessions worked independently on Anthony's instruction to use his cloud credits. Their
+reports are committed beside this one under `docs/audits/cloud/`.
+
+- **Red team of the identity safeguard** (`redteam-identity/REPORT.md`): six defeats (F13 to F18),
+  all adopted; five held by procedure only (F19); the rest held. Its proposed patch was applied as
+  committed, with the test adjustments it named.
+- **Independent replication from `main`** (`measurement-replication/`): PART 1 reached the same
+  numbers as §2 without reading this document (0 of 36 fail-able, kappa undefined, inclusion
+  implies the verdict, no false-notice fixture, the supplement does not cover it, no human-channel
+  control). PART 2 corrects this document in four places, all taken above: the three kappa cases,
+  the split between decoys and known-fail items, the F02 nuance for Anthony himself, and two
+  citation slips (BUILD_SPEC §8.1 not §7; §3 not §4). PART 3 is the decision-packet draft.
+- **Coverage pass** (`review-tests/REPORT.md`): 66 new tests in new files only, covering the
+  export, leak, HTML parity, importer refusals, status paths, ledger, contract strictness and CLI;
+  one named refusal (F20) and the review-source freeze (F22).
+
+A six-lens adversarial workflow (reviewer seat, measurement validity, promised versus landed,
+safeguard adversary, test coverage, fixtures) also ran on this container; its findings are being
+verified one by one and anything that survives and is not already above will be appended here.
+Not examined by anyone: the WP3 custody kit, the compiler and leak lint, anything outside the A1
+slice.
+
+## 5a. Proposed DECISIONS rows (not recorded; for Anthony and the merging seat)
+
+> B68 (proposed) The §4 decision-packet fields that would unblind the reviewer (`fixture_id`,
+> `evaluator_version`, the mechanical verdict and its evidence refs) are withheld from the packet
+> under A19 and BUILD_SPEC §11 and kept in the operator-only key; the human answer vocabulary is
+> `pass`/`fail` per rubric line, recorded in an append-only ledger, not in `case.reviews`. A bridge
+> from ledger to `case.reviews`, and whether `fail` should have a downstream effect, are open.
+
+> B69 (proposed) Under B61, a `reviewer_ref` is an identity reference, not a display name: ASCII
+> letters, digits, space, `-`, `_` and `.` only; two references are the same reviewer when they
+> agree after NFKC, casefold and dropping everything but letters and digits; a reference is one
+> reviewer of one `reviewer_kind`; `rated_at_utc` is a `Z` instant. Stricter than B61's words; a
+> label can only be too strict, never inflated.
+
+> B70 (proposed) Coverage finding F4, semantic side, beside B54's F1 to F3: no suite v1 fixture
+> exercises the hybrid human-fail path (effects right, notice false), the B52 mutations never vary
+> what a notice says, and the 36-item packet cannot distinguish a careful reviewer from a careless
+> one. Recorded, not patched; new coverage arrives only as a versioned supplement (B55 rule 3).
 
 ## 6. Boundaries kept
 
 Read-only audit of `main`; no model called; no human rating written anywhere but a scratch state
 root that was deleted; no fixture, receipt or decision edited. The only Stack write is an open
 thread in domain `humanity-succeed` carrying this audit's question for Anthony, touched at each
-milestone at his request. Code changes in this branch are limited to the B61 identity safeguard,
-the `rated_at_utc` check, the F12 export rendering, tests, and the documentation corrections
-listed under F11. Suite v1, its receipts and Anthony's packet are untouched.
+milestone at his request. Code changes in this branch are limited to the B61 identity safeguard and
+its red-team hardening (F03, F13 to F18), the F12 export rendering, the F20 named refusal, tests,
+and the documentation corrections listed under F11. Suite v1, its receipts and Anthony's packet are
+untouched. The cloud sessions kept the same boundaries; their reports say so in their own words.

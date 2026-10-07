@@ -446,11 +446,22 @@ def test_rated_at_utc_must_be_an_iso_8601_timestamp(tmp_path):
     assert any("rated_at_utc" in p for p in result["problems"])
     assert _ledger_bytes(env) == b""
 
-    # an offset form is still a timestamp; the field name says UTC but the record keeps what was typed
-    ok = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="ok")],
-                  rated_at="2026-10-07T14:03:00-04:00")
-    result = import_ratings(env.export_dir, _write_ratings(env, ok, "ok.json"), state_root=env.state_root)
-    assert result["status"] == "ok"
+    # the field is named _utc: an offset form, a bare date and a naive time are refused (red-team D6)
+    for n, bad_form in enumerate(("2026-10-07T14:03:00-04:00", "2026-10-07", "2026-10-07T14:03:00")):
+        bad = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="ok")],
+                       rated_at=bad_form)
+        result = import_ratings(env.export_dir, _write_ratings(env, bad, f"bad{n}.json"),
+                                state_root=env.state_root)
+        assert result["status"] == "refused", bad_form
+        assert any("rated_at_utc" in p for p in result["problems"])
+    assert _ledger_bytes(env) == b""
+
+    for n, good in enumerate(("2026-10-07T14:03:00Z", "2026-10-07T14:03:00.250Z")):
+        ok = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="ok")],
+                      rated_at=good)
+        result = import_ratings(env.export_dir, _write_ratings(env, ok, f"ok{n}.json"),
+                                state_root=env.state_root)
+        assert result["status"] == "ok", good
 
 
 def test_case_or_unicode_variant_of_a_recorded_reviewer_is_refused_not_a_second_reviewer(tmp_path):
@@ -520,3 +531,41 @@ def test_reviewer_identity_collision_is_checked_across_packets(tmp_path):
     assert result["status"] == "refused"
     assert any("collides" in p for p in result["problems"])
     assert read_records(env1.state_root, packet_id=OTHER_PACKET_ID) == []
+
+
+def test_a_reference_recorded_as_a_model_is_refused_as_a_human(tmp_path):
+    """Red-team D5: the same literal reference imported first as a model (secondary) and then as a
+    human was accepted and counted as votes. One reference is one reviewer of one kind."""
+    env = make_env(tmp_path, name="kind-flip")
+    model = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="m")],
+                     reviewer_ref="claude-seat", reviewer_kind="model")
+    assert import_ratings(env.export_dir, _write_ratings(env, model, "m.json"),
+                          state_root=env.state_root)["status"] == "ok"
+    before = _ledger_bytes(env)
+    human = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="h")],
+                     reviewer_ref="claude-seat", reviewer_kind="human")
+    result = import_ratings(env.export_dir, _write_ratings(env, human, "h.json"), state_root=env.state_root)
+    assert result["status"] == "refused" and result["recorded"] == 0
+    assert any("reviewer_kind" in p and "'model'" in p for p in result["problems"]), result["problems"]
+    assert _ledger_bytes(env) == before
+
+
+def test_a_duplicated_revision_in_the_ledger_is_corruption_not_a_silent_choice(tmp_path):
+    """Red-team D4: two ledger lines with the same (packet, item, dimension, reviewer, revision) and
+    different verdicts were resolved silently to the first. Now the ledger is refused by name."""
+    env = make_env(tmp_path, name="dup-revision")
+    first = _ratings(env, [Rating(item_id=ITEM_A, dimension=DIM_A, verdict="pass", words="p")],
+                     reviewer_ref="bob")
+    assert import_ratings(env.export_dir, _write_ratings(env, first, "r1.json"),
+                          state_root=env.state_root)["status"] == "ok"
+    lp = ledger_path(env.state_root)
+    line = lp.read_bytes().splitlines()[0]
+    lp.write_bytes(line + b"\n" + line.replace(b'"verdict":"pass"', b'"verdict":"fail"') + b"\n")
+
+    second = _ratings(env, [Rating(item_id=ITEM_B, dimension=DIM_B, verdict="pass", words="q")],
+                      reviewer_ref="bob")
+    result = import_ratings(env.export_dir, _write_ratings(env, second, "r2.json"),
+                            state_root=env.state_root)
+    assert result["status"] == "refused"
+    assert any("line 2" in p and "already appears at line 1" in p for p in result["problems"]), (
+        result["problems"])

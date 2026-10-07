@@ -24,9 +24,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..canonical import strict_json_loads
+from ..canonical import sha256_bytes, strict_json_loads
 from ..commissioning.agreement import agreement_between_reviewers
 from .contract import (
+    KEY_DIR,
     PACKET_FILE,
     REVIEW_MODE_SINGLE,
     STATUS_INDEPENDENT,
@@ -36,11 +37,18 @@ from .contract import (
     STATUS_SINGLE,
     VERDICTS,
     PacketItem,
+    PacketKey,
     PacketManifest,
     ReviewRecord,
 )
-from .identity import canonical_reviewer_ref
+from .identity import canonical_reviewer_ref, reviewer_ref_problem
 from .ledger import read_records
+
+
+class PacketUnbound(ValueError):
+    """The packet.json handed to ``review_status`` is not the one the operator key under the state
+    root was written for (missing key, or a hash mismatch). A status is only ever reported for the
+    exact manifest the ledger's records were imported against (red-team 2026-10-07, D2)."""
 
 
 def _packet_file(packet_path: Path) -> Path:
@@ -48,15 +56,32 @@ def _packet_file(packet_path: Path) -> Path:
     return p / PACKET_FILE if p.is_dir() else p
 
 
-def _load_packet(packet_path: Path) -> PacketManifest:
+def _load_packet(packet_path: Path) -> tuple[PacketManifest, str]:
     p = _packet_file(packet_path)
-    data = strict_json_loads(p.read_bytes())
-    return PacketManifest.model_validate(data, strict=True)
+    raw = p.read_bytes()
+    data = strict_json_loads(raw)
+    return PacketManifest.model_validate(data, strict=True), sha256_bytes(raw)
+
+
+def _bind_to_key(state_root: Path, manifest: PacketManifest, packet_sha256: str) -> None:
+    """Refuse a manifest whose bytes are not the ones the operator key records for its packet_id.
+    Without this, a trimmed copy of packet.json (same packet_id, fewer items) was reported as
+    ``independently_reviewed`` from a ledger in which the second reviewer covered 2 of 36 items."""
+    key_path = Path(state_root).joinpath(*KEY_DIR, f"{manifest.packet_id}.json")
+    try:
+        key = PacketKey.model_validate(strict_json_loads(key_path.read_bytes()), strict=True)
+    except OSError as e:
+        raise PacketUnbound(f"no operator key for packet {manifest.packet_id} under the state root "
+                            f"({key_path}): {e.strerror or e}") from e
+    if key.packet_sha256 != packet_sha256:
+        raise PacketUnbound(f"packet.json sha256 {packet_sha256} != operator key packet_sha256 "
+                            f"{key.packet_sha256} for packet {manifest.packet_id}: not the manifest "
+                            "the ledger's records were imported against")
 
 
 def _latest_human_votes(
     records: list[ReviewRecord],
-) -> tuple[dict[tuple[str, str, str], ReviewRecord], list[list[str]]]:
+) -> tuple[dict[tuple[str, str, str], ReviewRecord], list[list[str]], dict[str, str]]:
     """(item_id, reviewer, dimension) -> the highest-revision human, counts-as-vote record, plus
     the list of ``reviewer_ref`` collisions found.
 
@@ -75,8 +100,15 @@ def _latest_human_votes(
     latest: dict[tuple[str, str, str], ReviewRecord] = {}
     display: dict[str, str] = {}
     literals: dict[str, set[str]] = {}
+    problems: dict[str, str] = {}
     for rec in records:
         if rec.reviewer_kind != "human" or not rec.counts_as_vote:
+            continue
+        # A ledger written before the charset rule may hold a reference the importer would now
+        # refuse (a Cyrillic look-alike, say). It is reported and never counted: fail closed.
+        problem = reviewer_ref_problem(rec.reviewer_ref)
+        if problem:
+            problems[rec.reviewer_ref] = problem
             continue
         canon = canonical_reviewer_ref(rec.reviewer_ref)
         name = display.setdefault(canon, rec.reviewer_ref)
@@ -90,7 +122,7 @@ def _latest_human_votes(
         ):
             latest[key] = rec
     collisions = sorted(sorted(refs) for refs in literals.values() if len(refs) > 1)
-    return latest, collisions
+    return latest, collisions, problems
 
 
 def _item_coverage(
@@ -158,10 +190,11 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
     ``LedgerCorrupt`` (from ``review.ledger.read_records``) is never caught here: a malformed
     ledger line is a refusal, not something this function papers over into an empty result.
     """
-    manifest = _load_packet(packet_path)
+    manifest, packet_sha256 = _load_packet(packet_path)
+    _bind_to_key(state_root, manifest, packet_sha256)
     records = read_records(state_root, packet_id=manifest.packet_id)
 
-    latest, collisions = _latest_human_votes(records)
+    latest, collisions, ref_problems = _latest_human_votes(records)
     secondary_ratings = sum(1 for rec in records if rec.reviewer_kind == "model")
 
     items_report = []
@@ -207,10 +240,12 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
     return {
         "schema_id": STATUS_SCHEMA,
         "packet_id": manifest.packet_id,
+        "packet_sha256": packet_sha256,
         "status": status,
         "label": label,
         "distinct_human_reviewers": distinct_human_reviewers,
         "reviewer_ref_collisions": collisions,
+        "reviewer_ref_problems": ref_problems,
         "secondary_ratings": secondary_ratings,
         "items": items_report,
         "agreement": agreement_result,
@@ -218,4 +253,4 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
     }
 
 
-__all__ = ["review_status"]
+__all__ = ["PacketUnbound", "review_status"]

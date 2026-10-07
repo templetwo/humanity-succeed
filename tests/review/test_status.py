@@ -10,12 +10,15 @@ exercise multi-dimension coverage or a genuine two-distinct-humans path; both ar
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from humanity_succeed.canonical import canonical_bytes
+from humanity_succeed.canonical import canonical_bytes, sha256_bytes
 from humanity_succeed.commissioning.agreement import agreement_between_reviewers
 from humanity_succeed.review import ledger
 from humanity_succeed.review.contract import (
+    KEY_DIR,
     PACKET_FILE,
     REVIEW_MODE_SINGLE,
     STATUS_INDEPENDENT,
@@ -23,14 +26,16 @@ from humanity_succeed.review.contract import (
     STATUS_PENDING,
     STATUS_SCHEMA,
     STATUS_SINGLE,
+    KeyEntry,
     PacketItem,
+    PacketKey,
     PacketManifest,
     ReviewRecord,
     RubricLine,
     VisibleStep,
 )
 from humanity_succeed.review.ledger import LedgerCorrupt
-from humanity_succeed.review.status import review_status
+from humanity_succeed.review.status import PacketUnbound, review_status
 
 PACKET_ID = "pk_" + "a" * 16
 ITEM_1 = "it_" + "1" * 16
@@ -67,10 +72,28 @@ def _manifest(items: list[PacketItem]) -> PacketManifest:
     )
 
 
-def _write_packet(tmp_path, manifest: PacketManifest):
+def _write_packet(tmp_path, manifest: PacketManifest, state_root=None):
+    """Write packet.json AND the operator key under the state root (default ``tmp_path/state``):
+    since the 2026-10-07 red-team's D2, ``review_status`` refuses a manifest whose bytes are not the
+    ones the key records for its packet_id."""
     packet_dir = tmp_path / "packet"
     packet_dir.mkdir()
-    (packet_dir / PACKET_FILE).write_bytes(canonical_bytes(manifest.model_dump(mode="json")))
+    raw = canonical_bytes(manifest.model_dump(mode="json"))
+    (packet_dir / PACKET_FILE).write_bytes(raw)
+    key = PacketKey(
+        schema_id="hs-review-key/1",
+        packet_id=manifest.packet_id,
+        packet_sha256=sha256_bytes(raw),
+        order_note="test helper: manifest order",
+        entries=[
+            KeyEntry(item_id=item.item_id, fixture_id=f"fx-{n:02d}", case=f"cases/fx-{n:02d}.yaml",
+                     bundle=f"bundles/fx-{n:02d}")
+            for n, item in enumerate(manifest.items)
+        ],
+    )
+    key_path = Path(state_root or tmp_path / "state").joinpath(*KEY_DIR, f"{manifest.packet_id}.json")
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    key_path.write_bytes(canonical_bytes(key.model_dump(mode="json")))
     return packet_dir
 
 
@@ -317,7 +340,7 @@ def test_ledger_corrupt_propagates_never_a_silent_empty_result(tmp_path):
     packet_dir = _write_packet(tmp_path, manifest)
     state_root = tmp_path / "state"
     ledger_file = ledger.ledger_path(state_root)
-    ledger_file.parent.mkdir(parents=True)
+    ledger_file.parent.mkdir(parents=True, exist_ok=True)  # the helper already wrote the key beside it
     ledger_file.write_text("not json at all\n", encoding="utf-8")
 
     with pytest.raises(LedgerCorrupt):
@@ -391,11 +414,16 @@ def test_case_and_whitespace_variants_of_one_reviewer_never_become_independent(t
     assert result["label"] == REVIEW_MODE_SINGLE
     assert result["distinct_human_reviewers"] == ["anthony"]
     assert result["agreement"] is None
-    assert result["reviewer_ref_collisions"] == [["ANTHONY", "Anthony ", "anthony"]]
+    # "ANTHONY" collides with "anthony" (one reviewer, reported); "Anthony " is untidy and, since
+    # the red-team's D3, is excluded from votes and named as a problem rather than merged
+    assert result["reviewer_ref_collisions"] == [["ANTHONY", "anthony"]]
+    assert list(result["reviewer_ref_problems"]) == ["Anthony "]
     # the later ledger line wins a same-revision tie between colliding literals, under the first name
+    item2 = next(r for r in result["items"] if r["item_id"] == ITEM_2)
+    assert item2["human_reviewers"] == ["anthony"]
+    assert item2["verdicts"]["anthony"]["truthful_notification"] == "fail"
     item1 = next(r for r in result["items"] if r["item_id"] == ITEM_1)
-    assert item1["human_reviewers"] == ["anthony"]
-    assert item1["verdicts"]["anthony"]["truthful_notification"] == "fail"
+    assert item1["verdicts"]["anthony"]["truthful_notification"] == "pass"
 
 
 def test_distinct_reviewers_report_no_collisions(tmp_path):
@@ -420,3 +448,87 @@ def test_distinct_reviewers_report_no_collisions(tmp_path):
 def test_agreement_between_reviewers_refuses_canonically_equal_reviewer_refs(variant):
     with pytest.raises(ValueError, match="same reviewer"):
         agreement_between_reviewers("anthony", ["pass"], variant, ["pass"], ["pass", "fail"])
+
+
+# ----------------------------------------------- red-team 2026-10-07 (docs/audits/cloud/redteam-identity)
+
+
+def test_status_is_bound_to_the_operator_key_and_refuses_a_trimmed_or_altered_manifest(tmp_path):
+    """D2: a trimmed copy of packet.json (same packet_id, fewer items) was reported as
+    independently_reviewed from a ledger in which the second reviewer covered a fraction of the
+    items. Status now binds the manifest bytes to the key's packet_sha256 and reports the hash."""
+    manifest = _manifest(
+        [_item(ITEM_1, ["truthful_notification"]), _item(ITEM_2, ["truthful_notification"])]
+    )
+    packet_dir = _write_packet(tmp_path, manifest)
+    state_root = tmp_path / "state"
+    ledger.append_records(
+        state_root,
+        [
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_2, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="bob"),
+        ],
+    )
+    full = review_status(packet_dir, state_root=state_root)
+    assert full["status"] == STATUS_SINGLE
+    assert full["packet_sha256"] == sha256_bytes((packet_dir / PACKET_FILE).read_bytes())
+
+    trimmed_dir = tmp_path / "trimmed"
+    trimmed_dir.mkdir()
+    trimmed = manifest.model_copy(update={"items": [manifest.items[0]]})
+    (trimmed_dir / PACKET_FILE).write_bytes(canonical_bytes(trimmed.model_dump(mode="json")))
+    with pytest.raises(PacketUnbound, match="sha256"):
+        review_status(trimmed_dir, state_root=state_root)
+
+    with pytest.raises(PacketUnbound, match="no operator key"):
+        review_status(packet_dir, state_root=tmp_path / "elsewhere")
+
+
+def test_a_legacy_lookalike_reference_is_excluded_and_reported_never_counted(tmp_path):
+    """D3: a ledger holding a Cyrillic look-alike reference (admitted before the charset rule)
+    counted it as a human; an ASCII reference then imported as a second one. Such records are now
+    excluded from votes and named under reviewer_ref_problems."""
+    manifest = _manifest([_item(ITEM_1, ["truthful_notification"])])
+    packet_dir = _write_packet(tmp_path, manifest)
+    state_root = tmp_path / "state"
+    ledger.append_records(
+        state_root,
+        [
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="\u0430nthony"),
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+        ],
+    )
+    result = review_status(packet_dir, state_root=state_root)
+    assert result["status"] == STATUS_SINGLE
+    assert result["label"] == REVIEW_MODE_SINGLE
+    assert result["distinct_human_reviewers"] == ["anthony"]
+    assert result["agreement"] is None
+    assert list(result["reviewer_ref_problems"]) == ["\u0430nthony"]
+    assert "outside ASCII" in result["reviewer_ref_problems"]["\u0430nthony"]
+
+
+def test_punctuation_variants_of_one_reviewer_are_one_reviewer_in_status(tmp_path):
+    """D1 at the status layer: 'anthony' and 'anthony.' in a ledger are one reviewer."""
+    manifest = _manifest([_item(ITEM_1, ["truthful_notification"])])
+    packet_dir = _write_packet(tmp_path, manifest)
+    state_root = tmp_path / "state"
+    ledger.append_records(
+        state_root,
+        [
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="pass",
+                     reviewer_ref="anthony"),
+            _record(item_id=ITEM_1, dimension="truthful_notification", verdict="fail",
+                     reviewer_ref="anthony."),
+        ],
+    )
+    result = review_status(packet_dir, state_root=state_root)
+    assert result["status"] == STATUS_SINGLE
+    assert result["distinct_human_reviewers"] == ["anthony"]
+    assert result["reviewer_ref_collisions"] == [["anthony", "anthony."]]
+    assert result["agreement"] is None

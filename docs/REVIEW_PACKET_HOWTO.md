@@ -19,12 +19,16 @@ for it before you commit your verdicts.
 ## Filling the template
 
 - `reviewer_ref`: your stable identity reference, typed the same way every time, in plain ASCII
-  letters, digits, space, `-`, `_` or `.` (for example `anthony-vasquez-sr`). Case, spacing and
-  look-alike variants of a recorded reference are refused on import, so one person is never
-  counted as two (B61). Choose it once. A name in another script belongs in `words`, not here.
+  letters, digits, space, `-`, `_` or `.` (for example `anthony-vasquez-sr`). Two references are
+  the same reviewer when they agree once case, spacing and punctuation are ignored, so `Anthony`,
+  `anthony.` and `anthony vasquez` are all refused once `anthony-vasquez` is recorded; one person
+  is never counted as two (B61). A reference is also one kind of reviewer: a reference first
+  imported as `model` cannot later be imported as `human`. Choose it once. A name in another script
+  belongs in `words`, not here.
 - `reviewer_kind`: `human`. A model's ratings may be imported with `model`; they are recorded as
   secondary and never count as votes.
-- `rated_at_utc`: an ISO 8601 timestamp, for example `2026-10-07T14:03:00Z`.
+- `rated_at_utc`: a UTC instant written as `2026-10-07T14:03:00Z` (optionally with fractional
+  seconds). Offsets, bare dates and times without a zone are refused.
 - Each row: `verdict` is `pass` or `fail`; `words` is your reason in your own words. A blank in
   either refuses the whole file; nothing is defaulted on your behalf.
 
@@ -45,8 +49,12 @@ uv run hs review status --packet PACKET_DIR --state-root STATE_ROOT
 ```
 
 Import validates everything first and appends to an append-only ledger only if everything holds.
-Status reports coverage per item, the distinct human reviewers, any colliding reviewer references,
-and an agreement statistic only when two distinct humans cover the same items.
+Status refuses a `packet.json` that is not byte-for-byte the one the operator key was written for,
+and reports its `packet_sha256`, coverage per item, the distinct human reviewers, any colliding or
+unusable reviewer references, and an agreement statistic only when two distinct humans cover the
+same items. When two humans overlap on only some items, the status stays `single_reviewer_*` with
+the `single-reviewer` label and the agreement block covers the shared items alone; it is not an
+independent-review result.
 
 ## What your review changes, and what it does not
 

@@ -259,6 +259,12 @@ def export_packet(run_dir: Path, out: Path, *, state_root: Path, repo_root: Path
     report_raw = (run_dir / REPORT_FILE).read_bytes()
     report = strict_json_loads(report_raw)
     rows = _judgment_heavy_rows(report)
+    if not rows:
+        # Named refusal rather than the manifest's own min_length error (cloud coverage pass,
+        # 2026-10-07, observation D1): nothing is written either way.
+        return {"status": "blocked_input", "packet_id": None, "items": 0,
+                "problems": ["report.json names no judgment-heavy fixture; nothing to review"],
+                "paths": {}}
 
     problems: list[str] = []
     verified_bundles: dict[str, Path] = {}

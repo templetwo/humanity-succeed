@@ -348,16 +348,16 @@ def test_missing_bundle_directory_is_blocked_input_naming_the_fixture_and_writes
 
 
 def test_run_with_no_judgment_heavy_fixture_writes_nothing(tmp_path):
-    """Current behaviour, pinned: ``PacketManifest.items`` requires at least one item, so a run with
-    nothing to review raises the contract's own ``ValidationError`` (the CLI turns a ``ValueError``
-    into ``invalid_input``, exit 2) and touches neither the output directory nor the state root. A
-    named ``blocked_input`` would be kinder; what matters here is that nothing is written."""
+    """A run with nothing to review is a named ``blocked_input`` (it used to surface as the
+    manifest's own ``ValidationError``; observation D1 of the cloud coverage pass). Either way the
+    output directory and the state root are untouched."""
     run_dir = tmp_path / "run"
     run_dir.mkdir()
     (run_dir / "report.json").write_bytes(
         canonical_bytes(_report_for("synth-none-001", judgment_heavy=False)))
-    with pytest.raises(ValidationError):
-        export.export_packet(run_dir, tmp_path / "p", state_root=tmp_path / "s", repo_root=REPO)
+    result = export.export_packet(run_dir, tmp_path / "p", state_root=tmp_path / "s", repo_root=REPO)
+    assert result["status"] == "blocked_input" and result["items"] == 0
+    assert any("no judgment-heavy fixture" in problem for problem in result["problems"])
     assert not (tmp_path / "p").exists()
     assert not (tmp_path / "s").exists()
 

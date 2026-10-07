@@ -23,6 +23,7 @@ matching it exactly, is refused before anything is appended. The 2026-10-07 audi
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,8 @@ from .contract import (
 )
 from .identity import reviewer_ref_problem, same_reviewer
 from .ledger import LedgerCorrupt, append_records, read_records
+
+_RATED_AT_UTC = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z")
 
 
 def _refused(problems: list[str]) -> dict[str, Any]:
@@ -92,7 +95,11 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     ref_problem = reviewer_ref_problem(ratings.reviewer_ref)
     if ref_problem:
         problems.append(ref_problem)
+    # The field is named _utc: a UTC instant in one written form, not any ISO 8601 string (an offset,
+    # a date alone, a week date and a 24-hour tolerance all parsed before the 2026-10-07 red-team).
     try:
+        if not _RATED_AT_UTC.fullmatch(ratings.rated_at_utc):
+            raise ValueError(ratings.rated_at_utc)
         datetime.fromisoformat(ratings.rated_at_utc)
     except ValueError:
         problems.append(
@@ -180,6 +187,16 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         if rec.reviewer_ref != ratings.reviewer_ref
         and same_reviewer(rec.reviewer_ref, ratings.reviewer_ref)
     })
+    other_kind = sorted({
+        rec.reviewer_kind for rec in all_records
+        if rec.reviewer_ref == ratings.reviewer_ref and rec.reviewer_kind != ratings.reviewer_kind
+    })
+    if other_kind:
+        return _refused([
+            f"reviewer_ref {ratings.reviewer_ref!r} is already recorded with reviewer_kind "
+            f"{', '.join(repr(k) for k in other_kind)}; one reference is one reviewer of one kind, "
+            "and a model's reference never becomes a human vote (B61, PROTOCOL §9)"
+        ])
     if colliding:
         return _refused([
             f"reviewer_ref {ratings.reviewer_ref!r} collides with recorded reviewer_ref "
