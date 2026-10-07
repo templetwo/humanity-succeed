@@ -217,7 +217,7 @@ needed for WP3.
   this branch by `review/identity.py` with tests. The packet's measurement limit (every item is a
   truthful notice, so kappa is undefined by construction and the packet cannot distinguish a careful
   reviewer from a careless one) is recorded, not patched: suite v1 is frozen (B55).
-- Checks at this change: `uv run pytest` 677 passed, 2 skipped; `ruff` clean; schema freeze and suite
+- Checks at this change: `uv run pytest` 753 passed, 2 skipped; `ruff` clean; schema freeze and suite
   generator `--check` clean.
 - Three cloud sessions (red team, independent replication, coverage) extended the audit; their
   reports are under `docs/audits/cloud/`, their findings F13 to F22 are in the audit, and the
