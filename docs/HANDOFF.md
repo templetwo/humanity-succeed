@@ -217,7 +217,7 @@ needed for WP3.
   this branch by `review/identity.py` with tests. The packet's measurement limit (every item is a
   truthful notice, so kappa is undefined by construction and the packet cannot distinguish a careful
   reviewer from a careless one) is recorded, not patched: suite v1 is frozen (B55).
-- Checks at this change: `uv run pytest` 666 passed, 2 skipped; `ruff` clean; schema freeze and suite
+- Checks at this change: `uv run pytest` 677 passed, 2 skipped; `ruff` clean; schema freeze and suite
   generator `--check` clean.
 - **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
   items a reviewer should fail (new trajectories with a correct write and a false notice, in a

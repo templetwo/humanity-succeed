@@ -49,7 +49,7 @@ CPython 3.11.15 on macOS arm64.
 
 ```sh
 uv sync --locked --group dev
-uv run pytest                                   # 666 passed, 2 skipped at this change; all state in temp roots
+uv run pytest                                   # 677 passed, 2 skipped at this change; all state in temp roots
 uv run hs doctor --json                         # host facts; makes no model calls
 uv run hs cases validate examples cases/commissioning_dev
 uv run hs demo --out /tmp/hs-demo --state-root /tmp/hs-state
