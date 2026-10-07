@@ -100,7 +100,7 @@ a `supplement_a1_semantic_controls`). Until then the honest label for any review
 | F09 | `rated_at_utc` accepted any non-empty string | low | unrecorded | B61 (own-words records bound to the case hash) | **fixed**: importer requires ISO 8601 |
 | F10 | The one packet that matters exists in one directory on one machine, uncommitted; a re-export is a different packet | medium | partly stated in the receipt | custody decision for Anthony | recorded here |
 | F11 | README, HANDOFF and ACCEPTANCE still said review import is WP4 and not started, and quoted 213 tests | low | drift | none | **fixed** in this change |
-| F12 | Latent: the packet drops the clarification reply text and released scheduled observations | low | unrecorded; no current fixture affected | export follow-up | recorded here |
+| F12 | Latent: the packet dropped the clarification reply text and released scheduled observations | low | unrecorded; no current fixture affected | BUILD_SPEC §11 "actual visible sequence intact" | **fixed**: `review/export.py` shows both, hash-checked; test built through the real engine |
 
 ### F03. One person counted as two
 
@@ -121,10 +121,12 @@ hs review status                            -> independently_reviewed, label nul
 names: "repeats by one reviewer are revisions, never extra reviewers."
 
 Fix in this change, fail-closed and never silent (`src/humanity_succeed/review/identity.py`):
-`hs review import` refuses a `reviewer_ref` with stray whitespace, and refuses a reference that
-names an already-recorded reviewer once case, whitespace and Unicode form are normalised unless it
-matches byte for byte; the operator reuses the recorded reference or picks a distinct one, nothing
-is merged for them. `hs review status` counts colliding references already in a ledger as one
+`hs review import` refuses a `reviewer_ref` with stray whitespace, refuses one with characters
+outside ASCII letters, digits, space, `-`, `_` and `.` (normalisation does not fold a Cyrillic
+"а" onto "a", and a zero-width joiner survives casefold; a reference is not a display name), and
+refuses a reference that names an already-recorded reviewer once case, whitespace and Unicode
+form are normalised unless it matches byte for byte; the operator reuses the recorded reference
+or picks a distinct one, nothing is merged for them. `hs review status` counts colliding references already in a ledger as one
 reviewer and reports them under `reviewer_ref_collisions`. `agreement_between_reviewers` refuses
 canonically equal references. Regression tests: `tests/review/test_identity.py`, the identity tests
 appended to `tests/review/test_import.py` and `tests/review/test_status.py`, and
@@ -202,13 +204,17 @@ needs his copy and his word.
 
 ### F12. Latent gap in the recorded sequence
 
-`review/export.py` `_outcome` renders `clarification_delivered` as "allowed: clarification
+`review/export.py` `_outcome` rendered `clarification_delivered` as "allowed: clarification
 delivered" and `clock_advanced` as "allowed: clock advanced", dropping the reply text and the
 released observations the subject actually received. None of the 36 bundles has either effect
 (effects present: read 24, resource_revised 36, notification_delivered 36, task_finished 36), so
-no current item is affected. A future packet from a case with `clarification_reply` or
-`scheduled_observations` (class C6, the dev cases) would hide from the reviewer what the subject
-was told. Not changed here, since it alters packet content; it belongs with the next export change.
+no current item is affected and Anthony's packet is unchanged. A future packet from a case with
+`clarification_reply` or `scheduled_observations` (class C6, the dev cases) would have hidden from
+the reviewer what the subject was told. Fixed in this change: the event records only the reply's
+hash and the released observation indices, so the step now shows the case world's reply when it
+hashes to the recorded `reply_sha256`, and the released observations by index
+(`tests/review/test_export.py::test_packet_shows_the_reviewer_what_the_subject_was_told`, a bundle
+built through the real engine).
 
 ## 4. Checked and not a gap
 
@@ -231,7 +237,8 @@ the WP3 custody kit, the compiler and leak lint, anything outside the A1 slice.
 ## 6. Boundaries kept
 
 Read-only audit of `main`; no model called; no human rating written anywhere but a scratch state
-root that was deleted; no Stack write; no fixture, receipt or decision edited. Code changes in this
-branch are limited to the B61 identity safeguard, the `rated_at_utc` check, tests, and the
-documentation corrections listed under F11. Suite v1, its receipts and Anthony's packet are
-untouched.
+root that was deleted; no fixture, receipt or decision edited. The only Stack write is an open
+thread in domain `humanity-succeed` carrying this audit's question for Anthony, touched at each
+milestone at his request. Code changes in this branch are limited to the B61 identity safeguard,
+the `rated_at_utc` check, the F12 export rendering, tests, and the documentation corrections
+listed under F11. Suite v1, its receipts and Anthony's packet are untouched.

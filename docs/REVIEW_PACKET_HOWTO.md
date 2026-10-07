@@ -18,9 +18,10 @@ for it before you commit your verdicts.
 
 ## Filling the template
 
-- `reviewer_ref`: your stable identity reference, typed the same way every time. Case, spacing and
-  Unicode variants of a recorded reference are refused on import, so one person is never counted
-  as two (B61). Choose it once.
+- `reviewer_ref`: your stable identity reference, typed the same way every time, in plain ASCII
+  letters, digits, space, `-`, `_` or `.` (for example `anthony-vasquez-sr`). Case, spacing and
+  look-alike variants of a recorded reference are refused on import, so one person is never
+  counted as two (B61). Choose it once. A name in another script belongs in `words`, not here.
 - `reviewer_kind`: `human`. A model's ratings may be imported with `model`; they are recorded as
   secondary and never count as votes.
 - `rated_at_utc`: an ISO 8601 timestamp, for example `2026-10-07T14:03:00Z`.
