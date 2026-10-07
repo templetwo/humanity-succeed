@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 UT, IT, AT = "tests/unit", "tests/integration", "tests/adversarial"
 CT = "tests/commissioning"
+RT = "tests/review"
 
 ROWS = [
     # id, requirement, status, evidence, class, limits
@@ -120,7 +121,13 @@ ROWS = [
      "run-level not_evaluable/pending only; denominators are WP6"),
     ("A17", "Non-significant/uncertain NI not mislabeled", "not_started", [], "-", "WP6"),
     ("A18", "Training changes base files or calls telemetry: fails", "not_started", [], "-", "WP5"),
-    ("A19", "Blind packet leaking condition/verdict: export blocked", "not_started", [], "-", "WP4"),
+    ("A19", "Blind packet leaking condition/verdict: export blocked", "implemented",
+     [f"{RT}/test_export.py::test_a19_fixture_id_in_task_blocks_input_and_leak_check_catches_it_directly",
+      f"{RT}/test_export.py::test_a19_monkeypatched_leaking_item_builder_blocks_leak_and_writes_nothing",
+      f"{IT}/test_cli_review.py"], "unit+integration",
+     "substring scan over fixture/class/group/case ids, evaluator vocabulary and predicate names; not "
+     "semantic proof. The export selects only the hybrid PASSES, so inclusion itself implies the "
+     "mechanical outcome (docs/audits/2026-10-07_human_side_audit_a1_review.md)"),
     ("A20", "Auto-resume/silent retry/reused holdback rejected", "partial",
      [f"{IT}/test_evidence.py::test_crash_between_permission_and_execution",
       f"{CT}/test_plan_run.py", f"{CT}/test_partition_custody.py"], "integration",
@@ -132,12 +139,16 @@ ROWS = [
      "development mechanical commissioning run: 160/160 expectations met, 416/416 mutation "
      "invariants held, 4/4 evaluator sabotages detected. Formal commissioning BLOCKED: no "
      "holdback custodian (independent_holdback=false). Semantic commissioning PENDING: 36 "
-     "judgment-heavy fixtures need two human reviewers (review import is WP4). Lifecycle "
-     "ceiling: mechanically_validated"),
+     "judgment-heavy fixtures need two human reviewers; hs review export/import/status exist "
+     "since B67 and 0 human ratings are recorded. Lifecycle ceiling: mechanically_validated"),
+    ("WP4", "Experiment planning, workload planner, blind review", "partial",
+     [f"{RT}/", f"{IT}/test_cli_review.py", "docs/receipts/a1-review/export.json"], "unit+integration",
+     "blind review export, own-words rating import and review status only (A1 stage 2; B61, B67): "
+     "packet pk_889ccc2edce027b7 exported for Anthony, 0 ratings recorded. Experiment planning, "
+     "workload counting, cells and the condition/seed checks (A14) are not started"),
 ] + [
     (f"WP{n}", title, "not_started", [], "-", "not started; WP3 opened 2026-09-26")
-    for n, title in [(4, "Experiment planning, workload planner, blind review"),
-                     (5, "Optional MLX provider/trainer adapters (mock-tested)"),
+    for n, title in [(5, "Optional MLX provider/trainer adapters (mock-tested)"),
                      (6, "Analysis and preregistration"),
                      (7, "Offline handoff and gate")]
 ]

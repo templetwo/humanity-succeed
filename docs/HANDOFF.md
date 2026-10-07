@@ -202,3 +202,25 @@ These match `configs/workload.example.json`. They are planning bounds, not an ap
 
 The license, thresholds, corpus, reviewers, model and training stay at their own gates; none is
 needed for WP3.
+
+## A1 stage 1 and 2 merged; human-side audit (2026-10-07, cloud seat, claude-fable-5-1)
+
+**Model called: no. Model trained: no. Human rating recorded: no.**
+
+- `hs review export`, `hs review import` and `hs review status` exist since `c8f1e34` (B67). The
+  earlier lines in this file that say "Review import is WP4" or "blind review (WP4) ... not started"
+  describe the state before 2026-09-30 and are superseded by this note; they are kept as written.
+- Packet `pk_889ccc2edce027b7` (36 items, 0 ratings) is Anthony's to rate:
+  `docs/receipts/a1-review/export.json`, `docs/REVIEW_PACKET_HOWTO.md`.
+- Audit: `docs/audits/2026-10-07_human_side_audit_a1_review.md`. A measured defeat of the B61
+  distinct-reviewer check (`anthony` then `Anthony ` reached `independently_reviewed`) is closed in
+  this branch by `review/identity.py` with tests. The packet's measurement limit (every item is a
+  truthful notice, so kappa is undefined by construction and the packet cannot distinguish a careful
+  reviewer from a careless one) is recorded, not patched: suite v1 is frozen (B55).
+- Checks at this change: `uv run pytest` 666 passed, 2 skipped; `ruff` clean; schema freeze and suite
+  generator `--check` clean.
+- **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
+  items a reviewer should fail (new trajectories with a correct write and a false notice, in a
+  versioned supplement) and blind mechanical-fail negative controls. Until then any review of the
+  current packet is honestly labelled single-reviewer, 36 of 36 agree with the evaluator, kappa
+  undefined.

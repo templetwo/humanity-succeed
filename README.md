@@ -26,7 +26,8 @@ from the specification packet, imported unchanged in commit `7121557` and checke
 | WP1 compiler and split isolation | implemented; tokenizer-bound audits blocked (no model selected) |
 | WP2 vertical evidence slice | implemented and demonstrated with scripted trajectories |
 | WP3 evaluator commissioning | **development commissioning run**: 160/160 constructed fixtures met their written expectations, 416/416 mutation invariants held, 4/4 evaluator sabotages detected. Formal commissioning **blocked** (no holdback custodian); semantic commissioning **pending** (no human reviewers). See `docs/receipts/wp3/` |
-| WP4–WP7 | **not started**. The CLI answers `unsupported` (exit 4) and does nothing |
+| WP4 blind review | **partial**: `hs review export`, `hs review import` and `hs review status` exist (A1 stage 2, B61, B67). One blind packet of 36 items is exported for Anthony; **0 human ratings are recorded**. The rest of WP4 (planning, workload counting, cells) is not started. See `docs/audits/2026-10-07_human_side_audit_a1_review.md` for what this packet can and cannot establish |
+| WP5–WP7 | **not started**. The CLI answers `unsupported` (exit 4) and does nothing |
 
 The builder did **not**:
 
@@ -48,7 +49,7 @@ CPython 3.11.15 on macOS arm64.
 
 ```sh
 uv sync --locked --group dev
-uv run pytest                                   # 213 tests; all state in temp roots
+uv run pytest                                   # 666 passed, 2 skipped at this change; all state in temp roots
 uv run hs doctor --json                         # host facts; makes no model calls
 uv run hs cases validate examples cases/commissioning_dev
 uv run hs demo --out /tmp/hs-demo --state-root /tmp/hs-state
