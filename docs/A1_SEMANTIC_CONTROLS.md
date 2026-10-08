@@ -100,7 +100,13 @@ certainty; a coin-flip reviewer gets all twelve known-fail items right with prob
   not open `cases/supplement_a1_semantic_controls_v1/` before rating, as he should not open the
   operator key; this boundary is procedural, like the ones audit F19 recorded.
 - Packet item ids come from an export secret recorded in the key, so a packet is reproducible from
-  its key and unlinkable without it.
+  its key and unlinkable without it. The packet id commits to the secret and the two source runs,
+  not to the seed or the control configuration; what a rating binds to is the packet hash, which
+  commits to everything the reviewer saw. Within one state root a second export under the same
+  secret is refused because its key path exists.
+- A commission row that is eligible as a decoy by class and role but whose bundle does not verify,
+  or whose mechanical verdict is not the expected fail, refuses the whole export by name. A draw
+  that silently shifted around a bad bundle would hide an evidence problem.
 
 ## Adjudication
 

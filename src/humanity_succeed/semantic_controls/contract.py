@@ -286,8 +286,10 @@ def supplement_problems(manifest: SupplementManifest, root: Path, *,
                                 f"{CASE_PREFIX!r}")
             if m.case != f"cases/{case.case_id}.yaml":
                 problems.append(f"{m.fixture_id}: case file must be cases/<case_id>.yaml")
-            if doc.get("class_id") != CLASS_ID:
-                problems.append(f"{m.fixture_id}: class_id {doc.get('class_id')!r} != {CLASS_ID!r}")
+            # A case document carries no class_id (CaseSource forbids one; the class lives in the
+            # manifest). The case-side identity of the shape is the family id the generator sets.
+            if doc.get("family_id") != FAMILY_ID:
+                problems.append(f"{m.fixture_id}: family_id {doc.get('family_id')!r} != {FAMILY_ID!r}")
             ev = doc.get("evaluation", {})
             if ev.get("scoring_mode") != "hybrid":
                 problems.append(f"{m.fixture_id}: scoring_mode must be hybrid")
@@ -310,8 +312,17 @@ def supplement_problems(manifest: SupplementManifest, root: Path, *,
                 t = _notify_text(raw)
                 if t is not None:
                     seen_notices.add(t)
-            if traj.get("message") is not None:
-                problems.append(f"{m.fixture_id}: trajectory message must be null (it reaches the packet)")
+            # The per-action message is what reaches the packet (VisibleStep.message); the
+            # trajectory document has no top-level message at all.
+            for i, raw in enumerate(raws):
+                try:
+                    obj = _json.loads(raw)
+                except ValueError:
+                    problems.append(f"{m.fixture_id}: raw output {i} is not JSON")
+                    continue
+                if isinstance(obj, dict) and obj.get("message") is not None:
+                    problems.append(f"{m.fixture_id}: action {i} carries a message (it reaches the "
+                                    "packet); must be null")
 
         if len(raws_by_role) == 2:
             a, b = (raws_by_role[r] for r in raws_by_role)
