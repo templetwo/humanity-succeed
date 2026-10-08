@@ -18,6 +18,15 @@ expectations -- read ``result.mechanical_commissioning`` etc. for that. Output i
 with ``status``, ``result``, ``limitations``, ``artifacts`` and, on error, ``error.code``. Commands
 from later work packages are registered and answer ``unsupported`` (exit 4); none fakes success. No
 command calls a model.
+
+Semantic controls (DECISIONS B68-B71, a1/semantic-controls): ``controls generate|check|plan|run``
+build, check, plan and run the wrong-on-purpose supplement (``run`` never calls a model);
+``review export-controls`` exports a packet/2 with blind control items from one commission run
+and one supplement run (the seed and export secret are generated here and recorded only in the
+operator key, never printed and never arguments); ``review adjudicate`` records the named
+adjudicator's decision on one open disagreement. Exit codes follow the review commands above;
+a corrupt ledger (either file) is a ``ValueError`` and therefore ``invalid_input``, exit 2, as the
+2026-10-07 cloud tests pin for ``review status``.
 """
 
 from __future__ import annotations
@@ -345,11 +354,118 @@ def cmd_review_import(a: argparse.Namespace) -> int:
 
 
 def cmd_review_status(a: argparse.Namespace) -> int:
-    from .review.status import review_status
+    from .review.status import PacketUnbound, review_status
 
     root = state_root(a.state_root)
-    rep = review_status(Path(a.packet), state_root=root)
+    try:
+        rep = review_status(Path(a.packet), state_root=root)
+    except PacketUnbound as e:
+        return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
+                    EXIT_INVALID)
     return emit(envelope("ok", rep, limitations=[REVIEW_LIMITATION]), EXIT_OK)
+
+
+def cmd_review_export_controls(a: argparse.Namespace) -> int:
+    import secrets
+
+    from .review.export import export_packet_v2
+
+    root = state_root(a.state_root)
+    # Seed and secret are generated here, recorded in the operator key only (review/contract.py:
+    # a seed on a receipt names the drawn decoys; the secret plus fixture ids un-blinds item ids).
+    rep = export_packet_v2(Path(a.run), Path(a.supplement), Path(a.out), state_root=root,
+                           seed=secrets.token_hex(16))
+    if rep["status"] == "ok":
+        return emit(envelope("ok", {k: rep[k] for k in ("packet_id", "items", "counts", "paths")},
+                             artifacts=[a.out], limitations=[REVIEW_LIMITATION,
+                             "the operator key carries item roles and expected control verdicts; "
+                             "the reviewer should not open it, nor the supplement's case files, "
+                             "before committing verdicts (DECISIONS B69)"]), EXIT_OK)
+    if rep["status"] == "blocked_leak":
+        return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+            "code": "blind_packet_leak",
+            "message": "the packet would reveal identifiers, roles or evaluator fields; nothing "
+                       "written (BUILD_SPEC A19; DECISIONS B69)"}), EXIT_PRECONDITION)
+    return emit(envelope("failed", {"problems": rep["problems"]}, error={
+        "code": rep["status"],
+        "message": "; ".join(rep["problems"]) or "unverifiable or invalid run input; nothing written"}),
+        EXIT_CORRUPT)
+
+
+def cmd_review_adjudicate(a: argparse.Namespace) -> int:
+    from .review.adjudication import record_adjudication
+    from .review.status import PacketUnbound
+
+    root = state_root(a.state_root)
+    try:
+        rep = record_adjudication(Path(a.packet), state_root=root, item_id=a.item,
+                                  dimension=a.dimension, adjudicator_ref=a.adjudicator,
+                                  decision=a.decision, words=a.words, adjudicated_at_utc=a.at)
+    except PacketUnbound as e:
+        return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
+                    EXIT_INVALID)
+    if rep["status"] == "ok":
+        # The stored record carries fixture_id, which names the item's role in packet/2
+        # ("sc-g03-silent_omission", "c2-g01-blocked_attempt"); the adjudicator may still be a
+        # reviewer mid-packet (B71 "it can be you"), so the printed result omits it.
+        shown = {k: v for k, v in rep["record"].items() if k != "fixture_id"}
+        return emit(envelope("ok", shown, limitations=[
+            REVIEW_LIMITATION,
+            "an adjudication is the named adjudicator's own decision on one open disagreement; it "
+            "rewrites no reviewer's verdict and is not a third rating (DECISIONS B71)"]), EXIT_OK)
+    return emit(envelope("invalid", {"problems": rep["problems"]}, error={
+        "code": "adjudication_refused",
+        "message": "; ".join(rep["problems"]) or "adjudication refused; nothing recorded"}),
+        EXIT_INVALID)
+
+
+def cmd_controls_generate(a: argparse.Namespace) -> int:
+    from .semantic_controls import generator
+
+    generator.write(Path(a.out))
+    return emit(envelope("ok", {"out": str(Path(a.out))}, artifacts=[a.out],
+                         limitations=[SCRIPTED_LIMITATION,
+                                      "builder-authored supplement; no run and no review (B68)"]),
+                EXIT_OK)
+
+
+def cmd_controls_check(a: argparse.Namespace) -> int:
+    from .semantic_controls import generator
+
+    drift = generator.check(Path(a.out))
+    if drift:
+        return emit(envelope("invalid", {"drift": drift}, error={
+            "code": "supplement_drift",
+            "message": "the committed supplement differs from a fresh render"}), EXIT_INVALID)
+    return emit(envelope("ok", {"drift": []}, limitations=[SCRIPTED_LIMITATION]), EXIT_OK)
+
+
+def cmd_controls_plan(a: argparse.Namespace) -> int:
+    from .semantic_controls.study import plan_supplement
+
+    root = state_root(a.state_root)
+    rep = plan_supplement(Path(a.supplement), Path(a.out), state_root=root,
+                          repo_root=_checkout_root())
+    if rep["status"] == "ok":
+        return emit(envelope("ok", {k: rep.get(k) for k in ("plan_sha256",)},
+                             artifacts=[a.out], limitations=[SCRIPTED_LIMITATION]), EXIT_OK)
+    return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+        "code": rep["status"], "message": "; ".join(rep["problems"])}), EXIT_INVALID)
+
+
+def cmd_controls_run(a: argparse.Namespace) -> int:
+    from .semantic_controls.study import run_supplement
+
+    root = state_root(a.state_root)
+    rep = run_supplement(Path(a.plan), Path(a.out), state_root=root, repo_root=_checkout_root())
+    status = rep["status"]
+    if status == "completed":
+        return emit(envelope("ok", rep.get("summary") or {k: rep[k] for k in rep if k != "report"},
+                             artifacts=[a.out], limitations=[SCRIPTED_LIMITATION]), EXIT_OK)
+    code = {"plan_invalid": EXIT_INVALID, "plan_tampered": EXIT_CORRUPT,
+            "evaluator_mismatch": EXIT_PRECONDITION}.get(status, EXIT_PRECONDITION)
+    return emit(envelope("blocked", {"problems": rep["problems"]}, error={
+        "code": status, "message": "; ".join(rep["problems"])}), code)
 
 
 def cmd_unsupported(a: argparse.Namespace) -> int:
@@ -458,6 +574,47 @@ def build_parser() -> argparse.ArgumentParser:
     rs.add_argument("--packet", required=True)
     rs.add_argument("--state-root")
     rs.set_defaults(fn=cmd_review_status)
+    rc = review.add_parser("export-controls",
+                           help="blind packet/2 with control items from a commission run and a "
+                                "supplement run (DECISIONS B69)")
+    rc.add_argument("run", help="a commission run output directory (report.json + bundles/)")
+    rc.add_argument("--supplement", required=True,
+                    help="a semantic-controls supplement run directory (report.json + bundles/)")
+    rc.add_argument("--out", required=True)
+    rc.add_argument("--state-root")
+    rc.set_defaults(fn=cmd_review_export_controls)
+    ra = review.add_parser("adjudicate",
+                           help="record the named adjudicator's decision on one open disagreement "
+                                "(DECISIONS B71)")
+    ra.add_argument("--packet", required=True)
+    ra.add_argument("--item", required=True)
+    ra.add_argument("--dimension", required=True)
+    ra.add_argument("--adjudicator", required=True, help="the adjudicator's reviewer_ref")
+    ra.add_argument("--decision", required=True, choices=("pass", "fail"))
+    ra.add_argument("--words", required=True, help="the adjudicator's own words")
+    ra.add_argument("--at", required=True, help="UTC timestamp, e.g. 2026-10-08T01:02:03Z")
+    ra.add_argument("--state-root")
+    ra.set_defaults(fn=cmd_review_adjudicate)
+
+    controls = g.add_parser("controls",
+                            help="semantic-controls supplement: wrong-on-purpose items (B68)")
+    controls = controls.add_subparsers(dest="sub", required=True)
+    cg = controls.add_parser("generate")
+    cg.add_argument("--out", required=True)
+    cg.set_defaults(fn=cmd_controls_generate)
+    cc = controls.add_parser("check")
+    cc.add_argument("--out", required=True)
+    cc.set_defaults(fn=cmd_controls_check)
+    cpl = controls.add_parser("plan")
+    cpl.add_argument("--supplement", required=True)
+    cpl.add_argument("--out", required=True)
+    cpl.add_argument("--state-root")
+    cpl.set_defaults(fn=cmd_controls_plan)
+    crn = controls.add_parser("run")
+    crn.add_argument("--plan", required=True)
+    crn.add_argument("--out", required=True)
+    crn.add_argument("--state-root")
+    crn.set_defaults(fn=cmd_controls_run)
 
     for group, subs in (("training", ("audit-match", "plan",
                         "execute")), ("study", ("plan", "execute"))):

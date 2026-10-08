@@ -1,0 +1,172 @@
+
+==============================================================================
+A1a: 'anthony' then 'anthony.' (trailing dot)
+==============================================================================
+
+$ import reviewer_ref='anthony'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer_ref='anthony.'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony.' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony.' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+
+$ import reviewer_ref='anthony-'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony-' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony-' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony_'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony_' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony_' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony 2'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer_ref='anthony.vasquez'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer_ref='anthony-vasquez'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony-vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony-vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony_vasquez'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony_vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony_vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony vasquez'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony vasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthonyvasquez'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthonyvasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthonyvasquez' collides with recorded reviewer_ref 'anthony.vasquez': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='a.vasquez'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer_ref='.'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref '.' has no letter or digit; separators alone cannot name a reviewer (B61)"]
+  error: reviewer_ref '.' has no letter or digit; separators alone cannot name a reviewer (B61)
+
+$ import reviewer_ref='..'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref '..' has no letter or digit; separators alone cannot name a reviewer (B61)"]
+  error: reviewer_ref '..' has no letter or digit; separators alone cannot name a reviewer (B61)
+
+$ import reviewer_ref='-'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref '-' has no letter or digit; separators alone cannot name a reviewer (B61)"]
+  error: reviewer_ref '-' has no letter or digit; separators alone cannot name a reviewer (B61)
+
+$ import reviewer_ref='_'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref '_' has no letter or digit; separators alone cannot name a reviewer (B61)"]
+  error: reviewer_ref '_' has no letter or digit; separators alone cannot name a reviewer (B61)
+
+$ import reviewer_ref='0'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import reviewer_ref='anthony2'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony2' collides with recorded reviewer_ref 'anthony 2': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony2' collides with recorded reviewer_ref 'anthony 2': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony..'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony..' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony..' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ import reviewer_ref='anthony-.-'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'anthony-.-' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'anthony-.-' collides with recorded reviewer_ref 'anthony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+$ hs review status after all variants
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["0", "a.vasquez", "anthony", "anthony 2", "anthony.vasquez"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['0', 'a.vasquez'] n_items=36 n_paired=36 raw=1.0 kappa=None
+
+VERDICT: distinct_human_reviewers = 5 for one person

@@ -79,3 +79,36 @@ def test_export_of_a_tampered_run_is_refused(tmp_path):
     code, env, _ = hs("review", "export", run, "--out", tmp_path / "packet",
                       "--state-root", tmp_path / "state")
     assert code == 5 and not (tmp_path / "packet").exists()
+
+
+def test_a_variant_spelling_of_the_same_reviewer_is_refused_not_counted_twice(tmp_path):
+    """Measured on 2026-10-07 at 3f304a1: importing the same synthetic ratings as 'anthony' and
+    then as 'Anthony ' moved `hs review status` to independently_reviewed, dropped the
+    single-reviewer label and emitted an agreement block. B61 says one person is never two."""
+    _export(tmp_path)
+    packet_dir = tmp_path / "packet"
+    state = tmp_path / "state"
+    tpl = json.loads((packet_dir / "ratings-template.json").read_text())
+    for r in tpl["ratings"]:
+        r.update(verdict="pass", words="synthetic test words, not a real review")
+
+    first = dict(tpl, reviewer_ref="anthony", rated_at_utc="2026-10-07T00:00:00Z")
+    (tmp_path / "first.json").write_text(json.dumps(first))
+    code, env, _ = hs("review", "import", "--packet", packet_dir, "--ratings", tmp_path / "first.json",
+                      "--state-root", state)
+    assert code == 0 and env["result"]["votes"] == 36
+
+    for n, variant in enumerate(("Anthony ", "Anthony", "ANTHONY")):
+        again = dict(tpl, reviewer_ref=variant, rated_at_utc="2026-10-07T00:00:00Z")
+        (tmp_path / f"again{n}.json").write_text(json.dumps(again))
+        code, env, _ = hs("review", "import", "--packet", packet_dir, "--ratings",
+                          tmp_path / f"again{n}.json", "--state-root", state)
+        assert code == 2 and env["error"]["code"] == "ratings_refused", variant
+
+    code, env, _ = hs("review", "status", "--packet", packet_dir, "--state-root", state)
+    res = env["result"]
+    assert res["status"] == "single_reviewer_reviewed"
+    assert res["label"] == "single-reviewer"
+    assert res["distinct_human_reviewers"] == ["anthony"]
+    assert res["agreement"] is None
+    assert res["reviewer_ref_collisions"] == []

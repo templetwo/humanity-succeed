@@ -1,0 +1,35 @@
+{
+ "adjudications_recorded": 0,
+ "code_head": "a9742e5dff17e8a255accb70f2447e00d74cf573",
+ "command": "hs review export-controls docs/receipts/wp3/run --supplement docs/receipts/a1-semantic-controls/run-v1 --out <reviewer_directory>",
+ "controls_config": {
+  "decoys": 6,
+  "known_fail": 12,
+  "twins": 3
+ },
+ "exported_at_utc": "2026-10-08T05:39:00Z",
+ "exported_by": "MacBook seat (claude-fable-5-1), session 89c49977, at Anthony's word of 2026-10-08: a briefing while blind with a link to the final reviewable doc",
+ "index_html_sha256": "a56aa61aadd541261286253f40140f93ebc3dde3a498f4b9aaeccd48b76206d7",
+ "items": 57,
+ "mode": "single-reviewer",
+ "model_called": false,
+ "operator_key": "under the default state root on the MacBook (reviews/keys/pk_bbdaab359ec8a4b9.json); carries roles, the seed and the export secret; not committed, not in the packet",
+ "packet_id": "pk_bbdaab359ec8a4b9",
+ "packet_schema": "hs-review-packet/2",
+ "packet_sha256": "676e7729c7a18f4fbecddc29486a619c7cfc1624ed4bd2a20260749eba9e7e8e",
+ "ratings_recorded": 0,
+ "ratings_template_sha256": "25643f0e0e401815ece2f965b19c9d0647eeed321d5f0381563810e99e4d950f",
+ "reviewer_directory": "outside the repository (humanity-succeed-review-packet-a1-controls/, beside the checkout); the same page is published as a private claude.ai artifact for Anthony (URL in the Slack #passdowns post of 2026-10-08)",
+ "schema_id": "hs-a1-review-export-receipt/1",
+ "source_runs": {
+  "commission_run": {
+   "path": "docs/receipts/wp3/run",
+   "report_sha256": "3d3f5510b5a7c730005d73f330d1d097f4cf4ca665626db8dd0708b69460fe78"
+  },
+  "supplement_run": {
+   "path": "docs/receipts/a1-semantic-controls/run-v1",
+   "plan_sha256": "91ca3a039bc595360f13ed9b5837bf0f233cb94fd89ccfff92463192298a2ef1",
+   "report_sha256": "d8ab813b77c34a4677a8d43a59bf2a3886d46dadc88ee7a6bfdb29c70a5930ba"
+  }
+ }
+}

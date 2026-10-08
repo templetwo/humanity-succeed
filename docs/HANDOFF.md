@@ -202,3 +202,82 @@ These match `configs/workload.example.json`. They are planning bounds, not an ap
 
 The license, thresholds, corpus, reviewers, model and training stay at their own gates; none is
 needed for WP3.
+
+## A1 stage 1 and 2 merged; human-side audit (2026-10-07, cloud seat, claude-fable-5-1)
+
+**Model called: no. Model trained: no. Human rating recorded: no.**
+
+- `hs review export`, `hs review import` and `hs review status` exist since `c8f1e34` (B67). The
+  earlier lines in this file that say "Review import is WP4" or "blind review (WP4) ... not started"
+  describe the state before 2026-09-30 and are superseded by this note; they are kept as written.
+- Packet `pk_889ccc2edce027b7` (36 items, 0 ratings) is Anthony's to rate:
+  `docs/receipts/a1-review/export.json`, `docs/REVIEW_PACKET_HOWTO.md`.
+- Audit: `docs/audits/2026-10-07_human_side_audit_a1_review.md`. A measured defeat of the B61
+  distinct-reviewer check (`anthony` then `Anthony ` reached `independently_reviewed`) is closed in
+  this branch by `review/identity.py` with tests. The packet's measurement limit (every item is a
+  truthful notice, so kappa is undefined by construction and the packet cannot distinguish a careful
+  reviewer from a careless one) is recorded, not patched: suite v1 is frozen (B55).
+- Checks at this change: `uv run pytest` 753 passed, 2 skipped; `ruff` clean; schema freeze and suite
+  generator `--check` clean.
+- Three cloud sessions (red team, independent replication, coverage) extended the audit; their
+  reports are under `docs/audits/cloud/`, their findings F13 to F22 are in the audit, and the
+  red team's six defeats are closed in this branch. A draft decision packet with exact words is at
+  `docs/audits/cloud/measurement-replication/DECISION_PACKET_SEMANTIC_CONTROLS.md`; it approves
+  nothing.
+- The local six-lens workflow finished (`docs/audits/workflow/2026-10-07_six_lens_report.md`): 14
+  findings verified, 0 refuted; its additions are audit F23 to F30. Two of them belong beside the
+  decision below because they decide what any review can mean: nothing records the expected human
+  verdict per item or defines when semantic review is complete (F23), and no procedure, role or
+  record adjudicates a disagreement between two reviewers (F24). The four review wire formats are
+  now in the schema freeze (F28); the stage-0 freeze will fail at the first B58 evaluator bump and
+  the lawful fix is proposed, not made (F27).
+- The decisions in plain words, one page, five questions answerable yes / no / smaller:
+  `docs/audits/2026-10-08_five_questions_plain_words.md`. The dense packet is for whoever builds;
+  that page is for Anthony.
+- **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
+  items a reviewer should fail. Known-fail items need new trajectories (correct write, false or
+  blaming notice) in a versioned supplement; suite v1 can export none. Decoupling decoys (the 12 C2
+  `blocked_attempt` members) only remove the "included implies passed" leak. Until he decides, any
+  review of the current packet is honestly labelled single-reviewer, 36 of 36 agree with the
+  evaluator, kappa undefined.
+
+## Semantic controls built, not run (2026-10-07 to 2026-10-08, MacBook seat, claude-fable-5-1)
+
+**Model called: no. Model trained: no. Human rating recorded: no. Supplement run recorded: no.
+Packet with controls exported: no (scratch only, in tests and verification).**
+
+Anthony answered questions 1 to 4 of `docs/audits/2026-10-08_five_questions_plain_words.md` on
+2026-10-07 ("1. yes of course. lets think from multiple angles. 2. remove the hint. 3.no. 4. me";
+chronicle claim e89009dd): decisions B68 to B71 on main at 30ffd1b. This branch
+(`a1/semantic-controls`, based on PR #1's head c86d1f9 plus main) builds what those four answers
+authorize and stops before anything runs, as the plain-words page promised.
+
+- **What exists.** `docs/A1_SEMANTIC_CONTROLS.md` (design, angles, size, blinding rules, residuals);
+  `cases/supplement_a1_semantic_controls_v1/` (12 groups, 24 trajectories: an honest twin and one
+  wrong-on-purpose notice per group, 3 per angle, every one a measured mechanical pass, the honest
+  human verdict written in `SUPPLEMENT.json` before any run); `hs controls generate|check|plan|run`;
+  `hs review export-controls` (packet/2: the 36 measured items plus 6 seeded decoys, all 12
+  known-fail items and 3 honest twins, roles only in the operator key); `hs review status` with
+  control hit-rates disclosed only after one human covers every item; `hs review adjudicate` and
+  the `split_unadjudicated` status (B71). Packet/1 and `pk_889ccc2edce027b7` are untouched
+  (`tests/golden/test_review_v1_text_freeze.py`). The plan is frozen, not run:
+  `docs/receipts/a1-semantic-controls/freeze-v1/` (plan sha 91ca3a03).
+- **How it was built.** Verified multi-agent build: stage-0 freeze, lead-authored contract, an
+  advisory pass (eight contract defects, five rulings), three opus builder lanes on disjoint files,
+  three adversarial verifiers (2a WEAK, 2c WEAK, 2b BROKEN at the merge commit), every finding
+  applied or recorded, then this seat measured the final commit from a clean clone.
+- **Checks at this change (clean clone of the commit named below):** `uv run pytest -q` 934 passed, 0 failed (3 min 02 s); `ruff check src tests scripts` clean; schema freeze, suite v1 generator check and `hs controls check` clean; `hs controls plan` from the clone reproduced the committed plan sha 91ca3a03 byte for byte; `git status` empty. Measured at c13a1b3; this note is the only change after it. The branch is local to the MacBook and not pushed; pushing it is part of the open housekeeping gate on local branches.
+- **Two things the verifiers found that are Anthony's to weigh, not the code's to fix.**
+  (1) The 36 items of the packet he already holds are, byte for byte, the measured half of any
+  packet with controls; a reviewer who diffs the two finds every control. Ratings must bind to the
+  same source hashes, so this is a procedural boundary like the key's: rate the new packet with the
+  old one closed, or give the new packet to a reviewer who never saw the old one.
+  (2) Every decoy shares its case with a measured C2 item and shows a denied step; what the decoy
+  removes is the structural "included means passed" implication, not every inference.
+- **Still Anthony's:** question 5 (the sentence that means a review is finished); the size (he may
+  say smaller or bigger before the run); whether and when to run the frozen plan and export a
+  packet with controls; the merge of PR #1 and of this branch; the housekeeping gates of
+  2026-10-07 (DeepSeek receipts, the three local branches, the F4 and ASCII-reviewer rows).
+- **Lint note for whoever merges PR #1:** `ruff check .` reports 79 errors, all in the red team's
+  preserved attack scripts under `docs/audits/cloud/redteam-identity/`; `src`, `tests` and
+  `scripts` are clean. Exclude preserved audit scripts from lint rather than edit evidence.

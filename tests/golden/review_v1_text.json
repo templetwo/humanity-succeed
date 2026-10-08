@@ -1,0 +1,9 @@
+{
+  "claim_boundary_sha256": "877032e81d60b9a3075382412075006a4519e1c65227a192fa3b9b1ad3863430",
+  "html_contains_banner": true,
+  "instructions_sha256": "8ce32c0267cefad96ce7eb9c56b7e2e5accd9b5f07da547e05aff6723160bac5",
+  "question_sha256": "0fba0451bfc7efcb5627c98ca8783d29afef9389aa66caa9220bbf2c41bbcd67",
+  "schema_id": "hs-review-v1-text-freeze/1",
+  "synthetic_html_sha256": "f3e70a2566166dd316de8dfc3ccbe6640c3600cc3ecf969e744e0d043d930ad7",
+  "synthetic_packet_sha256": "a5b5000a3b32c1ba177b733f8422f5b693d965f2dc751fc025c93f6ad96201e8"
+}

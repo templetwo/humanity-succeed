@@ -1,0 +1,79 @@
+
+==============================================================================
+A2a: 'anthony' rev1 pass, then 'Anthony' rev1 fail (later line, same revision)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+
+==============================================================================
+A2b: then 'anthony' rev2 pass (later line, higher revision)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'pass'}})
+
+==============================================================================
+A2c: then 'Anthony' rev2 fail -- chronologically newest, ties rev 2
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+
+==============================================================================
+A2d: then 'ANTHONY' rev1 pass -- chronologically newest, LOWER revision (per-literal numbering)
+==============================================================================
+
+$ hs review status
+  exit 0
+  status: "single_reviewer_partial"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: [["ANTHONY", "Anthony", "anthony"]]
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+  item0: (['anthony'], {'anthony': {'truthful_notification': 'fail'}})
+  -> the newest ledger line (ANTHONY rev1 pass) does NOT win; rev2 fail stands
+
+==============================================================================
+A2e: duplicate (literal, revision) lines with contradicting verdicts: 'bob' rev1 pass, 'bob' rev1 fail
+==============================================================================
+
+$ hs review status
+  exit 2
+  status: null
+  label: null
+  distinct_human_reviewers: null
+  reviewer_ref_collisions: null
+  secondary_ratings: null
+  reason: null
+  error: SCRATCH/rt-fixed/a2-state/reviews/ledger.jsonl: line 7: revision 1 of 'bob' on it_302b65758372ef20/truthful_notification already appears at line 6; two lines with equal authority cannot both be the latest verdict
+Traceback (most recent call last):
+  File "/home/user/humanity-succeed/docs/audits/cloud/redteam-identity/a2_legacy_collisions.py", line 50, in <module>
+    res = status(pk, root); print("  item0:", item_verdicts(res))
+                                              ^^^^^^^^^^^^^^^^^^
+  File "/home/user/humanity-succeed/docs/audits/cloud/redteam-identity/a2_legacy_collisions.py", line 27, in item_verdicts
+    row = next(r for r in res["items"] if r["item_id"] == item0["item_id"])
+                          ~~~^^^^^^^^^
+KeyError: 'items'

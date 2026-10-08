@@ -1,0 +1,138 @@
+
+==============================================================================
+A8: which rated_at_utc values import?
+==============================================================================
+
+$ import rated_at_utc='2026-10-07T14:03:00Z'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07T14:03:00+05:30'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07T14:03:00-12:00'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07T14:03:00'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='20261007T140300'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='9999-12-31T23:59:59Z'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='0001-01-01T00:00:00Z'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07T14:03:00+23:59'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-10-07T14:03:00+24:00'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["rated_at_utc '2026-10-07T14:03:00+24:00' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)"]
+  error: rated_at_utc '2026-10-07T14:03:00+24:00' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)
+
+$ import rated_at_utc='2026-02-30T00:00:00Z'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["rated_at_utc '2026-02-30T00:00:00Z' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)"]
+  error: rated_at_utc '2026-02-30T00:00:00Z' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)
+
+$ import rated_at_utc='2026-10-07T24:00:00Z'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["rated_at_utc '2026-10-07T24:00:00Z' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)"]
+  error: rated_at_utc '2026-10-07T24:00:00Z' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)
+
+$ import rated_at_utc='2026-10-07 14:03:00Z'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='2026-W41-3'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import rated_at_utc='now'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["rated_at_utc 'now' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)"]
+  error: rated_at_utc 'now' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)
+
+$ import rated_at_utc='1759845780'
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["rated_at_utc '1759845780' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)"]
+  error: rated_at_utc '1759845780' is not an ISO 8601 timestamp (for example 2026-10-07T14:03:00Z)
+
+$ import rated_at_utc='2026-10-07T14:03:00.123456789Z'
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ hs review status
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["r0", "r1", "r12", "r13", "r16", "r2", "r3", "r4", "r5", "r6", "r7", "r8"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['r0', 'r1'] n_items=36 n_paired=36 raw=1.0 kappa=None

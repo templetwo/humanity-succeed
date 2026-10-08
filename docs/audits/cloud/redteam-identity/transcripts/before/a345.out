@@ -1,0 +1,188 @@
+
+==============================================================================
+A3a: two exports of one run: packet ids / item ids / source hashes
+==============================================================================
+  packet ids: pk_ec4e393edf82e195 pk_d4fb5ae6497150e6
+  item id overlap: 0
+  source_sha256 sets equal: True
+
+==============================================================================
+A3b: 'anthony' rates packet A; 'tony' rates packet B; status of each
+==============================================================================
+
+$ import anthony -> packet A
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import tony -> packet B
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ status A
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+
+$ status B
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["tony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+
+==============================================================================
+A3c: ratings written for packet A imported against packet B (same run, re-exported)
+==============================================================================
+
+$ import A's ratings file against packet B
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["ratings packet_id 'pk_ec4e393edf82e195' != packet manifest packet_id 'pk_d4fb5ae6497150e6'", "ratings packet_sha256 '2f818b091c78132a0faa8fba0f044a99304947ec0744b00d24cfa3b73ab094a4' != computed packet hash 'dd546fa7d307b26ec6d20aa09450b7e3e9e129cab54b468967014b1fb2c7ca29'"]
+  error: ratings packet_id 'pk_ec4e393edf82e195' != packet manifest packet_id 'pk_d4fb5ae6497150e6'; ratings packet_sha256 '2f818b091c78132a0faa8fba0f044a99304947ec0744b00d24cfa3b73ab094a4' != computed packet hash 'dd546fa7d307b26ec6d20aa09450b7e3e9e129cab54b468967014b1fb2c7ca29'
+
+==============================================================================
+A3d: cross-packet collision: 'Tony' on packet A (tony exists only on packet B)
+==============================================================================
+
+$ import 'Tony' -> packet A
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["reviewer_ref 'Tony' collides with recorded reviewer_ref 'tony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)"]
+  error: reviewer_ref 'Tony' collides with recorded reviewer_ref 'tony': the same reviewer once case, whitespace and Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly distinct one (B61)
+
+==============================================================================
+A4a: ratings file with reviewer_kind=human written by 'a model' -- indistinguishable
+==============================================================================
+
+$ import claude-seat as model
+  exit 0
+  recorded: 36
+  votes: 0
+  secondary: 36
+  problems: null
+
+$ status A (model secondary)
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 36
+  reason: "fewer than two distinct human reviewers cover any item"
+
+$ import SAME ref claude-seat as human
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ status A (same ref now human)
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "claude-seat"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 36
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'claude-seat'] n_items=36 n_paired=36 raw=1.0 kappa=None
+
+==============================================================================
+A4b: hand-edit the ledger: flip one reviewer's model lines to human + counts_as_vote true
+==============================================================================
+
+$ import anthony human
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+
+$ import gpt-x model
+  exit 0
+  recorded: 36
+  votes: 0
+  secondary: 36
+  problems: null
+  ledger lines rewritten: 36
+
+$ status after hand-edit
+  exit 0
+  status: "independently_reviewed"
+  label: null
+  distinct_human_reviewers: ["anthony", "gpt-x"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: null
+  agreement[truthful_notification]: reviewers=['anthony', 'gpt-x'] n_items=36 n_paired=36 raw=1.0 kappa=None
+  read_records raised? no -> 72 records read cleanly
+
+==============================================================================
+A5a: operator key: swap two entries' fixture_id, then import
+==============================================================================
+  before: it_edb6187e1e0dfba9 c2-g08-direct | it_601490fdf48baaea c1-g04-real_correction
+
+$ import against tampered key
+  exit 0
+  recorded: 36
+  votes: 36
+  secondary: 0
+  problems: null
+  recorded fixture_id for item0: c1-g04-real_correction (was c2-g08-direct )
+
+$ status with tampered key
+  exit 0
+  status: "single_reviewer_reviewed"
+  label: "single-reviewer"
+  distinct_human_reviewers: ["anthony"]
+  reviewer_ref_collisions: []
+  secondary_ratings: 0
+  reason: "fewer than two distinct human reviewers cover any item"
+
+==============================================================================
+A5b: key with an entry removed -> import names the missing item
+==============================================================================
+
+$ import against key missing one entry
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["no operator-key entry for item 'it_c3979dd4127ff7da'"]
+  error: no operator-key entry for item 'it_c3979dd4127ff7da'
+
+==============================================================================
+A5c: key packet_sha256 edited -> refused; packet.json edited (one char in instructions) -> refused
+==============================================================================
+
+$ import with key packet_sha256 zeroed
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["operator key packet_sha256 '0000000000000000000000000000000000000000000000000000000000000000' != computed packet hash '29f7a6fd88240da4d55173bb103244e9dfa297b90a996ee91c484aa4d40e70db'"]
+  error: operator key packet_sha256 '0000000000000000000000000000000000000000000000000000000000000000' != computed packet hash '29f7a6fd88240da4d55173bb103244e9dfa297b90a996ee91c484aa4d40e70db'
+
+$ import edited packet.json with original ratings sha
+  exit 2
+  recorded: null
+  votes: null
+  secondary: null
+  problems: ["ratings packet_sha256 '29f7a6fd88240da4d55173bb103244e9dfa297b90a996ee91c484aa4d40e70db' != computed packet hash '226d757dd2a9320119effefe946cae5bdaadfb83b9789c88b44428b84b7d0765'"]
+  error: ratings packet_sha256 '29f7a6fd88240da4d55173bb103244e9dfa297b90a996ee91c484aa4d40e70db' != computed packet hash '226d757dd2a9320119effefe946cae5bdaadfb83b9789c88b44428b84b7d0765'

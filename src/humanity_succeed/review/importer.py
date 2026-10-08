@@ -14,10 +14,23 @@ manifest bytes would be caught here rather than silently accepted.
 Revisions are numbered per ``(packet_id, item_id, dimension, reviewer_ref)`` from what the ledger
 already holds; nothing here rewrites or removes an existing line. A corrupt ledger line is a named
 refusal, never a silent skip past the evidence.
+
+Reviewer identity (B61, ``review/identity.py``): a ``reviewer_ref`` with stray whitespace, or one
+that names an already-recorded reviewer under case/whitespace/Unicode normalisation without
+matching it exactly, is refused before anything is appended. The 2026-10-07 audit measured that
+``"anthony"`` followed by ``"Anthony "`` reached ``independently_reviewed``; this closes that.
+
+Packet versions (DECISIONS B69, B70): a ``hs-review-packet/1`` packet is read with its
+``hs-review-key/1`` key, a ``hs-review-packet/2`` packet with its ``hs-review-key/2`` key. A packet of
+one version with a key of the other is a named refusal (never a raw validation error), and so is a
+malformed key. Nothing else changes for /2: verdicts stay pass/fail in the reviewer's own words, and
+the key's roles never reach the ledger.
 """
 
 from __future__ import annotations
 
+import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,14 +39,22 @@ from pydantic import ValidationError
 from ..canonical import StrictLoadError, load_document, sha256_bytes, strict_json_loads
 from .contract import (
     KEY_DIR,
+    KEY_SCHEMA,
+    KEY_SCHEMA_V2,
     PACKET_FILE,
+    PACKET_SCHEMA_V2,
     RECORD_SCHEMA,
     PacketKey,
+    PacketKeyV2,
     PacketManifest,
+    PacketManifestV2,
     RatingsFile,
     ReviewRecord,
 )
+from .identity import reviewer_ref_problem, same_reviewer
 from .ledger import LedgerCorrupt, append_records, read_records
+
+_RATED_AT_UTC = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z")
 
 
 def _refused(problems: list[str]) -> dict[str, Any]:
@@ -42,6 +63,31 @@ def _refused(problems: list[str]) -> dict[str, Any]:
 
 def _key_path(state_root: Path, packet_id: str) -> Path:
     return Path(state_root).joinpath(*KEY_DIR, f"{packet_id}.json")
+
+
+def _manifest_model(packet_doc: Any) -> type[PacketManifest] | type[PacketManifestV2]:
+    """The manifest model for a parsed packet document: /2 when it says so, otherwise /1 (whose
+    strict schema then names whatever is wrong, exactly as before packet/2 existed)."""
+    if isinstance(packet_doc, dict) and packet_doc.get("schema_id") == PACKET_SCHEMA_V2:
+        return PacketManifestV2
+    return PacketManifest
+
+
+def _key_model(manifest: PacketManifest | PacketManifestV2) -> type[PacketKey] | type[PacketKeyV2]:
+    return PacketKeyV2 if isinstance(manifest, PacketManifestV2) else PacketKey
+
+
+def key_version_problem(manifest: PacketManifest | PacketManifestV2, key_doc: Any) -> str | None:
+    """Why a parsed key document is the wrong VERSION for this packet, or None. Only a key that
+    declares the other known key schema is named here; anything else malformed is left to the key
+    model's strict validation."""
+    expected = KEY_SCHEMA_V2 if isinstance(manifest, PacketManifestV2) else KEY_SCHEMA
+    found = key_doc.get("schema_id") if isinstance(key_doc, dict) else None
+    if found in (KEY_SCHEMA, KEY_SCHEMA_V2) and found != expected:
+        return (f"key schema_id {found!r} does not match packet schema_id {manifest.schema_id!r} "
+                f"(which needs {expected!r}); a packet and its operator key are one version, and "
+                "mixed versions are refused")
+    return None
 
 
 def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -> dict[str, Any]:
@@ -64,7 +110,9 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         return _refused([f"cannot read packet {packet_json_path}: {e.strerror or e}"])
     packet_sha256 = sha256_bytes(packet_bytes)
     try:
-        manifest = PacketManifest.model_validate(strict_json_loads(packet_bytes), strict=True)
+        packet_doc = strict_json_loads(packet_bytes)
+        manifest_model = _manifest_model(packet_doc)
+        manifest = manifest_model.model_validate(packet_doc, strict=True)
     except (StrictLoadError, ValidationError) as e:
         return _refused([f"invalid packet manifest {packet_json_path}: {e}"])
 
@@ -82,6 +130,20 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         return _refused([f"invalid ratings file {ratings_path}: {e}"])
 
     problems: list[str] = []
+    ref_problem = reviewer_ref_problem(ratings.reviewer_ref)
+    if ref_problem:
+        problems.append(ref_problem)
+    # The field is named _utc: a UTC instant in one written form, not any ISO 8601 string (an offset,
+    # a date alone, a week date and a 24-hour tolerance all parsed before the 2026-10-07 red-team).
+    try:
+        if not _RATED_AT_UTC.fullmatch(ratings.rated_at_utc):
+            raise ValueError(ratings.rated_at_utc)
+        datetime.fromisoformat(ratings.rated_at_utc)
+    except ValueError:
+        problems.append(
+            f"rated_at_utc {ratings.rated_at_utc!r} is not an ISO 8601 timestamp "
+            "(for example 2026-10-07T14:03:00Z)"
+        )
     if ratings.packet_id != manifest.packet_id:
         problems.append(
             f"ratings packet_id {ratings.packet_id!r} != packet manifest packet_id "
@@ -102,8 +164,15 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     except OSError as e:
         return _refused([f"missing operator key {key_path}: {e.strerror or e}"])
     try:
-        key = PacketKey.model_validate(strict_json_loads(key_bytes), strict=True)
-    except (StrictLoadError, ValidationError) as e:
+        key_doc = strict_json_loads(key_bytes)
+    except StrictLoadError as e:
+        return _refused([f"invalid operator key {key_path}: {e}"])
+    mismatch = key_version_problem(manifest, key_doc)
+    if mismatch:
+        return _refused([f"operator key {key_path}: {mismatch}"])
+    try:
+        key = _key_model(manifest).model_validate(key_doc, strict=True)
+    except ValidationError as e:
         return _refused([f"invalid operator key {key_path}: {e}"])
     if key.packet_id != manifest.packet_id:
         problems.append(
@@ -115,6 +184,16 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
             f"operator key packet_sha256 {key.packet_sha256!r} != computed packet hash "
             f"{packet_sha256!r}"
         )
+    if isinstance(key, PacketKeyV2):
+        # Same binding rule as review/status.py ``_bind_to_key``: a /2 key holds exactly one entry
+        # per manifest item, or every control bucket is unreadable. Import must not append records
+        # against a key that status and adjudication will then refuse as unbound.
+        key_ids = [e.item_id for e in key.entries]
+        if len(set(key_ids)) != len(key_ids) or set(key_ids) != {i.item_id for i in manifest.items}:
+            problems.append(
+                f"operator key {key_path} does not hold exactly one entry per item of packet "
+                f"{manifest.packet_id}; a packet/2 key must, since control buckets are read from it"
+            )
     if problems:
         return _refused(problems)
 
@@ -148,9 +227,38 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     # 5. Existing ledger state for this packet, to number revisions. A corrupt line anywhere in
     #    the ledger is a named refusal, never a silent skip (ledger.py: "do not guess past it").
     try:
-        existing = read_records(state_root, packet_id=manifest.packet_id)
+        all_records = read_records(state_root)
     except LedgerCorrupt as e:
         return _refused([f"ledger corrupt: {e}"])
+    existing = [rec for rec in all_records if rec.packet_id == manifest.packet_id]
+
+    # 5b. Reviewer identity is ledger-wide, not per packet (B61). A reference that names an
+    #     already-recorded reviewer once case, whitespace and Unicode form are normalised, without
+    #     matching it byte for byte, is ambiguous: refuse it and name the collision. The operator
+    #     reuses the recorded reference or chooses a clearly distinct one; nothing is merged for
+    #     them (review/identity.py).
+    colliding = sorted({
+        rec.reviewer_ref for rec in all_records
+        if rec.reviewer_ref != ratings.reviewer_ref
+        and same_reviewer(rec.reviewer_ref, ratings.reviewer_ref)
+    })
+    other_kind = sorted({
+        rec.reviewer_kind for rec in all_records
+        if rec.reviewer_ref == ratings.reviewer_ref and rec.reviewer_kind != ratings.reviewer_kind
+    })
+    if other_kind:
+        return _refused([
+            f"reviewer_ref {ratings.reviewer_ref!r} is already recorded with reviewer_kind "
+            f"{', '.join(repr(k) for k in other_kind)}; one reference is one reviewer of one kind, "
+            "and a model's reference never becomes a human vote (B61, PROTOCOL §9)"
+        ])
+    if colliding:
+        return _refused([
+            f"reviewer_ref {ratings.reviewer_ref!r} collides with recorded reviewer_ref "
+            f"{', '.join(repr(c) for c in colliding)}: the same reviewer once case, whitespace and "
+            "Unicode form are normalised. Reuse the recorded reference exactly, or choose a clearly "
+            "distinct one (B61)"
+        ])
 
     counts_as_vote = ratings.reviewer_kind == "human"
     records: list[ReviewRecord] = []
@@ -196,4 +304,4 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     }
 
 
-__all__ = ["import_ratings"]
+__all__ = ["import_ratings", "key_version_problem"]

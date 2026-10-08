@@ -186,3 +186,32 @@ part was already ruled house-wide (Stack `8ac7c661`). Prior-decisions lines are 
 | B69 | (Five questions, 2) Review packets may include blind control items: a seeded share of mechanical-fail rows whose honest verdict is pass (suite v1 C2 `blocked_attempt`), and the known-fail items of the B68 supplement, with each item's role kept only in the operator key and the packet instruction text corrected; `hs review status` reports the control hit-rate and agreement with and without controls. A new packet schema version. Anthony, 2026-10-07, verbatim, "remove the hint" | Packet `pk_889ccc2edce027b7` is not altered; controls mean a new export with new item ids. Ratings given on the old packet stay bound to it and are reported as a packet without controls |
 | B70 | (Five questions, 3) No third verdict and no defect flag: human verdicts stay `pass` / `fail`; "cannot tell" stays a withheld row plus a note, as today. Anthony, 2026-10-07, verbatim, "no" | Closes Decision 3 of the semantic-controls packet as option 3a |
 | B71 | (Five questions, 4) Anthony is the named adjudicator for a disagreement between two reviewers (PROTOCOL §9; audit F24). Anthony, 2026-10-07, verbatim, "me" | The adjudication procedure and record are the seat's to build and his to use. An adjudication is a separate record; it never rewrites a reviewer's own verdict and is not a third rating. With one reviewer it does not bite. The audit's proposed rows B68 to B71 (§5a, unrecorded) take fresh numbers if and when he records them |
+
+### Semantic controls implementation facts (2026-10-07 to 2026-10-08, MacBook seat, claude-fable-5-1, with three claude-opus-5-5 lanes)
+
+Implementation facts under B68 to B71, not new Anthony rulings. Where the seat had to choose, the
+choice is named here so he can overrule it; each is also in `docs/A1_SEMANTIC_CONTROLS.md`.
+
+- **Size (B68, his to resize before the run):** 12 groups, one honest twin and one wrong member each,
+  3 per angle; the proposed packet is 36 measured + 6 decoys + 12 known-fail + 3 honest twins = 57.
+- **Angles:** wrong total, blame, silent omission, reversed correction. A false verification claim was
+  considered and set aside because the frozen C1 rubric line does not make it a clear fail.
+- **Voice:** the supplement keeps suite v1's task tones, naming scheme, finish summary and honest
+  notice sentence verbatim; only nouns, numbers and actor names are new. The advisory pass found that
+  fifteen items in a new voice would have been the controls.
+- **Disclosure:** `hs review status` reports nothing about controls until one human covers every
+  item; per-reviewer hit-rates and the measured-only agreement use full-coverage reviewers only;
+  revisions after that point are counted and shown.
+- **Decoys:** a commission row eligible by class and role whose bundle does not verify, or whose
+  mechanical verdict is not fail, refuses the whole export by name. Known residual: every decoy
+  shares its case with a measured C2 item, so a reader can pair them; what the decoy removes is the
+  structural "included means passed" implication.
+- **Adjudication (B71):** its own append-only record under the state root; stale on any change to
+  the set of latest votes (a revision by either side, a new reviewer); the adjudicator may be one of
+  the reviewers and status says so; a second adjudication on a still-open disagreement is a revision.
+- **Packet/1 untouched:** `tests/golden/test_review_v1_text_freeze.py` pins the reviewer-facing text
+  and render of the existing packet shape; `pk_889ccc2edce027b7` is not extended.
+- **Not done:** no supplement run is recorded (plan frozen at
+  `docs/receipts/a1-semantic-controls/freeze-v1/`), no packet with controls is exported, no rating
+  and no adjudication is recorded, no model is called. Question 5 (when a review is finished) is
+  still Anthony's.

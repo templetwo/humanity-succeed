@@ -3,9 +3,9 @@
   "checkpoint": "WP3 (development commissioning)",
   "note": "One row per requirement. pytest exiting zero does not fill a row.",
   "counts": {
-    "implemented": 31,
-    "partial": 6,
-    "not_started": 10,
+    "implemented": 36,
+    "partial": 7,
+    "not_started": 8,
     "blocked": 0
   },
   "rows": [
@@ -415,10 +415,14 @@
     {
       "id": "A19",
       "requirement": "Blind packet leaking condition/verdict: export blocked",
-      "status": "not_started",
-      "test_evidence": [],
-      "verification_class": "-",
-      "unresolved_limits": "WP4"
+      "status": "implemented",
+      "test_evidence": [
+        "tests/review/test_export.py::test_a19_fixture_id_in_task_blocks_input_and_leak_check_catches_it_directly",
+        "tests/review/test_export.py::test_a19_monkeypatched_leaking_item_builder_blocks_leak_and_writes_nothing",
+        "tests/integration/test_cli_review.py"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "substring scan over fixture/class/group/case ids, evaluator vocabulary and predicate names; not semantic proof. `hs review export` selects only the hybrid PASSES, so inclusion itself implies the mechanical outcome (docs/audits/2026-10-07_human_side_audit_a1_review.md); since B69, `hs review export-controls` mixes in blind control items and also forbids role and angle vocabulary, and no packet with controls has been exported yet"
     },
     {
       "id": "A20",
@@ -443,15 +447,65 @@
         "docs/WP3_DESIGN.md"
       ],
       "verification_class": "commissioning",
-      "unresolved_limits": "development mechanical commissioning run: 160/160 expectations met, 416/416 mutation invariants held, 4/4 evaluator sabotages detected. Formal commissioning BLOCKED: no holdback custodian (independent_holdback=false). Semantic commissioning PENDING: 36 judgment-heavy fixtures need two human reviewers (review import is WP4). Lifecycle ceiling: mechanically_validated"
+      "unresolved_limits": "development mechanical commissioning run: 160/160 expectations met, 416/416 mutation invariants held, 4/4 evaluator sabotages detected. Formal commissioning BLOCKED: no holdback custodian (independent_holdback=false). Semantic commissioning PENDING: 36 judgment-heavy fixtures need two human reviewers; hs review export/import/status exist since B67 and 0 human ratings are recorded. Lifecycle ceiling: mechanically_validated"
     },
     {
       "id": "WP4",
       "requirement": "Experiment planning, workload planner, blind review",
-      "status": "not_started",
-      "test_evidence": [],
-      "verification_class": "-",
-      "unresolved_limits": "not started; WP3 opened 2026-09-26"
+      "status": "partial",
+      "test_evidence": [
+        "tests/review/",
+        "tests/integration/test_cli_review.py",
+        "docs/receipts/a1-review/export.json"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "blind review export, own-words rating import and review status only (A1 stage 2; B61, B67): packet pk_889ccc2edce027b7 exported for Anthony, 0 ratings recorded. Semantic controls are built and tested, not run (B68-B71 rows below). Experiment planning, workload counting, cells and the condition/seed checks (A14) are not started"
+    },
+    {
+      "id": "B68",
+      "requirement": "Semantic-controls supplement: wrong-on-purpose notices, honest verdict written before any run",
+      "status": "implemented",
+      "test_evidence": [
+        "tests/semantic_controls/",
+        "cases/supplement_a1_semantic_controls_v1/SUPPLEMENT.json",
+        "docs/receipts/a1-semantic-controls/freeze-v1/plan.json",
+        "docs/A1_SEMANTIC_CONTROLS.md"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "12 groups, each one honest twin and one wrong member, 3 per angle (wrong_total, blame, silent_omission, reversed_correction); generator --check byte-stable; every member a measured mechanical pass; plan frozen, NOT run; size is Anthony's to resize before the run"
+    },
+    {
+      "id": "B69",
+      "requirement": "Blind control items in review packets (packet/2); roles only in the operator key",
+      "status": "implemented",
+      "test_evidence": [
+        "tests/review/test_export_v2.py",
+        "tests/integration/test_cli_controls.py"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "hs review export-controls: 36 measured + 6 decoys + 12 known-fail + 3 honest twins = 57 items, seeded draw recorded in the key, leak scan over roles, angles and ids; status discloses hit-rates only after one human covers every item. Known residual: a decoy shares its case with a measured C2 item. No packet with controls has been exported"
+    },
+    {
+      "id": "B70",
+      "requirement": "No third verdict and no defect flag",
+      "status": "implemented",
+      "test_evidence": [
+        "tests/review/test_import_v2.py"
+      ],
+      "verification_class": "unit",
+      "unresolved_limits": "verdicts stay pass/fail; the importer changes only to accept packet/2 with its key"
+    },
+    {
+      "id": "B71",
+      "requirement": "Named adjudicator; split_unadjudicated status; adjudication record",
+      "status": "implemented",
+      "test_evidence": [
+        "tests/review/test_adjudication.py",
+        "tests/review/test_status_v2.py",
+        "tests/integration/test_cli_controls.py"
+      ],
+      "verification_class": "unit+integration",
+      "unresolved_limits": "an open split between two reviewers no longer reads independently_reviewed; adjudications are append-only, never rewrite a verdict, and go stale on any change to the votes; 0 adjudications recorded"
     },
     {
       "id": "WP5",
