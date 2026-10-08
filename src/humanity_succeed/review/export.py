@@ -500,9 +500,11 @@ def export_packet_v2(commission_run: Path, supplement_run: Path, out: Path, *,
     (contract: v1 builds its key after writing; a reused export_secret would otherwise crash with
     out/ half-written).
 
-    Decoy eligibility follows the contract literally: a DECOY_SELECTOR row whose bundle does not
-    verify is not eligible (it is not a refusal by itself); the refusal names every excluded row
-    when too few remain. A row that is already measured (judgment-heavy) is never also a decoy.
+    Decoy selector rows (lead ruling, 2026-10-07): any DECOY_SELECTOR row that is not sound
+    (mechanical not fail/fail, bundle not "consistent", empty rubric) is a hard blocked_input
+    naming the row, before any draw, never a silent shift of the pool. "Fewer eligible than asked"
+    remains a separate refusal for a pool that is simply too small. A row that is already measured
+    (judgment-heavy) is never also a decoy. An existing out dir raises FileExistsError, as v1.
     """
     # 1. Arguments.
     problems: list[str] = []
@@ -542,6 +544,8 @@ def export_packet_v2(commission_run: Path, supplement_run: Path, out: Path, *,
         fid = row.get("fixture_id")
         role = row.get("role")
         ehv = (row.get("expected") or {}).get("expected_human_verdict")
+        if not isinstance(fid, str) or not fid:
+            problems.append(f"supplement row has no fixture_id (bundle {row.get('bundle')!r})")
         if row.get("match") is not True:
             problems.append(f"supplement {fid}: match is {row.get('match')!r}, not True")
         if row.get("verify_internal") != "consistent":
@@ -570,8 +574,11 @@ def export_packet_v2(commission_run: Path, supplement_run: Path, out: Path, *,
     measured_ids = {r.get("fixture_id") for r in measured_rows}
     by_id_c = {r.get("fixture_id"): r for r in commission["fixtures"]}
 
+    # Lead ruling (2026-10-07): every DECOY_SELECTOR row must be sound. A selector row with
+    # mechanical not fail/fail, a bundle that does not verify, or an empty rubric is a HARD
+    # refusal naming the row, before any draw. The alternative rejected: treating it as merely
+    # ineligible, which silently shifts the seeded draw and hides an evidence problem.
     decoy_eligible: list[str] = []
-    decoy_excluded: list[str] = []
     for row in commission["fixtures"]:
         fid = row.get("fixture_id")
         if not isinstance(fid, str) or fid in measured_ids:
@@ -581,35 +588,38 @@ def export_packet_v2(commission_run: Path, supplement_run: Path, out: Path, *,
             continue
         if ((row.get("expected") or {}).get("mechanical") != "fail"
                 or (row.get("observed") or {}).get("mechanical") != "fail"):
-            decoy_excluded.append(f"{fid}: expected/observed mechanical not both 'fail'")
+            problems.append(f"decoy-selector row {fid}: expected/observed mechanical not both "
+                            "'fail'")
             continue
         bad = _verify_row_bundle(commission_run, row, verified)
         if bad is not None:
-            decoy_excluded.append(f"{fid}: {bad}")
+            problems.append(f"decoy-selector row {fid}: {bad}")
             continue
         if not _has_rubric(commission_run / row["bundle"]):
-            decoy_excluded.append(f"{fid}: case carries an empty human_rubric")
+            problems.append(f"decoy-selector row {fid}: case carries an empty human_rubric")
             continue
         decoy_eligible.append(fid)
+    if problems:
+        return _v2_blocked("blocked_input", problems)
 
     known_rows = [r for r in supp_rows if r.get("role") in ANGLES]
-    twin_eligible = [r.get("fixture_id") for r in supp_rows if r.get("role") == HONEST_ROLE]
+    # Step 3 refused every supplement row without a non-empty str fixture_id, so this is list[str]
+    # (pinned by test_v2_refuses_supplement_row_without_fixture_id).
+    twin_eligible: list[str] = [str(r["fixture_id"]) for r in supp_rows
+                                if r.get("role") == HONEST_ROLE]
     if len(decoy_eligible) < cfg["decoys"]:
         problems.append(f"config asks for {cfg['decoys']} decoys but only {len(decoy_eligible)} "
-                        "commission rows are eligible"
-                        + (f" (excluded: {'; '.join(decoy_excluded)})" if decoy_excluded else ""))
+                        "commission rows are eligible")
     if len(known_rows) != cfg["known_fail"]:
         problems.append(f"supplement has {len(known_rows)} known-fail rows (every row whose role "
                         f"is an angle) but config asks for known_fail={cfg['known_fail']}")
     if len(twin_eligible) < cfg["twins"]:
         problems.append(f"config asks for {cfg['twins']} honest twins but the supplement has only "
                         f"{len(twin_eligible)} rows with role {HONEST_ROLE!r}")
-    if any(not isinstance(f, str) or not f for f in twin_eligible):
-        problems.append("a supplement honest-twin row has no fixture_id")
     if problems:
         return _v2_blocked("blocked_input", problems)
 
-    by_id_s = {r.get("fixture_id"): r for r in supp_rows}
+    by_id_s = {r["fixture_id"]: r for r in supp_rows}
     decoy_ids = seeded_draw(seed, sorted(decoy_eligible), cfg["decoys"])
     twin_ids = seeded_draw(seed, sorted(twin_eligible), cfg["twins"])
 
@@ -728,11 +738,13 @@ def export_packet_v2(commission_run: Path, supplement_run: Path, out: Path, *,
     if hits:
         return _v2_blocked("blocked_leak", hits)
 
-    # 8. Nothing may already exist where this export writes.
+    # 8. Nothing may already exist where this export writes. An existing out dir raises
+    #    FileExistsError exactly as v1 does (the CLI maps it to refuse_overwrite, exit 2); an
+    #    existing key path is blocked_input. Both are checked before the first write.
     out_dir = Path(out)
     key_path = Path(state_root).joinpath(*KEY_DIR, f"{packet_id}.json")
     if out_dir.exists():
-        problems.append(f"refusing to overwrite existing path: {out_dir}")
+        raise FileExistsError(f"refusing to overwrite existing path: {out_dir}")
     if key_path.exists():
         problems.append(f"key path already exists: {key_path} (the same export_secret over the "
                         "same two reports)")

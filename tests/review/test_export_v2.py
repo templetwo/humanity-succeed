@@ -527,14 +527,18 @@ def test_v2_refuses_existing_key_path_and_writes_nothing(supplement_run, tmp_pat
     assert key_path.read_bytes() == before
 
 
-def test_v2_refuses_existing_out_dir_without_writing_a_key(supplement_run, tmp_path):
+def test_v2_existing_out_dir_raises_like_v1_and_writes_no_key(supplement_run, tmp_path):
+    """Lead ruling: an existing out dir raises FileExistsError exactly as v1 does (the CLI maps it
+    to refuse_overwrite, exit 2). The check runs before any write, so no key lands either."""
     out = tmp_path / "out_a"
     out.mkdir()
-    res, _out, state_root = _export(supplement_run, tmp_path)
-    assert res["status"] == "blocked_input"
-    assert any("refusing to overwrite" in p for p in res["problems"])
+    with pytest.raises(FileExistsError, match="refusing to overwrite"):
+        _export(supplement_run, tmp_path)
     assert list(out.iterdir()) == []
-    assert not (state_root / "reviews").exists()
+    assert not (tmp_path / "state_a" / "reviews").exists()
+    # same behaviour as v1 on the same condition
+    with pytest.raises(FileExistsError):
+        export.export_packet(REAL_RUN, out, state_root=tmp_path / "state_v1", repo_root=REPO)
 
 
 @pytest.mark.parametrize("kwargs,needle", [
@@ -564,17 +568,83 @@ def test_v2_refuses_a_tampered_selected_supplement_bundle(supplement_run, tmp_pa
     _nothing_written(out, state_root)
 
 
-def test_v2_tampered_decoy_bundle_is_ineligible_and_named(supplement_run, tmp_path):
-    """Contract: a DECOY_SELECTOR row whose bundle does not verify is not eligible. With all 12
-    asked for, one tampered bundle makes the ask unsatisfiable and the refusal names it."""
+def _seed_not_drawing(fixture_id: str) -> str:
+    """A seed whose 2-decoy draw over the 12 eligible rows excludes ``fixture_id``. Removing that
+    row from the pool cannot change such a draw, so a silent pool shift would pass unnoticed."""
+    for n in range(1000):
+        seed = f"probe-{n}"
+        if fixture_id not in _draw(seed, _eligible_decoys(), 2):
+            return seed
+    raise AssertionError("no probe seed found")  # pragma: no cover
+
+
+@pytest.mark.parametrize("unsound", ["tampered_bundle", "mechanical_not_fail", "empty_rubric"])
+def test_v2_unsound_decoy_selector_row_is_a_hard_refusal(supplement_run, tmp_path, monkeypatch,
+                                                        unsound):
+    """Lead ruling (2026-10-07): an unsound DECOY_SELECTOR row is a HARD blocked_input naming the
+    row, before any draw. Rejected alternative: a silent pool shift, i.e. dropping the row from
+    the eligible pool and drawing from the rest. To prove the refusal is not merely "too few
+    left", only 2 of 12 decoys are asked for and the seed's draw never touches the unsound row:
+    under the rejected alternative this export would have returned ok."""
+    target = "c2-g05-blocked_attempt"
     run_copy = tmp_path / "run_copy"
     shutil.copytree(REAL_RUN, run_copy)
-    events = run_copy / "bundles" / "c2-g05-blocked_attempt" / "events.jsonl"
-    events.write_bytes(events.read_bytes() + b'{"tampered": true}\n')
-    res, out, state_root = _export(supplement_run, tmp_path, commission=run_copy,
-                                   config={"decoys": 12, "known_fail": 4, "twins": 1})
+    if unsound == "tampered_bundle":
+        events = run_copy / "bundles" / target / "events.jsonl"
+        events.write_bytes(events.read_bytes() + b'{"tampered": true}\n')
+        needle = "bundle failed internal verification"
+    elif unsound == "mechanical_not_fail":
+        def mutate(report):
+            row = next(r for r in report["fixtures"] if r["fixture_id"] == target)
+            row["observed"]["mechanical"] = "pass"
+        _rewrite_report(run_copy, mutate)
+        needle = "mechanical not both 'fail'"
+    else:
+        # A real bundle with an empty rubric cannot verify (the rubric is inside the view hash),
+        # so this branch is reached through the rubric seam.
+        original = export._has_rubric
+        monkeypatch.setattr(export, "_has_rubric",
+                            lambda d: False if d.name == target else original(d))
+        needle = "empty human_rubric"
+    seed = _seed_not_drawing(target)
+    res, out, state_root = _export(supplement_run, tmp_path, commission=run_copy, seed=seed,
+                                   config={"decoys": 2, "known_fail": 4, "twins": 1})
     assert res["status"] == "blocked_input"
-    assert any("only 11" in p and "c2-g05-blocked_attempt" in p for p in res["problems"])
+    assert res["problems"] == [p for p in res["problems"] if target in p and needle in p]
+    assert len(res["problems"]) == 1, res["problems"]
+    _nothing_written(out, state_root)
+
+    # Positive control: the same seed and config on the untouched run is ok, and the draw indeed
+    # did not include the target row (so only the hard refusal can explain the block above).
+    monkeypatch.undo()
+    ok, _out, st = _export(supplement_run, tmp_path, name="ok", seed=seed,
+                           config={"decoys": 2, "known_fail": 4, "twins": 1})
+    assert ok["status"] == "ok", ok["problems"]
+    assert target not in {e.fixture_id for e in _key(st, ok["packet_id"]).entries}
+
+
+def test_v2_too_small_decoy_pool_is_still_its_own_refusal(supplement_run, tmp_path):
+    res, out, state_root = _export(supplement_run, tmp_path,
+                                   config={"decoys": 13, "known_fail": 4, "twins": 1})
+    assert res["status"] == "blocked_input"
+    assert res["problems"] == ["config asks for 13 decoys but only 12 commission rows are eligible"]
+    _nothing_written(out, state_root)
+
+
+@pytest.mark.parametrize("role_index", [0, 1])   # 0: a true_notice row, 1: an angle row
+@pytest.mark.parametrize("bad_id", [None, ""])
+def test_v2_refuses_supplement_row_without_fixture_id(supplement_run, tmp_path, role_index, bad_id):
+    """Pins the precondition of sorted(twin_eligible): a supplement row without a non-empty str
+    fixture_id is refused in the row checks, so the seeded draw never sees None (no TypeError)."""
+    supp = _copy_supplement(supplement_run, tmp_path / "supp")
+
+    def mutate(report):
+        report["fixtures"][role_index]["fixture_id"] = bad_id
+
+    _rewrite_report(supp, mutate)
+    res, out, state_root = _export(supp, tmp_path)
+    assert res["status"] == "blocked_input"
+    assert any("has no fixture_id" in p for p in res["problems"]), res["problems"]
     _nothing_written(out, state_root)
 
 
@@ -592,3 +662,15 @@ def test_v2_html_only_leak_blocks_and_writes_nothing(supplement_run, tmp_path, m
     assert res["status"] == "blocked_leak"
     assert '"blame"' in res["problems"] and "decoy" in res["problems"]
     _nothing_written(out, state_root)
+
+
+def test_v2_existing_out_dir_is_checked_before_the_key_path(supplement_run, tmp_path):
+    """Both exist: the out-dir check comes first and raises (as v1 would), rather than the key-path
+    blocked_input. Distinguishes the early check from make_new_dir's own late raise."""
+    r1, _o, _s = _export(supplement_run, tmp_path, name="one", export_secret=FIXED, state="state")
+    assert r1["status"] == "ok"
+    out2 = tmp_path / "out_two"
+    out2.mkdir()
+    with pytest.raises(FileExistsError):
+        _export(supplement_run, tmp_path, name="two", export_secret=FIXED, state="state")
+    assert list(out2.iterdir()) == []
