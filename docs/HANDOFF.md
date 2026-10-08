@@ -240,3 +240,44 @@ needed for WP3.
   `blocked_attempt` members) only remove the "included implies passed" leak. Until he decides, any
   review of the current packet is honestly labelled single-reviewer, 36 of 36 agree with the
   evaluator, kappa undefined.
+
+## Semantic controls built, not run (2026-10-07 to 2026-10-08, MacBook seat, claude-fable-5-1)
+
+**Model called: no. Model trained: no. Human rating recorded: no. Supplement run recorded: no.
+Packet with controls exported: no (scratch only, in tests and verification).**
+
+Anthony answered questions 1 to 4 of `docs/audits/2026-10-08_five_questions_plain_words.md` on
+2026-10-07 ("1. yes of course. lets think from multiple angles. 2. remove the hint. 3.no. 4. me";
+chronicle claim e89009dd): decisions B68 to B71 on main at 30ffd1b. This branch
+(`a1/semantic-controls`, based on PR #1's head c86d1f9 plus main) builds what those four answers
+authorize and stops before anything runs, as the plain-words page promised.
+
+- **What exists.** `docs/A1_SEMANTIC_CONTROLS.md` (design, angles, size, blinding rules, residuals);
+  `cases/supplement_a1_semantic_controls_v1/` (12 groups, 24 trajectories: an honest twin and one
+  wrong-on-purpose notice per group, 3 per angle, every one a measured mechanical pass, the honest
+  human verdict written in `SUPPLEMENT.json` before any run); `hs controls generate|check|plan|run`;
+  `hs review export-controls` (packet/2: the 36 measured items plus 6 seeded decoys, all 12
+  known-fail items and 3 honest twins, roles only in the operator key); `hs review status` with
+  control hit-rates disclosed only after one human covers every item; `hs review adjudicate` and
+  the `split_unadjudicated` status (B71). Packet/1 and `pk_889ccc2edce027b7` are untouched
+  (`tests/golden/test_review_v1_text_freeze.py`). The plan is frozen, not run:
+  `docs/receipts/a1-semantic-controls/freeze-v1/` (plan sha 91ca3a03).
+- **How it was built.** Verified multi-agent build: stage-0 freeze, lead-authored contract, an
+  advisory pass (eight contract defects, five rulings), three opus builder lanes on disjoint files,
+  three adversarial verifiers (2a WEAK, 2c WEAK, 2b BROKEN at the merge commit), every finding
+  applied or recorded, then this seat measured the final commit from a clean clone.
+- **Checks at this change (clean clone of the commit named below):** `uv run pytest -q` 934 passed, 0 failed (3 min 02 s); `ruff check src tests scripts` clean; schema freeze, suite v1 generator check and `hs controls check` clean; `hs controls plan` from the clone reproduced the committed plan sha 91ca3a03 byte for byte; `git status` empty. Measured at c13a1b3; this note is the only change after it. The branch is local to the MacBook and not pushed; pushing it is part of the open housekeeping gate on local branches.
+- **Two things the verifiers found that are Anthony's to weigh, not the code's to fix.**
+  (1) The 36 items of the packet he already holds are, byte for byte, the measured half of any
+  packet with controls; a reviewer who diffs the two finds every control. Ratings must bind to the
+  same source hashes, so this is a procedural boundary like the key's: rate the new packet with the
+  old one closed, or give the new packet to a reviewer who never saw the old one.
+  (2) Every decoy shares its case with a measured C2 item and shows a denied step; what the decoy
+  removes is the structural "included means passed" implication, not every inference.
+- **Still Anthony's:** question 5 (the sentence that means a review is finished); the size (he may
+  say smaller or bigger before the run); whether and when to run the frozen plan and export a
+  packet with controls; the merge of PR #1 and of this branch; the housekeeping gates of
+  2026-10-07 (DeepSeek receipts, the three local branches, the F4 and ASCII-reviewer rows).
+- **Lint note for whoever merges PR #1:** `ruff check .` reports 79 errors, all in the red team's
+  preserved attack scripts under `docs/audits/cloud/redteam-identity/`; `src`, `tests` and
+  `scripts` are clean. Exclude preserved audit scripts from lint rather than edit evidence.
