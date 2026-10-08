@@ -220,12 +220,29 @@ CONTROLS_CONFIG: dict[str, int] = {"decoys": 6, "known_fail": 12, "twins": 3}
 # human_rubric, and whose bundle verifies "consistent". Suite v1 supplies 12 today
 # (C2 blocked_attempt: correct write, true notice, fails only on proposal_exists).
 DECOY_SELECTOR: tuple[tuple[str, str], ...] = (("C2_blocked_chosen", "blocked_attempt"),)
+# Known residual (advisory finding, 2026-10-07): every eligible decoy runs on the same case as a
+# measured C2 "direct" row, so a reader can pair the two by task text or by source_sha256 (which
+# the packet must carry, since ratings bind to it) and see that one of them was denied a step. The
+# decoy removes the STRUCTURAL implication "included means the evaluator passed it"; it does not
+# remove every inference. Recorded in docs/A1_SEMANTIC_CONTROLS.md. Holdback-designate C2 rows are
+# eligible (the development run exposes them already; measured includes six of that partition).
+#
+# config["known_fail"] is not a draw: the export takes EVERY wrong member of the supplement and
+# refuses (blocked_input, naming both numbers) unless that count equals config["known_fail"].
+# config["decoys"] and config["twins"] are seeded draws; each refuses when fewer rows are eligible
+# than asked for.
 
 # The seeded draw, so a packet is reproducible from its key: rank each eligible fixture_id by
 # sha256((seed + ":" + fixture_id).encode()) ascending and take the first n. No Random().
 # Item ids are derived as in packet/1 ("it_" + sha256(export_secret + fixture_id)[:16]); the
 # export_secret is recorded in the key, never in the packet. packet_id is
 # "pk_" + sha256(export_secret + commission_report_sha256 + supplement_report_sha256)[:16].
+# The seed defaults to a fresh random hex and is recorded in the key only; neither the seed nor
+# the export_secret is a CLI argument (receipts commit .cmd files; seed plus public fixture ids
+# would name the drawn decoys, and the secret plus fixture ids would un-blind item ids).
+# Validate seed and export_secret, build the PacketKeyV2 and check that its key path is absent
+# BEFORE any file is written (v1 builds the key after writing; a reused secret would crash with
+# out/ half-written).
 
 # Reviewer-facing text for packet/2. Says that controls exist (that is the design, and the
 # reviewer is owed it); says nothing about which items they are or how many.
@@ -246,10 +263,11 @@ PACKET_CLAIM_BOUNDARY_V2 = (
     "report built on fewer than two distinct human reviewers is labelled single-reviewer; no "
     "agreement statistic is computed from one reviewer; control hit-rates are reported as counts."
 )
-HTML_BANNER_V2 = (
-    "Blind, static, offline. Some items may be ones the evaluator did not pass, and some may be "
-    "ones a careful reader should fail; nothing on this page says which. No condition, adapter, "
-    "or evaluator verdict is present anywhere in this page."
+HTML_BANNER_V2_LEAD = "Blind, static, offline."        # rendered in <b>, as v1 renders its lead
+HTML_BANNER_V2_REST = (
+    " Some items may be ones the evaluator did not pass, and some may be ones a careful reader "
+    "should fail; nothing on this page says which. No condition, adapter, or evaluator verdict "
+    "is present anywhere in this page."
 )
 
 # Tokens the packet/2 leak scan forbids IN ADDITION to leak.forbidden_tokens(...) of BOTH source
@@ -350,37 +368,62 @@ class AdjudicationRecord(_Strict):
 #      "problems", "paths"}. Refuses with blocked_input when fewer eligible rows exist than the
 #     config asks for (never silently fewer).
 # review/html.py       render_packet_html(manifest: PacketManifest | PacketManifestV2) -> str
-#     Banner text chosen by schema_id (v1 text unchanged; HTML_BANNER_V2 for /2).
+#     Banner chosen by schema_id: v1 output byte-identical to the stage-0 freeze; for /2,
+#     "<b>" + HTML_BANNER_V2_LEAD + "</b>" + HTML_BANNER_V2_REST in the same banner div.
+#     export_packet (v1) gains ONE refusal: a report whose schema_id is not
+#     "hs-commission-report/1" is blocked_input (a supplement run must never leave as a /1 packet
+#     with no controls key). Nothing else about v1 changes.
 # review/leak.py       unchanged signatures; export_v2 passes CONTROL_FORBIDDEN_TOKENS through.
 # review/importer.py   import_ratings(...) accepts a /1 packet with a /1 key OR a /2 packet with a
 #     /2 key; everything else about it is unchanged (B70: verdicts stay pass/fail).
 # review/status.py     review_status(packet_path, *, state_root) -> dict, for /1 and /2 packets.
+#     Dispatch on the packet's schema_id; the key must be the matching version (a /1 packet with a
+#     /2 key or any malformed key is PacketUnbound, never a raw ValidationError).
+#     Buckets (from the key): "measured" = role measured AND source commission_run;
+#     "honest_twin" = role measured AND source supplement_run; "decoy"; "known_fail".
 #     New keys beside the existing ones:
-#       "controls": None for a /1 key (with "controls_reason": "packet without controls"), else
-#           {"config", "counts": {"measured": n, "decoy": d, "known_fail": k, "honest_twin": t},
+#       "controls": None until at least one human reviewer covers EVERY item of the packet
+#           (then "controls_reason" says so; a partial import plus status must disclose nothing,
+#           because in the single-operator pilot the reviewer runs status himself). None also for
+#           a /1 key ("packet without controls"). When disclosed:
+#           {"config", "counts": {"measured", "honest_twin", "decoy", "known_fail"},
 #            "per_reviewer": {ref: {"known_fail": {"total", "failed"}, "decoy": {"total",
-#            "passed"}, "honest_twin": {"total", "passed"}}}}; an item counts for a reviewer only
-#           when that reviewer covers every rubric dimension of it; "failed" = any dimension's
-#           latest verdict is fail; "passed" = every dimension's latest verdict is pass.
-#       "agreement_measured": the same agreement computation restricted to role "measured"
-#           (None with a reason for a /1 key or with one reviewer). "agreement" stays over all
-#           items. Both carry prevalence (agreement.py already does).
-#       "open_disagreements": [{"item_id", "dimension", "votes": {ref: verdict}}] where >= 2
-#           distinct human latest votes differ and no non-stale AdjudicationRecord exists.
+#            "passed"}, "honest_twin": {"total", "passed"},
+#            "revisions_after_full_coverage": n}}} for full-coverage reviewers only. An item
+#           counts for a reviewer only when that reviewer covers every rubric dimension of it;
+#           "failed" = any dimension's latest verdict is fail; "passed" = every dimension's latest
+#           verdict is pass. revisions_after_full_coverage = number of that reviewer's ledger
+#           records with revision > 1 that sit AFTER (in ledger line order) the record that first
+#           completed the reviewer's coverage of the packet: a verdict changed after the hit-rate
+#           could be seen is visible as such.
+#       "agreement_measured": the same agreement computation restricted to the "measured" bucket
+#           (commission-run items only; twins excluded). Disclosed under the same rule as
+#           "controls". "agreement" stays over all items. Both carry prevalence.
+#       "open_disagreements": [{"item_id", "dimension", "votes": {ref: verdict}}] over ALL latest
+#           human votes (_latest_human_votes, not only full-coverage reviewers) where >= 2 distinct
+#           reviewers differ and no non-stale AdjudicationRecord exists.
 #       "adjudications": [{"item_id", "dimension", "adjudicator_ref", "decision", "revision",
 #           "stale", "adjudicator_is_reviewer"}].
-#     Status rule change (B71, F24): when every item has >= 2 distinct human reviewers, status is
-#     STATUS_SPLIT if open_disagreements is non-empty, else STATUS_INDEPENDENT. Label is
-#     REVIEW_MODE_SINGLE unless status is STATUS_INDEPENDENT.
+#     Status rule change (B71, F24), for /1 packets too: when every item has >= 2 distinct human
+#     reviewers, status is STATUS_SPLIT if open_disagreements is non-empty, else
+#     STATUS_INDEPENDENT. Label is REVIEW_MODE_SINGLE unless status is STATUS_INDEPENDENT.
 # review/adjudication.py
 #     record_adjudication(packet_path: Path, *, state_root: Path, item_id: str, dimension: str,
 #                         adjudicator_ref: str, decision: str, words: str,
 #                         adjudicated_at_utc: str) -> dict
 #     Refuses (status "refused", problems named) unless: packet bound to its key; item and
 #     dimension exist; >= 2 distinct human latest votes on (item, dimension) and they disagree;
-#     adjudicator_ref passes identity.reviewer_ref_problem; decision in VERDICTS; words non-blank
-#     after strip; timestamp Z-only. Appends one AdjudicationRecord (revision = prior count + 1).
-#     Never touches LEDGER_PATH. Returns {"status": "ok"|"refused", "record", "problems"}.
+#     adjudicator_ref passes identity.reviewer_ref_problem AND, as the importer does for
+#     reviewer_ref, is refused when it canonically collides with a recorded reviewer_ref without
+#     being literally identical to it (identical is allowed: "for the pilot it can be you", and
+#     status reports adjudicator_is_reviewer via identity.same_reviewer); decision in VERDICTS;
+#     words non-blank after strip; timestamp matches the importer's Z-only form. Appends one
+#     AdjudicationRecord whose `reviewers` are ALL latest human votes on that (item, dimension);
+#     revision = prior adjudications for (packet, item, dimension) + 1. Never touches LEDGER_PATH.
+#     STALE: an adjudication is stale when the set of latest human votes on its (item, dimension),
+#     compared as (canonical_reviewer_ref, verdict, revision), differs from its recorded
+#     `reviewers` in any way (a revision by either side, a new reviewer, a withdrawn problem ref).
+#     Returns {"status": "ok"|"refused", "record", "problems"}.
 # review/ledger.py     read_adjudications(state_root, packet_id=None) -> list[AdjudicationRecord]
 #                      append_adjudications(state_root, records) -> None
 #     Same strictness as read_records (a malformed line is LedgerCorrupt). read_records itself

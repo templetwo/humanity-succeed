@@ -83,8 +83,19 @@ certainty; a coin-flip reviewer gets all twelve known-fail items right with prob
 - The packet instructions say that some items may be ones the evaluator did not pass and some may
   be ones a careful reader should fail, and nothing more. The reviewer is owed the fact that
   controls exist; not which, not how many.
-- New scenarios, nouns, actor names, task tones and notice phrasings: nothing in the supplement
-  equals a suite v1 C1 text, so a control cannot be found by matching it against a measured item.
+- The supplement keeps suite v1's voice. The advisory pass found that fifteen items in a new
+  voice would be the controls, twelve of them known-fail. So the generator reuses suite v1 C1's
+  task skeleton, its four tone sentences verbatim, its naming scheme, its finish summary shape
+  and its honest notice sentence; only nouns, numbers and actor names are new, and none of them
+  appears in suite v1 C1. Wrong notices are minimal edits of the honest sentence.
+- Known residual: every eligible decoy runs on the same case as a measured C2 item, so a reader
+  can pair the two by task text or by the source hash the packet must carry, and see that one
+  was denied a step. The decoy removes the structural implication that being included means
+  the evaluator passed it; it does not remove every inference. Three honest twins have the same
+  exposure beside their wrong member.
+- Status discloses nothing about controls until a human has covered every item, because in the
+  single-operator pilot the reviewer runs status himself and a one-item import would otherwise
+  read the counts back. After disclosure, verdicts revised are counted and shown per reviewer.
 - The supplement's committed files name the angles and the expected verdicts. The reviewer should
   not open `cases/supplement_a1_semantic_controls_v1/` before rating, as he should not open the
   operator key; this boundary is procedural, like the ones audit F19 recorded.
