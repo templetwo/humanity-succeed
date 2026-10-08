@@ -25,7 +25,8 @@ build, check, plan and run the wrong-on-purpose supplement (``run`` never calls 
 and one supplement run (the seed and export secret are generated here and recorded only in the
 operator key, never printed and never arguments); ``review adjudicate`` records the named
 adjudicator's decision on one open disagreement. Exit codes follow the review commands above;
-a corrupt ledger is 5.
+a corrupt ledger (either file) is a ``ValueError`` and therefore ``invalid_input``, exit 2, as the
+2026-10-07 cloud tests pin for ``review status``.
 """
 
 from __future__ import annotations
@@ -353,7 +354,6 @@ def cmd_review_import(a: argparse.Namespace) -> int:
 
 
 def cmd_review_status(a: argparse.Namespace) -> int:
-    from .review.ledger import LedgerCorrupt
     from .review.status import PacketUnbound, review_status
 
     root = state_root(a.state_root)
@@ -362,9 +362,6 @@ def cmd_review_status(a: argparse.Namespace) -> int:
     except PacketUnbound as e:
         return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
                     EXIT_INVALID)
-    except LedgerCorrupt as e:
-        return emit(envelope("failed", None, error={"code": "ledger_corrupt", "message": str(e)}),
-                    EXIT_CORRUPT)
     return emit(envelope("ok", rep, limitations=[REVIEW_LIMITATION]), EXIT_OK)
 
 
@@ -397,7 +394,6 @@ def cmd_review_export_controls(a: argparse.Namespace) -> int:
 
 def cmd_review_adjudicate(a: argparse.Namespace) -> int:
     from .review.adjudication import record_adjudication
-    from .review.ledger import LedgerCorrupt
     from .review.status import PacketUnbound
 
     root = state_root(a.state_root)
@@ -408,9 +404,6 @@ def cmd_review_adjudicate(a: argparse.Namespace) -> int:
     except PacketUnbound as e:
         return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
                     EXIT_INVALID)
-    except LedgerCorrupt as e:
-        return emit(envelope("failed", None, error={"code": "ledger_corrupt", "message": str(e)}),
-                    EXIT_CORRUPT)
     if rep["status"] == "ok":
         return emit(envelope("ok", rep["record"], limitations=[
             REVIEW_LIMITATION,

@@ -126,8 +126,10 @@ ROWS = [
       f"{RT}/test_export.py::test_a19_monkeypatched_leaking_item_builder_blocks_leak_and_writes_nothing",
       f"{IT}/test_cli_review.py"], "unit+integration",
      "substring scan over fixture/class/group/case ids, evaluator vocabulary and predicate names; not "
-     "semantic proof. The export selects only the hybrid PASSES, so inclusion itself implies the "
-     "mechanical outcome (docs/audits/2026-10-07_human_side_audit_a1_review.md)"),
+     "semantic proof. `hs review export` selects only the hybrid PASSES, so inclusion itself implies "
+     "the mechanical outcome (docs/audits/2026-10-07_human_side_audit_a1_review.md); since B69, "
+     "`hs review export-controls` mixes in blind control items and also forbids role and angle "
+     "vocabulary, and no packet with controls has been exported yet"),
     ("A20", "Auto-resume/silent retry/reused holdback rejected", "partial",
      [f"{IT}/test_evidence.py::test_crash_between_permission_and_execution",
       f"{CT}/test_plan_run.py", f"{CT}/test_partition_custody.py"], "integration",
@@ -144,8 +146,31 @@ ROWS = [
     ("WP4", "Experiment planning, workload planner, blind review", "partial",
      [f"{RT}/", f"{IT}/test_cli_review.py", "docs/receipts/a1-review/export.json"], "unit+integration",
      "blind review export, own-words rating import and review status only (A1 stage 2; B61, B67): "
-     "packet pk_889ccc2edce027b7 exported for Anthony, 0 ratings recorded. Experiment planning, "
-     "workload counting, cells and the condition/seed checks (A14) are not started"),
+     "packet pk_889ccc2edce027b7 exported for Anthony, 0 ratings recorded. Semantic controls are "
+     "built and tested, not run (B68-B71 rows below). Experiment planning, workload counting, cells "
+     "and the condition/seed checks (A14) are not started"),
+    ("B68", "Semantic-controls supplement: wrong-on-purpose notices, honest verdict written before any run",
+     "implemented",
+     ["tests/semantic_controls/", "cases/supplement_a1_semantic_controls_v1/SUPPLEMENT.json",
+      "docs/receipts/a1-semantic-controls/freeze-v1/plan.json", "docs/A1_SEMANTIC_CONTROLS.md"],
+     "unit+integration",
+     "12 groups, each one honest twin and one wrong member, 3 per angle (wrong_total, blame, "
+     "silent_omission, reversed_correction); generator --check byte-stable; every member a measured "
+     "mechanical pass; plan frozen, NOT run; size is Anthony's to resize before the run"),
+    ("B69", "Blind control items in review packets (packet/2); roles only in the operator key",
+     "implemented", [f"{RT}/test_export_v2.py", f"{IT}/test_cli_controls.py"], "unit+integration",
+     "hs review export-controls: 36 measured + 6 decoys + 12 known-fail + 3 honest twins = 57 items, "
+     "seeded draw recorded in the key, leak scan over roles, angles and ids; status discloses "
+     "hit-rates only after one human covers every item. Known residual: a decoy shares its case with "
+     "a measured C2 item. No packet with controls has been exported"),
+    ("B70", "No third verdict and no defect flag", "implemented", [f"{RT}/test_import_v2.py"], "unit",
+     "verdicts stay pass/fail; the importer changes only to accept packet/2 with its key"),
+    ("B71", "Named adjudicator; split_unadjudicated status; adjudication record", "implemented",
+     [f"{RT}/test_adjudication.py", f"{RT}/test_status_v2.py", f"{IT}/test_cli_controls.py"],
+     "unit+integration",
+     "an open split between two reviewers no longer reads independently_reviewed; adjudications are "
+     "append-only, never rewrite a verdict, and go stale on any change to the votes; 0 adjudications "
+     "recorded"),
 ] + [
     (f"WP{n}", title, "not_started", [], "-", "not started; WP3 opened 2026-09-26")
     for n, title in [(5, "Optional MLX provider/trainer adapters (mock-tested)"),

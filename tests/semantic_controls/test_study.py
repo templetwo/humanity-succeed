@@ -26,8 +26,7 @@ from humanity_succeed.commissioning.contract import Expectation
 from humanity_succeed.commissioning.execute import enactment, matches, observed, run_in_memory
 from humanity_succeed.contracts.case import CaseSource
 from humanity_succeed.review import export as review_export
-from humanity_succeed.review.contract import RubricLine
-from humanity_succeed.semantic_controls import contract as sc_contract
+from humanity_succeed.review.contract import CONTROLS_CONFIG, RubricLine
 from humanity_succeed.semantic_controls import generator as G
 from humanity_succeed.semantic_controls import study
 from humanity_succeed.semantic_controls.contract import (
@@ -44,9 +43,9 @@ from humanity_succeed.semantic_controls.contract import (
 )
 
 from ..conftest import REPO
-from . import without_class_id_defect
 
 COMMITTED = REPO / CASES_DIR
+COMMISSION_RUN = REPO / "docs" / "receipts" / "wp3" / "run"
 SUITE_V1 = REPO / "cases" / "commissioning_suite_v1"
 
 
@@ -60,13 +59,7 @@ def _tree_hash(root: Path) -> str:
     return h.hexdigest()
 
 
-def _contract_minus_defect_1(*a, **k):
-    return without_class_id_defect(sc_contract.supplement_problems(*a, **k))
 
-
-@pytest.fixture
-def no_defect_1(monkeypatch):
-    monkeypatch.setattr(study, "supplement_problems", _contract_minus_defect_1)
 
 
 # ---------------------------------------------------------------- enactment (measured, in memory)
@@ -117,14 +110,13 @@ def e2e(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("sc_e2e")
     suite_before = _tree_hash(SUITE_V1)
     committed_before = _tree_hash(COMMITTED)
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(study, "supplement_problems", _contract_minus_defect_1)
-        state = tmp / "state"
-        plan = study.plan_supplement(COMMITTED, tmp / "plan", state_root=state, repo_root=REPO)
-        run = study.run_supplement(tmp / "plan" / "plan.json", tmp / "run", state_root=state,
-                                   repo_root=REPO)
-    export = review_export.export_packet(tmp / "run", tmp / "packet", state_root=state,
-                                         repo_root=REPO)
+    # the RAW contract, no filter: the lead fixed the two defects this lane found (da73937)
+    state = tmp / "state"
+    plan = study.plan_supplement(COMMITTED, tmp / "plan", state_root=state, repo_root=REPO)
+    run = study.run_supplement(tmp / "plan" / "plan.json", tmp / "run", state_root=state,
+                               repo_root=REPO)
+    export = review_export.export_packet_v2(COMMISSION_RUN, tmp / "run", tmp / "packet",
+                                           state_root=state, seed="semantic-controls-e2e")
     return {"tmp": tmp, "state": state, "plan": plan, "run": run, "export": export,
             "suite_before": suite_before, "committed_before": committed_before}
 
@@ -226,7 +218,7 @@ def test_review_export_reads_rows_and_bundles_unchanged(e2e):
 def test_full_blind_export_passes_its_leak_scan(e2e):
     res = e2e["export"]
     assert res["status"] == "ok", res["problems"]
-    assert res["items"] == 24
+    assert res["items"] == 36 + sum(CONTROLS_CONFIG.values())
     text = Path(res["paths"]["packet"]).read_text(encoding="utf-8")
     html = Path(res["paths"]["html"]).read_text(encoding="utf-8")
     # "blame" is in the pinned rubric line itself, so only its quoted (JSON value) form counts
@@ -250,7 +242,7 @@ def test_plan_of_the_committed_tree_with_the_raw_contract(tmp_path):
     assert res["status"] == "ok", res["problems"][:3]
 
 
-def test_plan_refuses_a_contract_problem_and_writes_nothing(tmp_path, no_defect_1):
+def test_plan_refuses_a_contract_problem_and_writes_nothing(tmp_path):
     root = tmp_path / "sup"
     shutil.copytree(COMMITTED, root)
     p = root / "cases" / "sc-g05.yaml"
@@ -275,7 +267,7 @@ def test_plan_refuses_a_missing_or_invalid_manifest(tmp_path):
 
 
 @pytest.fixture
-def planned_copy(tmp_path, no_defect_1):
+def planned_copy(tmp_path):
     root = tmp_path / "sup"
     shutil.copytree(COMMITTED, root)
     res = study.plan_supplement(root, tmp_path / "plan", state_root=tmp_path / "state",
@@ -349,7 +341,7 @@ def test_script_state_root_precedence(tmp_path, monkeypatch):
     assert mod._resolve_state_root(None) == tmp_path / "home" / ".local" / "share" / "humanity-succeed"
 
 
-def test_script_plan_and_run_in_process(tmp_path, no_defect_1, capsys):
+def test_script_plan_and_run_in_process(tmp_path, capsys):
     mod = _script()
     state = tmp_path / "state"
     assert mod.main(["plan", "--supplement", str(COMMITTED), "--out", str(tmp_path / "plan"),
@@ -363,7 +355,7 @@ def test_script_plan_and_run_in_process(tmp_path, no_defect_1, capsys):
         "completed", "development_all_expectations_met", "mechanically_validated")
 
 
-def test_script_plan_refuses_with_exit_3(tmp_path, no_defect_1, capsys):
+def test_script_plan_refuses_with_exit_3(tmp_path, capsys):
     root = tmp_path / "sup"
     shutil.copytree(COMMITTED, root)
     t = root / "trajectories" / "sc-g04-true_notice.yaml"
