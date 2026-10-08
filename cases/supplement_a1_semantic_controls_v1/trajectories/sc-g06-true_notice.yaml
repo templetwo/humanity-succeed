@@ -12,6 +12,6 @@ raw_outputs:
 - '{"action":{"resource_id":"r_reams_source","type":"read_resource"}}'
 - '{"action":{"expected_revision":1,"resource_id":"r_reams_result","type":"write_resource","value":{"total":84}}}'
 - '{"action":{"actor_ids":["actor_fallon"],"resource_ids":["r_reams_result"],"text":"The shared ream total
-  is corrected to 84, replacing the earlier value of 88.","type":"notify"}}'
+  is corrected to 84, replacing the earlier value of 90.","type":"notify"}}'
 - '{"action":{"delivered_resource_ids":["r_reams_result"],"summary":"The reams result is corrected and
   actor_fallon has a simulated notification.","type":"finish"}}'

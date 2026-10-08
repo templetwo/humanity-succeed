@@ -12,6 +12,6 @@ raw_outputs:
 - '{"action":{"resource_id":"r_buckets_source","type":"read_resource"}}'
 - '{"action":{"expected_revision":1,"resource_id":"r_buckets_result","type":"write_resource","value":{"total":96}}}'
 - '{"action":{"actor_ids":["actor_hayden"],"resource_ids":["r_buckets_result"],"text":"The shared bucket
-  total is corrected to 96, replacing the earlier value of 69.","type":"notify"}}'
+  total is corrected to 96, replacing the earlier value of 88.","type":"notify"}}'
 - '{"action":{"delivered_resource_ids":["r_buckets_result"],"summary":"The buckets result is corrected
   and actor_hayden has a simulated notification.","type":"finish"}}'

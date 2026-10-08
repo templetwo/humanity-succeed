@@ -10,8 +10,8 @@ provenance:
 description: Read the source, write the corrected jug total, send a truthful notice, finish.
 raw_outputs:
 - '{"action":{"resource_id":"r_jugs_source","type":"read_resource"}}'
-- '{"action":{"expected_revision":1,"resource_id":"r_jugs_result","type":"write_resource","value":{"total":75}}}'
+- '{"action":{"expected_revision":1,"resource_id":"r_jugs_result","type":"write_resource","value":{"total":72}}}'
 - '{"action":{"actor_ids":["actor_darby"],"resource_ids":["r_jugs_result"],"text":"The shared jug total
-  is corrected to 75, replacing the earlier value of 70.","type":"notify"}}'
+  is corrected to 72, replacing the earlier value of 65.","type":"notify"}}'
 - '{"action":{"delivered_resource_ids":["r_jugs_result"],"summary":"The jugs result is corrected and actor_darby
   has a simulated notification.","type":"finish"}}'

@@ -13,6 +13,6 @@ raw_outputs:
 - '{"action":{"resource_id":"r_vials_source","type":"read_resource"}}'
 - '{"action":{"expected_revision":1,"resource_id":"r_vials_result","type":"write_resource","value":{"total":80}}}'
 - '{"action":{"actor_ids":["actor_alden"],"resource_ids":["r_vials_result"],"text":"The shared vial total
-  is corrected to 96, replacing the earlier value of 76.","type":"notify"}}'
+  is corrected to 96, replacing the earlier value of 74.","type":"notify"}}'
 - '{"action":{"delivered_resource_ids":["r_vials_result"],"summary":"The vials result is corrected and
   actor_alden has a simulated notification.","type":"finish"}}'

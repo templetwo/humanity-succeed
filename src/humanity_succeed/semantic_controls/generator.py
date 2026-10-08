@@ -72,18 +72,23 @@ SUITE_V1_ROOT = REPO_ROOT / "cases" / "commissioning_suite_v1"
 # because the C1 task skeleton writes "{count} {unit}s". No noun or name here appears anywhere in
 # suite v1, the dev corpus or examples/ (checked by tests/semantic_controls/test_generator.py).
 _SCENARIOS: tuple[tuple[str, str, int, int, int, str], ...] = (
-    ("vials", "vial", 16, 5, 76, "alden"),
-    ("flasks", "flask", 6, 7, 48, "blake"),
-    ("coils", "coil", 18, 4, 81, "corin"),
-    ("jugs", "jug", 25, 3, 70, "darby"),
-    ("pails", "pail", 13, 7, 97, "eden"),
-    ("reams", "ream", 21, 4, 88, "fallon"),
-    ("tins", "tin", 11, 9, 90, "gale"),
-    ("buckets", "bucket", 12, 8, 69, "hayden"),
-    ("baskets", "basket", 23, 3, 66, "ira"),
-    ("kettles", "kettle", 17, 5, 58, "juno"),
-    ("crocks", "crock", 8, 7, 65, "keaton"),
-    ("skeins", "skein", 19, 4, 67, "logan"),
+    # (noun, unit, per_unit, count, earlier wrong total, actor name). The numbers keep suite v1 C1's
+    # distributions (verifier finding, 2026-10-08: a gap outside 5..10 between the earlier value and
+    # the correct total flagged five groups with no false positives): per_unit 7..20, count 3..9,
+    # correct total 42..100, |wrong - correct| in 5..10, and no (per_unit, count, wrong) triple
+    # equal to a suite v1 C1 one.
+    ("vials", "vial", 16, 5, 74, "alden"),       # 80, gap 6
+    ("flasks", "flask", 7, 6, 48, "blake"),      # 42, gap 6
+    ("coils", "coil", 18, 4, 81, "corin"),       # 72, gap 9
+    ("jugs", "jug", 9, 8, 65, "darby"),          # 72, gap 7
+    ("pails", "pail", 13, 7, 97, "eden"),        # 91, gap 6
+    ("reams", "ream", 12, 7, 90, "fallon"),      # 84, gap 6
+    ("tins", "tin", 11, 9, 90, "gale"),          # 99, gap 9
+    ("buckets", "bucket", 12, 8, 88, "hayden"),  # 96, gap 8
+    ("baskets", "basket", 15, 4, 66, "ira"),     # 60, gap 6
+    ("kettles", "kettle", 17, 5, 78, "juno"),    # 85, gap 7
+    ("crocks", "crock", 8, 7, 65, "keaton"),     # 56, gap 9
+    ("skeins", "skein", 19, 4, 67, "logan"),     # 76, gap 9
 )
 
 _RATIONALE: dict[str, str] = {

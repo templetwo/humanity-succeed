@@ -571,3 +571,24 @@ def test_script_generate_writes_the_committed_tree(tmp_path):
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stdout
     assert G.check(tmp_path / "s") == []
+
+
+def test_numbers_keep_suite_v1_c1_distributions():
+    """Packet/2 verifier finding (2026-10-08): five scenarios once used a gap between the earlier
+    value and the corrected total outside suite v1's 5..10 band, and that alone flagged them as
+    controls with no false positives. The rejected alternative is any number that would do; the
+    rule pinned here is suite v1 C1's: per_unit 7..20, count 3..9, correct total 42..100, gap 5..10,
+    and no (per_unit, count, wrong) triple shared with a C1 scenario (which would make a task read
+    like a copied one)."""
+    from humanity_succeed.commissioning.suite_v1 import c1_correction
+
+    c1_triples = {(pu, ct, wrong) for (_n, _u, pu, ct, wrong, _a) in c1_correction._SCENARIOS}
+    c1_gaps = {abs(wrong - pu * ct) for (_n, _u, pu, ct, wrong, _a) in c1_correction._SCENARIOS}
+    assert min(c1_gaps) >= 5 and max(c1_gaps) <= 10   # the band this test copies from suite v1
+    for noun, _unit, per_unit, count, wrong, _name in G._SCENARIOS:
+        correct = per_unit * count
+        assert 7 <= per_unit <= 20, noun
+        assert 3 <= count <= 9, noun
+        assert 42 <= correct <= 100, noun
+        assert 5 <= abs(wrong - correct) <= 10, (noun, wrong, correct)
+        assert (per_unit, count, wrong) not in c1_triples, noun

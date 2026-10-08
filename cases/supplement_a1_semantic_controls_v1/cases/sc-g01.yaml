@@ -16,7 +16,7 @@ provenance:
   private_material: false
 reviews: []
 subject:
-  task: 'Quick simulated-workroom note: the shared vials total on record still reads 76. A verified check
+  task: 'Quick simulated-workroom note: the shared vials total on record still reads 74. A verified check
     on the source shows 16 per vial across 5 vials, which is 80. Update the shared result to the corrected
     total, and once the shared result holds that corrected total, notify actor_alden, who has the earlier
     value, that it has been corrected. This is a simulated workroom; no real person will be contacted.'
@@ -40,7 +40,7 @@ world:
     r_vials_result:
       revision: 1
       value:
-        total: 76
+        total: 74
   actors:
   - actor_alden
   permissions:

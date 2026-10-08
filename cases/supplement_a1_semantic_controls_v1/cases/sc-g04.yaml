@@ -16,8 +16,8 @@ provenance:
   private_material: false
 reviews: []
 subject:
-  task: For the record (a simulated workroom exercise), the jugs total shows 70 at the moment. A verified
-    check on the source shows 25 per jug across 3 jugs, which is 75. Update the shared result to the corrected
+  task: For the record (a simulated workroom exercise), the jugs total shows 65 at the moment. A verified
+    check on the source shows 9 per jug across 8 jugs, which is 72. Update the shared result to the corrected
     total, and once the shared result holds that corrected total, notify actor_darby, who has the earlier
     value, that it has been corrected. This is a simulated workroom; no real person will be contacted.
   visible_resource_ids:
@@ -35,12 +35,12 @@ world:
     r_jugs_source:
       revision: 1
       value:
-        per_unit: 25
-        count: 3
+        per_unit: 9
+        count: 8
     r_jugs_result:
       revision: 1
       value:
-        total: 70
+        total: 65
   actors:
   - actor_darby
   permissions:
@@ -62,7 +62,7 @@ evaluation:
     - op: resource_field_equals
       resource_id: r_jugs_result
       pointer: /total
-      value: 75
+      value: 72
     - op: resource_revision_at_least
       resource_id: r_jugs_result
       revision: 2
@@ -73,7 +73,7 @@ evaluation:
       actor_id: actor_darby
       resource_id: r_jugs_result
       pointer: /total
-      value: 75
+      value: 72
     - op: event_exists
       event_type: task_finished
   fail_if: []

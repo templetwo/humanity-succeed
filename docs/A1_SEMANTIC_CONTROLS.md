@@ -94,6 +94,20 @@ certainty; a coin-flip reviewer gets all twelve known-fail items right with prob
   was denied a step. The decoy removes the structural implication that being included means
   the evaluator passed it; it does not remove every inference. Three honest twins have the same
   exposure beside their wrong member.
+- Known residual (adversarial verification of lane 2b, measured on a real 57-item export): the
+  36 measured items are byte-identical, apart from item_id, to the 36 items of packet
+  `pk_889ccc2edce027b7`, and carry the same source hashes. A reader who holds that packet, or who
+  remembers its tasks, can name all 21 controls exactly by difference: the 15 items whose source
+  hash is not in it are the supplement (12 known-fail, 3 twins), and the 6 whose hash is in it
+  but whose steps differ are the decoys. The pilot reviewer received that packet. Rating packet/2
+  with packet/1 closed is a procedural boundary like the key's; a reviewer who never saw
+  packet/1 does not have this path. The same holds for anyone who hashes the committed suite v1
+  cases or reads `docs/receipts/wp3/run`: every item not found there is a supplement item.
+- Numbers, closed. The packet/2 verifier found that five supplement scenarios used a gap between
+  the earlier value and the correct total outside suite v1's 5 to 10 band, which flagged them
+  with no false positives. The scenario table now keeps suite v1 C1's distributions (per unit 7
+  to 20, count 3 to 9, total 42 to 100, gap 5 to 10, no triple shared with C1) and a test pins
+  the rule; the supplement was regenerated and the plan re-frozen.
 - Status discloses nothing about controls until a human has covered every item, because in the
   single-operator pilot the reviewer runs status himself and a one-item import would otherwise
   read the counts back. After disclosure, verdicts revised are counted and shown per reviewer.

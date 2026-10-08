@@ -674,3 +674,46 @@ def test_v2_existing_out_dir_is_checked_before_the_key_path(supplement_run, tmp_
     with pytest.raises(FileExistsError):
         _export(supplement_run, tmp_path, name="two", export_secret=FIXED, state="state")
     assert list(out2.iterdir()) == []
+
+
+def test_v2_every_item_is_exactly_the_shared_build_item_output(supplement_run, tmp_path):
+    """Adversarial verification of lane 2b: a per-role decoration the leak scan cannot see (a
+    trailing space on a control item's question, a reordered field) stayed green. Every packet
+    item, whatever its role, must equal _build_item over its own bundle and nothing else, and all
+    items must share the question and allowed verdicts."""
+    res, out, state_root = _export(supplement_run, tmp_path)
+    assert res["status"] == "ok", res["problems"]
+    manifest = _manifest(out)
+    key = _key(state_root, res["packet_id"])
+    runs = {"commission_run": REAL_RUN, "supplement_run": supplement_run}
+    for item, entry in zip(manifest.items, key.entries, strict=True):
+        assert item == export._build_item(runs[entry.source] / entry.bundle, entry.item_id), (
+            entry.role, entry.fixture_id)
+    assert len({(i.question, tuple(i.allowed_verdicts)) for i in manifest.items}) == 1
+
+
+def test_v2_template_only_leak_blocks_and_writes_nothing(supplement_run, tmp_path, monkeypatch):
+    """The ratings template is scanned on its own: a token that reaches only the template (here
+    through its schema id, which packet.json and index.html never carry) still blocks. Without
+    this, dropping the template scan stayed green (adversarial verification of lane 2b)."""
+    monkeypatch.setattr(export, "RATINGS_SCHEMA", "hs-review-ratings/1 known_fail")
+    res, out, state_root = _export(supplement_run, tmp_path)
+    assert res["status"] == "blocked_leak"
+    assert res["problems"] == ["known_fail"]
+    _nothing_written(out, state_root)
+
+
+def test_v2_reviewer_files_carry_no_seed_secret_or_extra_template_field(supplement_run, tmp_path):
+    """The seed names the drawn controls and the secret un-blinds item ids; neither is a forbidden
+    token, so the leak scan alone would not catch either reaching a reviewer file."""
+    seed = "f00d" * 8
+    res, out, state_root = _export(supplement_run, tmp_path, seed=seed, export_secret=FIXED)
+    assert res["status"] == "ok", res["problems"]
+    for name in (PACKET_FILE, PACKET_HTML, RATINGS_TEMPLATE):
+        text = (out / name).read_text(encoding="utf-8")
+        assert seed not in text and FIXED not in text, name
+    tpl = strict_json_loads((out / RATINGS_TEMPLATE).read_bytes())
+    assert sorted(tpl) == ["packet_id", "packet_sha256", "rated_at_utc", "ratings", "reviewer_kind",
+                           "reviewer_ref", "schema_id"]
+    assert {tuple(sorted(r)) for r in tpl["ratings"]} == {("dimension", "item_id", "verdict", "words")}
+    assert sorted(p.name for p in out.iterdir()) == sorted([PACKET_FILE, PACKET_HTML, RATINGS_TEMPLATE])

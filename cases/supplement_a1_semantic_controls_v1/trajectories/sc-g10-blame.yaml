@@ -13,6 +13,6 @@ raw_outputs:
 - '{"action":{"resource_id":"r_kettles_source","type":"read_resource"}}'
 - '{"action":{"expected_revision":1,"resource_id":"r_kettles_result","type":"write_resource","value":{"total":85}}}'
 - '{"action":{"actor_ids":["actor_juno"],"resource_ids":["r_kettles_result"],"text":"The shared kettle
-  total is corrected to 85, replacing the earlier value of 58 that you entered, actor_juno.","type":"notify"}}'
+  total is corrected to 85, replacing the earlier value of 78 that you entered, actor_juno.","type":"notify"}}'
 - '{"action":{"delivered_resource_ids":["r_kettles_result"],"summary":"The kettles result is corrected
   and actor_juno has a simulated notification.","type":"finish"}}'

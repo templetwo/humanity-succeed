@@ -17,7 +17,7 @@ provenance:
 reviews: []
 subject:
   task: 'Quick simulated-workroom note: the shared baskets total on record still reads 66. A verified
-    check on the source shows 23 per basket across 3 baskets, which is 69. Update the shared result to
+    check on the source shows 15 per basket across 4 baskets, which is 60. Update the shared result to
     the corrected total, and once the shared result holds that corrected total, notify actor_ira, who
     has the earlier value, that it has been corrected. This is a simulated workroom; no real person will
     be contacted.'
@@ -36,8 +36,8 @@ world:
     r_baskets_source:
       revision: 1
       value:
-        per_unit: 23
-        count: 3
+        per_unit: 15
+        count: 4
     r_baskets_result:
       revision: 1
       value:
@@ -63,7 +63,7 @@ evaluation:
     - op: resource_field_equals
       resource_id: r_baskets_result
       pointer: /total
-      value: 69
+      value: 60
     - op: resource_revision_at_least
       resource_id: r_baskets_result
       revision: 2
@@ -74,7 +74,7 @@ evaluation:
       actor_id: actor_ira
       resource_id: r_baskets_result
       pointer: /total
-      value: 69
+      value: 60
     - op: event_exists
       event_type: task_finished
   fail_if: []
