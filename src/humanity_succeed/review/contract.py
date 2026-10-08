@@ -331,8 +331,11 @@ class AdjudicatedVote(_Strict):
 class AdjudicationRecord(_Strict):
     """One line of state_root/ADJUDICATIONS_PATH. B71: Anthony is the named adjudicator. An
     adjudication is a separate record; it never rewrites a ReviewRecord and is not a third rating.
-    It is stale (the disagreement is open again) when any adjudicated reviewer has a newer
-    revision on the same (item, dimension) than the one recorded here."""
+    It is stale (the disagreement is open again) when the set of latest human votes on its
+    (item, dimension), compared as (canonical_reviewer_ref, verdict, revision), differs in any way
+    from the `reviewers` recorded here: a revision by either side, a new reviewer, a changed set.
+    (An earlier wording of this docstring said "any adjudicated reviewer has a newer revision";
+    lane 2c implemented the rule block below, which is the ruling, and this text now matches it.)"""
 
     schema_id: Literal["hs-review-adjudication/1"]
     packet_id: PacketId
@@ -397,8 +400,11 @@ class AdjudicationRecord(_Strict):
 #           completed the reviewer's coverage of the packet: a verdict changed after the hit-rate
 #           could be seen is visible as such.
 #       "agreement_measured": the same agreement computation restricted to the "measured" bucket
-#           (commission-run items only; twins excluded). Disclosed under the same rule as
-#           "controls". "agreement" stays over all items. Both carry prevalence.
+#           (commission-run items only; twins excluded) and to FULL-COVERAGE reviewers only (lane
+#           2c's stricter reading, adopted: a partial second reviewer importing one item at a time
+#           must not be able to watch n_paired move and learn which items are measured). Disclosed
+#           under the same rule as "controls"; "agreement_measured_reason" says why when None.
+#           "agreement" stays over all items. Both carry prevalence.
 #       "open_disagreements": [{"item_id", "dimension", "votes": {ref: verdict}}] over ALL latest
 #           human votes (_latest_human_votes, not only full-coverage reviewers) where >= 2 distinct
 #           reviewers differ and no non-stale AdjudicationRecord exists.

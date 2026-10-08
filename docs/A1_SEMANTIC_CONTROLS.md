@@ -82,7 +82,8 @@ certainty; a coin-flip reviewer gets all twelve known-fail items right with prob
   both source reports, and the export refuses on any hit.
 - The packet instructions say that some items may be ones the evaluator did not pass and some may
   be ones a careful reader should fail, and nothing more. The reviewer is owed the fact that
-  controls exist; not which, not how many.
+  controls exist; not which. How many is public in this note and in the key's configuration,
+  and status shows the bucket counts only after a human has covered every item.
 - The supplement keeps suite v1's voice. The advisory pass found that fifteen items in a new
   voice would be the controls, twelve of them known-fail. So the generator reuses suite v1 C1's
   task skeleton, its four tone sentences verbatim, its naming scheme, its finish summary shape

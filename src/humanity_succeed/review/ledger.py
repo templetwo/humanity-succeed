@@ -7,6 +7,9 @@ Adjudications (B71) live in a SEPARATE append-only file, state_root/reviews/adju
 (``ADJUDICATIONS_PATH``), so a review ledger line never gains a field (audit F28). They are read with
 the same strictness: a malformed line, or two lines claiming the same revision of one
 (packet, item, dimension) adjudication, is ``LedgerCorrupt``.
+
+Adjudication records (read_adjudications / append_adjudications) were added by lane 2c of the
+semantic-controls build (DECISIONS B71); read_records is unchanged.
 """
 
 from __future__ import annotations
