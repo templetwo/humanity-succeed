@@ -231,6 +231,9 @@ needed for WP3.
   record adjudicates a disagreement between two reviewers (F24). The four review wire formats are
   now in the schema freeze (F28); the stage-0 freeze will fail at the first B58 evaluator bump and
   the lawful fix is proposed, not made (F27).
+- The decisions in plain words, one page, five questions answerable yes / no / smaller:
+  `docs/audits/2026-10-08_five_questions_plain_words.md`. The dense packet is for whoever builds;
+  that page is for Anthony.
 - **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
   items a reviewer should fail. Known-fail items need new trajectories (correct write, false or
   blaming notice) in a versioned supplement; suite v1 can export none. Decoupling decoys (the 12 C2

@@ -109,7 +109,8 @@ prevalence between 0.2 and 0.4 keeps a single slip from moving kappa by more tha
 packet §4). A decision packet in the house style, with exact words to approve, narrow or refuse,
 candidate sizes, a third-verdict option and what stays single-reviewer regardless, is drafted at
 `docs/audits/cloud/measurement-replication/DECISION_PACKET_SEMANTIC_CONTROLS.md`. It approves
-nothing. Until Anthony decides, the honest label for any review of `pk_889ccc2edce027b7` is:
+nothing. The same decisions in plain words, one page, five questions, are at
+`docs/audits/2026-10-08_five_questions_plain_words.md`; that page is the one written for Anthony. Until Anthony decides, the honest label for any review of `pk_889ccc2edce027b7` is:
 single-reviewer, 36 of 36 agree with the evaluator, kappa undefined.
 
 ## 3. Findings
