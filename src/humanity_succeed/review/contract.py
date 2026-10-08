@@ -214,11 +214,13 @@ SourceKind = Literal["commission_run", "supplement_run"]
 #   twins:      seeded share of the supplement's honest twins (role "measured", source supplement)
 CONTROLS_CONFIG: dict[str, int] = {"decoys": 6, "known_fail": 12, "twins": 3}
 
-# Which commission-run rows are eligible decoys: (class_id, member role) pairs. A row matches when
-# row["class_id"] == class_id and row["fixture_id"].endswith("-" + role). Decoys must also be
-# rows whose expected AND observed mechanical verdict is "fail", whose case carries a non-empty
-# human_rubric, and whose bundle verifies "consistent". Suite v1 supplies 12 today
-# (C2 blocked_attempt: correct write, true notice, fails only on proposal_exists).
+# Which commission-run rows are decoys: (class_id, member role) pairs. A row matches when
+# row["class_id"] == class_id and row["fixture_id"].endswith("-" + role). Every matching row must
+# have expected AND observed mechanical verdict "fail", a non-empty human_rubric, and a bundle that
+# verifies "consistent"; a matching row that fails any of these REFUSES THE WHOLE EXPORT by name
+# (lead ruling 2026-10-07 on lane 2b's finding: a draw that silently shifted around a bad bundle
+# would hide an evidence problem). Suite v1 supplies 12 today (C2 blocked_attempt: correct write,
+# true notice, fails only on proposal_exists).
 DECOY_SELECTOR: tuple[tuple[str, str], ...] = (("C2_blocked_chosen", "blocked_attempt"),)
 # Known residual (advisory finding, 2026-10-07): every eligible decoy runs on the same case as a
 # measured C2 "direct" row, so a reader can pair the two by task text or by source_sha256 (which
