@@ -566,3 +566,40 @@ def test_packet_shows_the_reviewer_what_the_subject_was_told(tmp_path):
     html_text = (out / PACKET_HTML).read_text(encoding="utf-8")
     assert "Yes, the shared note is the current one." in html_text
     assert "the shared note is superseded" in html_text
+
+
+# ------------------------------------- packet/2 era: v1 refuses a non-commission report (B69)
+
+
+@pytest.mark.parametrize("schema_id", ["hs-semantic-controls-report/1", None, "hs-commission-report/2"])
+def test_v1_refuses_a_report_that_is_not_a_commission_report(tmp_path, schema_id):
+    """review/contract.py: export_packet (v1) gains ONE refusal. A supplement run (or anything
+    whose schema_id is not hs-commission-report/1) must never leave as a /1 packet with no
+    controls key. The rows here are the real run's, so only the schema_id differs from an export
+    that succeeds (positive control below)."""
+    report = strict_json_loads((REAL_RUN / "report.json").read_bytes())
+    if schema_id is None:
+        del report["schema_id"]
+    else:
+        report["schema_id"] = schema_id
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "report.json").write_bytes(canonical_bytes(report))
+    (run_dir / "bundles").symlink_to(REAL_RUN / "bundles", target_is_directory=True)
+
+    out = tmp_path / "packet"
+    state_root = tmp_path / "state"
+    result = export.export_packet(run_dir, out, state_root=state_root, repo_root=REPO)
+    assert result["status"] == "blocked_input"
+    assert result["packet_id"] is None
+    assert "hs-commission-report/1" in result["problems"][0]
+    assert repr(schema_id) in result["problems"][0]
+    assert not out.exists()
+    assert not (state_root / "reviews").exists()
+
+    # positive control: the same rows under the commission schema_id export fine
+    report["schema_id"] = "hs-commission-report/1"
+    (run_dir / "report.json").unlink()
+    (run_dir / "report.json").write_bytes(canonical_bytes(report))
+    ok = export.export_packet(run_dir, tmp_path / "packet_ok", state_root=state_root, repo_root=REPO)
+    assert ok["status"] == "ok", ok["problems"]
