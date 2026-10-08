@@ -31,5 +31,13 @@
    "plan_sha256": "91ca3a039bc595360f13ed9b5837bf0f233cb94fd89ccfff92463192298a2ef1",
    "report_sha256": "d8ab813b77c34a4677a8d43a59bf2a3886d46dadc88ee7a6bfdb29c70a5930ba"
   }
+ },
+ "workbook": {
+  "built_from": "packet.json only (task, visible resources, recorded sequence, rubric, question, item id, source hash) plus tick boxes, ruled lines, a cover with the blind briefing and an answer sheet; no role, expectation or key content",
+  "bytes": 145021,
+  "delivered": "Slack #passdowns thread of the 2026-10-08 briefing, and the conversation",
+  "file": "workbook.pdf beside index.html in the reviewer directory",
+  "pages": 60,
+  "sha256": "c232833b8bc406b2d7d7fbd669e75bdaedf7fb2f0245f772c2191f9db07cf95e"
  }
 }
