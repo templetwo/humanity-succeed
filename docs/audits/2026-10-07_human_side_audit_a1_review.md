@@ -138,6 +138,14 @@ single-reviewer, 36 of 36 agree with the evaluator, kappa undefined.
 | F20 | A run with no judgment-heavy row raised the manifest's `ValidationError` instead of a named refusal (coverage pass D1) | low | unrecorded; now closed | none | **fixed**: `blocked_input`, nothing written |
 | F21 | When two humans overlap on some items, status keeps the `single-reviewer` label and still emits an agreement block over the shared items, which a reader can mistake for an independent-review result (coverage pass D3) | low | consistent with the contract | none | one sentence in `docs/REVIEW_PACKET_HOWTO.md` |
 | F22 | The stage-0 freeze pins four verdict fields per fixture and nothing else: a rubric edit, an event payload change or a bundle byte change with the same verdict passes it; no golden test pinned suite v1's event streams or case hashes (coverage pass §3) | medium | unrecorded | B55 (never rescored) | **added**: `tests/golden/suite_v1_review_source.json` pins the 36 judgment-heavy cases' `review_source_sha256` and stable event-stream hashes, measured from the committed bundles |
+| F23 | No answer key and no finish line: nothing records the expected human verdict for any item, and "semantic review is complete" (WP3_DESIGN §, `commissioning/contract.py`, B53) has no definition in code or docs; two reviewers passing all 36 and two failing all 36 yield identical status, label and kappa (workflow F09) | high | unrecorded | a B50-shaped rule for the human side; the decision packet's `expected_human_verdict` field | recorded |
+| F24 | No adjudication procedure, record type or role for packet reviews; PROTOCOL §9 requires disagreement "adjudicated by a named procedure", and status reaches `independently_reviewed` over an unresolved split (one fail among 72 votes: kappa 0.0, item verdicts split) (workflow F11) | medium | unrecorded | decision for Anthony | recorded |
+| F25 | The 12 C4 items write and notify without reading the source they cite, and no criterion, predicate or rubric, asks whether they read; the one rubric line cannot be failed, and the twin where the same move is a lie is decided by code (workflow F03) | medium | recorded as a gap in `A1_MEASUREMENT_AMENDMENT.md` §1a ("required reads ... missing as an enforced check") | B57 / B59 | recorded |
+| F26 | The ledger has no per-line hash or chain: deleting every revision-2 line silently reverts 36 fails to 36 passes, a canonical-form edit of a verdict passes strict validation, truncation reads as pending; a pretty-printed `packet.json` breaks the hash binding with no hint; if `packet.json` is lost, status is unusable although the ledger holds every record (workflow F05, F13) | medium | unrecorded | custody decision; proposals in F19 | recorded |
+| F27 | The stage-0 freeze re-scores suite v1 under the live evaluator with no version pin; the first B58 evaluator bump fails it on the version assertion, and the one-command route back is re-capturing the baseline, which is rescoring suite v1 (forbidden by B55); no test replays the committed run's recorded evaluations (workflow critic C01) | medium | unrecorded | B58 prerequisite | recorded; fix proposed in §3 |
+| F28 | The four A1 wire formats (`hs-review-packet/1`, `-key/1`, `-ratings/1`, `-record/1`) were outside the repo's schema freeze; ledger lines are read strictly with extra fields forbidden and no version tolerance, so the first field added to `ReviewRecord` locks every existing verdict out of status and import (workflow critic C03) | medium | unrecorded | `review/contract.py` evolution rule | **fixed in part**: the four models are now rendered and frozen by `scripts/export_schemas.py --check`; the evolution rule is proposed in §3 |
+| F29 | The packet's own claim boundary tells the reviewer these are "the judgment-heavy fixtures", with a hyphen, the one word the leak scan forbids with an underscore; the packet never says the sequences are scripted builder fixtures; the leak-clean `scope_limitations` sentences are dropped (workflow critic C02, F20) | low | unrecorded | packet text is a future-export change; Anthony's packet is already out | recorded |
+| F30 | Smaller items from the workflow: export selects by the author's `expected.judgment_heavy` flag, not the observed outcome (same set today, F18); the Pilot §7.1 pilot-scope freeze manifest is not built and no committed artifact joins `fixture_id` to `review_source_sha256` (F21); B57, B58, B59 and B63 have no acceptance rows and the packet does not say the B57 grid is absent (F28); three tasks carry pluralisation slips, "boxs", "batchs", "shelfs", frozen into suite v1 (F33) | low | partly recorded (HANDOFF) | various | recorded |
 
 ### F03. One person counted as two
 
@@ -184,6 +192,12 @@ technical tightening would be an operator-created reviewer registry under the st
 (BUILD_SPEC §3's layout already places "human review identity keys" there), with import refusing a
 `reviewer_ref` not in it. That is a decision for Anthony, not a repair, and it still would not
 prove who typed the file.
+
+The workflow's reviewer-seat lens added two details. The ratings template ships with
+`reviewer_kind` pre-filled `"human"`, so the one field that makes a vote a vote is never typed by
+the reviewer. And the kind check added for F17 binds a kind to a reference, not to a person: a seat
+that picks a fresh reference and writes `human` still counts, so one seat can supply both
+"independent" reviewers.
 
 The red team's held-by-procedure list (F19) belongs here. A hand edit of `ledger.jsonl` that flips
 a model's 36 lines to `human`/`counts_as_vote: true` is read cleanly and reported as independent
@@ -232,7 +246,10 @@ bridge, and a `fail` has no sink.
 The replication session named the field this audit only implied: on this packet the only
 information a careful reviewer adds over a careless one is in `words`, and no code or statistic
 reads `words`. `status.py` and `agreement.py` consume `verdict` alone. The ledger keeps every word;
-nothing downstream does anything with it.
+nothing downstream does anything with it. The workflow added the sharper consequence: every ledger
+line carries `fixture_id`, so the one file that holds the reviewer's reasons and revisions cannot
+be handed to a second reviewer or used to argue a disagreement blind (PROTOCOL §9: "Rater
+revisions remain inspectable").
 
 ### F08. The §4 decision packet, as built
 
@@ -274,6 +291,65 @@ hash and the released observation indices, so the step now shows the case world'
 hashes to the recorded `reply_sha256`, and the released observations by index
 (`tests/review/test_export.py::test_packet_shows_the_reviewer_what_the_subject_was_told`, a bundle
 built through the real engine).
+
+### F23. No answer key, no finish line
+
+The workflow's measurement lens put it plainly: before anyone sits down with the 36 items, nobody
+has written down what the right answer to each one is, or when the review counts as finished.
+`Expectation` carries `mechanical`, `conduct`, `contained`, `judgment_heavy` and `rationale`
+(`commissioning/contract.py`); `RubricItem` carries `dimension` and `instruction`; a search of
+`src/` and `tests/` for any expected-human-verdict field finds nothing. The honest verdict is
+derivable from the class contracts (every judgment-heavy notice is built true; 36 of 36 measured),
+but it is never written as a field and never compared to a rating. `hs review status` derives
+`independently_reviewed` from coverage alone: two reviewers who pass everything and two who fail
+everything produce identical status, label, reason and undefined kappa; only the confusion matrix
+differs, and nothing relates any verdict to a right answer. "Semantic review is complete" appears in
+`docs/WP3_DESIGN.md`, `commissioning/contract.py` and B53 with no definition anywhere, and
+`commissioning/run.py` caps the lifecycle at `mechanically_validated`, so no code path produces
+`instrument_commissioned`. B50's rule, expectations written before any run, exists for the evaluator
+only. The decision packet's Decision 1 proposes an operator-only `expected_human_verdict` written
+before any run; the completion criterion is a separate decision nobody has drafted.
+
+### F24. Nobody settles a disagreement
+
+PROTOCOL §9 requires that "semantic disagreement is retained and adjudicated by a named procedure",
+and BUILD_SPEC §9 places the two commissioning reviews "before adjudication". The review slice has no
+adjudication procedure, record type, role, status or document. `ReviewRecord` has no role or
+resolution field; the only adjudicator concept in the repository is the case-level `Review.role`,
+which the ledger never writes. Status reports both verdicts side by side and reaches
+`independently_reviewed` over an unresolved split: the workflow measured one fail among 72 votes
+giving kappa 0.0 with the item's verdicts shown as pass and fail and the status unchanged. B50's
+miss triage does not transfer: it triages against a written mechanical expectation, and no human
+expectation exists (F23), so a human fail on a hybrid pass is a disagreement for which neither an
+expectation nor a triage rule exists.
+
+### F27. The stage-0 freeze is a rescoring harness
+
+`tests/golden/test_suite_v1_observed_freeze.py` re-executes all 160 trajectories through
+`commissioning.execute.run_in_memory`, which calls `evaluate_and_record` without an
+`evaluator_version`, so it evaluates under whatever version the build carries, then asserts that
+version equals `hs-evaluator/0.2.0`. Only `evidence/replay.py` pins a recorded version. When B58's
+0.3.0 is cut, this test fails on the version assertion for every fixture, and the one-command way
+back to green, re-running `capture_suite_v1_observed.py` into the baseline, is literally rescoring
+suite v1 under a new evaluator, which B55 forbids. Nothing in the test, its docstring or DECISIONS
+says which fix is lawful. Proposed, not done here: an `evaluator_version` keyword on
+`run_in_memory` passed through to `evaluate_and_record`; the capture pins the frozen version read
+from the baseline; a golden test replays the 36 committed bundles' recorded evaluations through
+`evidence.replay`. The seat that cuts 0.3.0 should read this first.
+
+### F28. The review wire formats were outside the freeze
+
+`scripts/export_schemas.py --check`, the freeze the acceptance table calls "generated schemas
+frozen", rendered four schemas: case, action, event, implementation case. `PacketManifest`,
+`PacketKey`, `RatingsFile` and `ReviewRecord` were not rendered, frozen or documented outside
+`docs/audits`. All four are strict (`extra="forbid"`), and `read_records` validates every ledger line
+on every read, so the workflow measured that one added required field fails on 36 of 36 existing
+lines and one appended line with one extra field (`defect_note`, the field Decision 3c proposes)
+makes status exit 2 and import refuse "ledger corrupt". This change adds the four models to the
+export script, so they are now frozen and any contract change shows up as a reviewed diff. The
+evolution rule is proposed, not written: new `ReviewRecord` fields are optional with explicit
+defaults, or they go under `hs-review-record/2` which `read_records` accepts beside `/1`; a
+`DECISIONS` row records the choice before any field is added.
 
 ### F22. What the stage-0 freeze pins
 
@@ -320,10 +396,15 @@ reports are committed beside this one under `docs/audits/cloud/`.
   one named refusal (F20) and the review-source freeze (F22).
 
 A six-lens adversarial workflow (reviewer seat, measurement validity, promised versus landed,
-safeguard adversary, test coverage, fixtures) also ran on this container; its findings are being
-verified one by one and anything that survives and is not already above will be appended here.
-Not examined by anyone: the WP3 custody kit, the compiler and leak lint, anything outside the A1
-slice.
+safeguard adversary, test coverage, fixtures) also ran on this container: 47 raw findings, 35 after
+merge, the top 14 each verified by one skeptic whose default was to refute (0 refuted, several
+narrowed), 21 lower-ranked findings passed through unverified, 3 critic additions. Its report, in
+its own words and against `main` at `3f304a1`, is `docs/audits/workflow/2026-10-07_six_lens_report.md`.
+Everything it verified that was not already above is F23 to F30; its F01, F02, F04, F06, F07, F08,
+F10, F12 and F14 restate findings above with details folded into their paragraphs. Where the
+workflow's §2 differs from this document's §2 it is in emphasis, not fact: it names "no answer key
+and no finish line" (F23) as the other half of F01. Not examined by anyone: the WP3 custody kit, the
+compiler and leak lint, anything outside the A1 slice.
 
 ## 5a. Proposed DECISIONS rows (not recorded; for Anthony and the merging seat)
 
@@ -344,6 +425,12 @@ slice.
 > what a notice says, and the 36-item packet cannot distinguish a careful reviewer from a careless
 > one. Recorded, not patched; new coverage arrives only as a versioned supplement (B55 rule 3).
 
+> B71 (proposed) Before any human rating is imported into a ledger that matters: the expected
+> human verdict per item is written operator-only before any run (the human side of B50); the
+> condition under which semantic review is complete is named; disagreement between two reviewers is
+> adjudicated by a named procedure with a recorded role (PROTOCOL §9); and the ledger evolution
+> rule (F28) is fixed. None of these exists today.
+
 ## 6. Boundaries kept
 
 Read-only audit of `main`; no model called; no human rating written anywhere but a scratch state
@@ -351,5 +438,6 @@ root that was deleted; no fixture, receipt or decision edited. The only Stack wr
 thread in domain `humanity-succeed` carrying this audit's question for Anthony, touched at each
 milestone at his request. Code changes in this branch are limited to the B61 identity safeguard and
 its red-team hardening (F03, F13 to F18), the F12 export rendering, the F20 named refusal, tests,
-and the documentation corrections listed under F11. Suite v1, its receipts and Anthony's packet are
-untouched. The cloud sessions kept the same boundaries; their reports say so in their own words.
+the four review wire formats added to the schema freeze (F28), and the documentation corrections
+listed under F11. Suite v1, its receipts and Anthony's packet are untouched. The cloud sessions and
+the local workflow kept the same boundaries; their reports say so in their own words.

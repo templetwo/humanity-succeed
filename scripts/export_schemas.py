@@ -17,6 +17,7 @@ from humanity_succeed.contracts.actions import ActionEnvelope
 from humanity_succeed.contracts.case import CaseSource
 from humanity_succeed.contracts.events import EventEnvelope
 from humanity_succeed.contracts.schemas import implementation_case_schema
+from humanity_succeed.review.contract import PacketKey, PacketManifest, RatingsFile, ReviewRecord
 
 OUT = Path(__file__).resolve().parents[1] / "schemas" / "generated"
 
@@ -27,6 +28,13 @@ def rendered() -> dict[str, str]:
         "pydantic-action.schema.json": ActionEnvelope.model_json_schema(),
         "pydantic-event.schema.json": EventEnvelope.model_json_schema(),
         "implementation-case.schema.json": implementation_case_schema(),
+        # The A1 blind-review wire formats (BUILD_SPEC §11; B60/B61). Outside this freeze until the
+        # 2026-10-07 audit (F28): a field added to ReviewRecord would have locked every existing
+        # ledger line out of status and import with no reviewed diff to show for it.
+        "review-packet.schema.json": PacketManifest.model_json_schema(),
+        "review-key.schema.json": PacketKey.model_json_schema(),
+        "review-ratings.schema.json": RatingsFile.model_json_schema(),
+        "review-record.schema.json": ReviewRecord.model_json_schema(),
     }
     return {name: canonical_str(doc) + "\n" for name, doc in docs.items()}
 

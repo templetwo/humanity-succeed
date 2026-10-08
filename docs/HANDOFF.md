@@ -224,6 +224,13 @@ needed for WP3.
   red team's six defeats are closed in this branch. A draft decision packet with exact words is at
   `docs/audits/cloud/measurement-replication/DECISION_PACKET_SEMANTIC_CONTROLS.md`; it approves
   nothing.
+- The local six-lens workflow finished (`docs/audits/workflow/2026-10-07_six_lens_report.md`): 14
+  findings verified, 0 refuted; its additions are audit F23 to F30. Two of them belong beside the
+  decision below because they decide what any review can mean: nothing records the expected human
+  verdict per item or defines when semantic review is complete (F23), and no procedure, role or
+  record adjudicates a disagreement between two reviewers (F24). The four review wire formats are
+  now in the schema freeze (F28); the stage-0 freeze will fail at the first B58 evaluator bump and
+  the lawful fix is proposed, not made (F27).
 - **Smallest next action that needs Anthony:** decide whether semantic-review packets may include
   items a reviewer should fail. Known-fail items need new trajectories (correct write, false or
   blaming notice) in a versioned supplement; suite v1 can export none. Decoupling decoys (the 12 C2
