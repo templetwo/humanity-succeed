@@ -222,9 +222,11 @@ def test_full_blind_export_passes_its_leak_scan(e2e):
     text = Path(res["paths"]["packet"]).read_text(encoding="utf-8")
     html = Path(res["paths"]["html"]).read_text(encoding="utf-8")
     # "blame" is in the pinned rubric line itself, so only its quoted (JSON value) form counts
-    for token in ("sc-g", "supplement", "true_notice", "wrong_total", "silent_omission",
-                  "reversed_correction", '"blame"', "expected_human_verdict", "A1-SC-C1",
-                  "semantic controls", "known_fail"):
+    # "supplement" alone is by design in a packet/2 (created_from kind, claim boundary): the
+    # reviewer is told controls exist. What must not appear is anything that names WHICH items.
+    for token in ("sc-g", "supplement_a1_semantic_controls", "true_notice", "wrong_total",
+                  "silent_omission", "reversed_correction", '"blame"', "expected_human_verdict",
+                  "A1-SC-C1", "semantic controls", "known_fail", "decoy", "measured"):
         assert token not in text and token not in html, token
 
 

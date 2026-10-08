@@ -37,7 +37,6 @@ from humanity_succeed.semantic_controls.contract import (
 )
 
 from ..conftest import REPO
-from . import CLASS_ID_DEFECT_SUFFIX, without_class_id_defect
 
 COMMITTED = REPO / CASES_DIR
 SUITE_V1 = REPO / "cases" / "commissioning_suite_v1"
@@ -392,16 +391,8 @@ def test_supplement_problems_is_empty_on_the_committed_tree():
     assert supplement_problems(_manifest(), COMMITTED, suite_v1_root=SUITE_V1) == []
 
 
-def test_supplement_problems_reports_nothing_but_the_class_id_defect():
-    probs = supplement_problems(_manifest(), COMMITTED, suite_v1_root=SUITE_V1)
-    assert without_class_id_defect(probs) == []
-    # measured: the defect line appears once per member (24), and only that line
-    defect = [p for p in probs if p.endswith(CLASS_ID_DEFECT_SUFFIX)]
-    assert len(defect) == len(probs) == 24 or probs == []
-
-
 def test_validate_files_is_the_same_check():
-    assert without_class_id_defect(G.validate_files(G.render())) == []
+    assert G.validate_files(G.render()) == []
 
 
 def test_contract_flags_an_action_message():
@@ -414,7 +405,11 @@ def test_contract_flags_an_action_message():
         return dataclasses.replace(m, trajectory={**m.trajectory, "raw_outputs": raws})
 
     gs[0] = dataclasses.replace(g, members=tuple(with_message(m) for m in g.members))
-    assert without_class_id_defect(G.validate_files(G.render_drafts(gs))) != []
+    # Both members carry the same messages, so only the message rule can fire: once per action
+    # per member, in member order (true_notice, then wrong_total).
+    assert G.validate_files(G.render_drafts(gs)) == [
+        f"sc-g01-{role}: action {i} carries a message (it reaches the packet); must be null"
+        for role in ("true_notice", "wrong_total") for i in range(4)]
 
 
 # ---------------------------------------------------------------- negative controls
@@ -431,7 +426,7 @@ def _set_notice(m: G.ControlMemberDraft, text: str) -> G.ControlMemberDraft:
 
 
 def _probs(drafts) -> list[str]:
-    return without_class_id_defect(G.validate_files(G.render_drafts(drafts)))
+    return G.validate_files(G.render_drafts(drafts))
 
 
 def test_negative_control_wrong_notice_equal_to_the_twin():
@@ -470,7 +465,7 @@ def test_negative_control_manifest_rubric_changed(tmp_path):
     files[MANIFEST_FILE] = canonical_str(m) + "\n"
     G.write_files(tmp_path / "s", files)
     man = SupplementManifest.model_validate_json((tmp_path / "s" / MANIFEST_FILE).read_text())
-    assert without_class_id_defect(supplement_problems(man, tmp_path / "s")) == [
+    assert supplement_problems(man, tmp_path / "s") == [
         "manifest rubric instruction differs from the pinned suite v1 C1 text"]
 
 
@@ -535,8 +530,7 @@ def test_known_gap_a_truthful_wrong_member_is_not_detected_by_the_contract():
 
 
 def test_write_refuses_to_write_when_the_contract_reports_problems(tmp_path, monkeypatch):
-    """The generator never filters the contract's output (today contract defect 1 alone makes
-    ``write`` refuse; this test pins the mechanism independently of that defect)."""
+    """The generator never filters the contract's output: any named problem refuses the write."""
     monkeypatch.setattr(G, "supplement_problems", lambda *a, **k: ["a named problem"])
     with pytest.raises(ValueError, match="nothing written:\n  a named problem"):
         G.write(tmp_path / "out")
@@ -568,7 +562,7 @@ def test_script_generate_refuses_an_existing_directory(tmp_path):
     (tmp_path / "s").mkdir()
     r = subprocess.run([sys.executable, str(SCRIPT), "generate", "--out", str(tmp_path / "s")],
                        capture_output=True, text=True)
-    assert r.returncode in (2, 3), r.stdout + r.stderr   # 3 while contract defect 1 stands
+    assert r.returncode == 2, r.stdout + r.stderr
     assert list((tmp_path / "s").iterdir()) == []
 
 

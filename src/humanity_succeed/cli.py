@@ -405,7 +405,11 @@ def cmd_review_adjudicate(a: argparse.Namespace) -> int:
         return emit(envelope("invalid", None, error={"code": "packet_unbound", "message": str(e)}),
                     EXIT_INVALID)
     if rep["status"] == "ok":
-        return emit(envelope("ok", rep["record"], limitations=[
+        # The stored record carries fixture_id, which names the item's role in packet/2
+        # ("sc-g03-silent_omission", "c2-g01-blocked_attempt"); the adjudicator may still be a
+        # reviewer mid-packet (B71 "it can be you"), so the printed result omits it.
+        shown = {k: v for k, v in rep["record"].items() if k != "fixture_id"}
+        return emit(envelope("ok", shown, limitations=[
             REVIEW_LIMITATION,
             "an adjudication is the named adjudicator's own decision on one open disagreement; it "
             "rewrites no reviewer's verdict and is not a third rating (DECISIONS B71)"]), EXIT_OK)

@@ -183,7 +183,7 @@ def make_v2(tmp_path: Path, layout=LAYOUT, name: str = "v2") -> V2:
 
 
 def rec(item_id: str, dimension: str, verdict: str, reviewer_ref: str, revision: int = 1,
-        reviewer_kind: str = "human") -> ReviewRecord:
+        reviewer_kind: str = "human", file_sha: str | None = None) -> ReviewRecord:
     return ReviewRecord(
         schema_id="hs-review-record/1",
         packet_id=PACKET_ID,
@@ -198,7 +198,7 @@ def rec(item_id: str, dimension: str, verdict: str, reviewer_ref: str, revision:
         counts_as_vote=reviewer_kind == "human",
         revision=revision,
         rated_at_utc=WHEN,
-        ratings_file_sha256=_sha("ratings"),
+        ratings_file_sha256=file_sha or _sha("ratings"),
     )
 
 
@@ -274,7 +274,7 @@ def test_split_adjudicate_independent_revise_split_again(tmp_path):
     assert settled["open_disagreements"] == []
     assert settled["adjudications"] == [{
         "item_id": M2, "dimension": D, "adjudicator_ref": "anthony", "decision": "pass",
-        "revision": 1, "stale": False, "adjudicator_is_reviewer": True,
+        "revision": 1, "stale": False, "superseded": False, "adjudicator_is_reviewer": True,
     }]
 
     # 4. a revision (same verdict) -> 5. split again, the adjudication marked stale
@@ -294,6 +294,8 @@ def test_split_adjudicate_independent_revise_split_again(tmp_path):
     final = status(env)
     assert final["status"] == STATUS_INDEPENDENT
     assert [a["stale"] for a in final["adjudications"]] == [True, False]
+    # the re-adjudication supersedes the first record (verifier finding F4)
+    assert [a["superseded"] for a in final["adjudications"]] == [True, False]
 
 
 def test_a_revision_that_resolves_the_split_needs_no_adjudication(tmp_path):
@@ -522,20 +524,27 @@ def test_a_twin_passes_only_when_every_dimension_passes(tmp_path):
 
 def test_revisions_after_full_coverage_count_only_revisions_after_the_covering_record(tmp_path):
     """anthony revises M1 BEFORE finishing (not counted), completes coverage with K2 (the covering
-    record), then revises M2 and K1/E (counted: 2). maria's later revision is hers, not his. The
-    hit-rate reads the revised (latest) verdicts."""
+    record) in import file A, and the same file A also carries a revision of T1 AFTER the covering
+    record (not counted: it was written before any hit-rate could be seen; verifier finding F3).
+    Then a later import file B revises M2 and K1/E (counted: 2). maria's later revision is hers,
+    not his. The hit-rate reads the revised (latest) verdicts. The rejected alternative, counting
+    by record position alone, would report 3 here."""
     env = make_v2(tmp_path)
+    file_a, file_b = "a" * 64, "b" * 64
     ledger.append_records(env.state_root, [
-        rec(M1, D, "pass", "anthony"),
-        rec(M1, D, "fail", "anthony", revision=2),            # before coverage: not counted
-        rec(M2, D, "pass", "anthony"), rec(T1, D, "pass", "anthony"),
-        rec(D1, D, "pass", "anthony"), rec(D2, D, "pass", "anthony"),
-        rec(K1, D, "pass", "anthony"), rec(K1, E, "pass", "anthony"),
-        rec(K2, D, "pass", "anthony"),                          # completes coverage
-        rec(M2, D, "fail", "anthony", revision=2),             # counted
+        rec(M1, D, "pass", "anthony", file_sha=file_a),
+        rec(M1, D, "fail", "anthony", revision=2, file_sha=file_a),   # before coverage: not counted
+        rec(M2, D, "pass", "anthony", file_sha=file_a), rec(T1, D, "pass", "anthony", file_sha=file_a),
+        rec(D1, D, "pass", "anthony", file_sha=file_a), rec(D2, D, "pass", "anthony", file_sha=file_a),
+        rec(K1, D, "pass", "anthony", file_sha=file_a), rec(K1, E, "pass", "anthony", file_sha=file_a),
+        rec(K2, D, "pass", "anthony", file_sha=file_a),                # completes coverage
+        rec(T1, D, "fail", "anthony", revision=2, file_sha=file_a),   # same import: not counted
+    ])
+    ledger.append_records(env.state_root, [
+        rec(M2, D, "fail", "anthony", revision=2, file_sha=file_b),   # counted
         rec(M1, D, "pass", "maria"),
-        rec(M1, D, "fail", "maria", revision=2),               # maria's, not anthony's
-        rec(K1, E, "fail", "anthony", revision=2),             # counted
+        rec(M1, D, "fail", "maria", revision=2),                       # maria's, not anthony's
+        rec(K1, E, "fail", "anthony", revision=2, file_sha=file_b),   # counted
     ])
     result = status(env)
     per = result["controls"]["per_reviewer"]
@@ -548,8 +557,9 @@ def test_a_revision_is_counted_once_coverage_completes_even_in_a_later_import(tm
     env = make_v2(tmp_path)
     ledger.append_records(env.state_root, cover_all("anthony"))
     assert status(env)["controls"]["per_reviewer"]["anthony"]["revisions_after_full_coverage"] == 0
-    ledger.append_records(env.state_root, [rec(K2, D, "fail", "anthony", revision=2),
-                                           rec(K2, D, "pass", "anthony", revision=3)])
+    later = "c" * 64   # a later import: a different ratings file
+    ledger.append_records(env.state_root, [rec(K2, D, "fail", "anthony", revision=2, file_sha=later),
+                                           rec(K2, D, "pass", "anthony", revision=3, file_sha=later)])
     per = status(env)["controls"]["per_reviewer"]["anthony"]
     assert per["revisions_after_full_coverage"] == 2
     assert per["known_fail"] == {"total": 2, "failed": 0}

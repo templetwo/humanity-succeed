@@ -398,9 +398,11 @@ class AdjudicationRecord(_Strict):
 #           counts for a reviewer only when that reviewer covers every rubric dimension of it;
 #           "failed" = any dimension's latest verdict is fail; "passed" = every dimension's latest
 #           verdict is pass. revisions_after_full_coverage = number of that reviewer's ledger
-#           records with revision > 1 that sit AFTER (in ledger line order) the record that first
-#           completed the reviewer's coverage of the packet: a verdict changed after the hit-rate
-#           could be seen is visible as such.
+#           records with revision > 1 that sit AFTER (in ledger line order) the IMPORT that first
+#           completed the reviewer's coverage of the packet (the contiguous records sharing the
+#           covering record's ratings_file_sha256; verifier finding F3, 2026-10-08: a revision in
+#           that same file was written before any hit-rate could be seen). A verdict changed after
+#           the hit-rate could be seen is visible as such.
 #       "agreement_measured": the same agreement computation restricted to the "measured" bucket
 #           (commission-run items only; twins excluded) and to FULL-COVERAGE reviewers only (lane
 #           2c's stricter reading, adopted: a partial second reviewer importing one item at a time
@@ -411,7 +413,9 @@ class AdjudicationRecord(_Strict):
 #           human votes (_latest_human_votes, not only full-coverage reviewers) where >= 2 distinct
 #           reviewers differ and no non-stale AdjudicationRecord exists.
 #       "adjudications": [{"item_id", "dimension", "adjudicator_ref", "decision", "revision",
-#           "stale", "adjudicator_is_reviewer"}].
+#           "stale", "superseded", "adjudicator_is_reviewer"}]; "superseded" is true for every
+#           record of an (item, dimension) except its highest revision (verifier finding F4: a
+#           second adjudication on a still-open disagreement is the adjudicator's revision).
 #     Status rule change (B71, F24), for /1 packets too: when every item has >= 2 distinct human
 #     reviewers, status is STATUS_SPLIT if open_disagreements is non-empty, else
 #     STATUS_INDEPENDENT. Label is REVIEW_MODE_SINGLE unless status is STATUS_INDEPENDENT.

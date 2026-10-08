@@ -184,6 +184,16 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
             f"operator key packet_sha256 {key.packet_sha256!r} != computed packet hash "
             f"{packet_sha256!r}"
         )
+    if isinstance(key, PacketKeyV2):
+        # Same binding rule as review/status.py ``_bind_to_key``: a /2 key holds exactly one entry
+        # per manifest item, or every control bucket is unreadable. Import must not append records
+        # against a key that status and adjudication will then refuse as unbound.
+        key_ids = [e.item_id for e in key.entries]
+        if len(set(key_ids)) != len(key_ids) or set(key_ids) != {i.item_id for i in manifest.items}:
+            problems.append(
+                f"operator key {key_path} does not hold exactly one entry per item of packet "
+                f"{manifest.packet_id}; a packet/2 key must, since control buckets are read from it"
+            )
     if problems:
         return _refused(problems)
 

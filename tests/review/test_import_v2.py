@@ -149,3 +149,22 @@ def test_b70_verdicts_stay_pass_or_fail_for_v2(tmp_path):
     result = import_ratings(env.export_dir, path, state_root=env.state_root)
     assert result["status"] == "refused" and any("invalid ratings file" in p for p in result["problems"])
     assert _ledger_bytes(env) == b""
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda d: d.update(entries=d["entries"][:-1]),                                   # omits an item
+    lambda d: d.update(entries=d["entries"] + [dict(d["entries"][0], item_id="it_" + "ee" * 8)]),
+    lambda d: d.update(entries=d["entries"] + [d["entries"][0]]),                    # duplicate
+])
+def test_a_v2_key_without_exactly_one_entry_per_item_is_refused_as_status_refuses_it(tmp_path, mutate):
+    """Verifier probe 2c(b): import used to append against a key that review_status then called
+    PacketUnbound ("one entry per item"); the two now agree."""
+    env = _env(tmp_path)
+    doc = env.key.model_dump(mode="json")
+    mutate(doc)
+    _key_file(env).write_bytes(json.dumps(doc).encode())
+    ratings = _ratings(env, [Rating(item_id=M1, dimension=D, verdict="pass", words="w")])
+    result = import_ratings(env.export_dir, _write_ratings(env, ratings), state_root=env.state_root)
+    assert result["status"] == "refused"
+    assert any("exactly one entry per item" in p for p in result["problems"]), result["problems"]
+    assert _ledger_bytes(env) == b""

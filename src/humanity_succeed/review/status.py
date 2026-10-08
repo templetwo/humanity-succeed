@@ -299,9 +299,10 @@ def _revisions_after_full_coverage(name: str, manifest: Manifest, records: list[
     needed = {(item.item_id, line.dimension) for item in manifest.items for line in item.rubric}
     canon = canonical_reviewer_ref(name)
     seen: set[tuple[str, str]] = set()
-    completed_at: int | None = None
+    completing_file: str | None = None     # ratings_file_sha256 of the import that completed coverage
+    in_completing_file = False
     count = 0
-    for index, rec in enumerate(records):
+    for rec in records:
         if (
             rec.reviewer_kind != "human"
             or not rec.counts_as_vote
@@ -309,11 +310,21 @@ def _revisions_after_full_coverage(name: str, manifest: Manifest, records: list[
             or canonical_reviewer_ref(rec.reviewer_ref) != canon
         ):
             continue
-        if completed_at is None:
+        if completing_file is None:
             seen.add((rec.item_id, rec.dimension))
             if needed <= seen:
-                completed_at = index
-        elif rec.revision > 1:
+                completing_file = rec.ratings_file_sha256
+                in_completing_file = True
+            continue
+        # Verifier finding F3 (2026-10-08): a revision that sits after the covering record but
+        # inside the SAME ratings file was written before any hit-rate could be seen, so it is not
+        # counted. The completing import's records are contiguous in the ledger (one append per
+        # import); the first record from another file ends the skip, and a later re-import of the
+        # same bytes is a new import and counts.
+        if in_completing_file and rec.ratings_file_sha256 == completing_file:
+            continue
+        in_completing_file = False
+        if rec.revision > 1:
             count += 1
     return count
 
@@ -399,6 +410,10 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
                     "votes": {name: votes[name].verdict for name in sorted(votes)},
                 })
     adjudications_report = []
+    latest_revision: dict[tuple[str, str], int] = {}
+    for adj in adjudications:
+        key_ = (adj.item_id, adj.dimension)
+        latest_revision[key_] = max(latest_revision.get(key_, 0), adj.revision)
     for adj, stale in zip(adjudications, stale_by_index, strict=True):
         voters = [v.reviewer_ref for v in adj.reviewers]
         voters += list(votes_on(latest, adj.item_id, adj.dimension))
@@ -409,6 +424,9 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
             "decision": adj.decision,
             "revision": adj.revision,
             "stale": stale,
+            # Verifier finding F4: a later adjudication of the same (item, dimension) is the
+            # adjudicator's revision; the earlier record stays in the file and reads superseded.
+            "superseded": adj.revision < latest_revision[(adj.item_id, adj.dimension)],
             "adjudicator_is_reviewer": any(same_reviewer(adj.adjudicator_ref, v) for v in voters),
         })
 

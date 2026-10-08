@@ -128,6 +128,9 @@ def test_controls_pipeline_end_to_end(tmp_path):
                           "--decision", "fail", "--words", "synthetic adjudication words",
                           "--at", f"2026-10-08T01:00:{n:02d}Z", "--state-root", state)
         assert code == 0, env
+        # the command's output names no fixture, so an adjudicator who is still reviewing learns
+        # no role from it (verifier finding F5)
+        assert "fixture_id" not in env["result"] and "sc-g" not in json.dumps(env)
     assert (state / "reviews" / "ledger.jsonl").read_bytes() == ledger_before
     code, env, _ = hs("review", "status", "--packet", packet_dir, "--state-root", state)
     res = env["result"]
@@ -149,6 +152,7 @@ def test_controls_pipeline_end_to_end(tmp_path):
     assert res["status"] == "independently_reviewed" and res["open_disagreements"] == []
     latest = [a for a in res["adjudications"] if a["item_id"] == first["item_id"]]
     assert latest and max(a["revision"] for a in latest) == 2
+    assert {a["revision"]: a["superseded"] for a in latest} == {1: True, 2: False}
 
     # an adjudication on an item where the two reviewers AGREE is refused: nothing to settle
     agreed = next(e["item_id"] for e in key["entries"] if e["role"] == "measured")
