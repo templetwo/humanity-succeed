@@ -7,9 +7,9 @@ mechanical AND human expectations, and the evaluator (`hs-evaluator/0.2.0`), eng
 package versions. The same command produced the same `plan_sha256` twice on different state roots,
 so the plan is deterministic.
 
-**No run has been made against this plan and no packet with controls has been exported.** Anthony
-sees the supplement before anything runs (`docs/audits/2026-10-08_five_questions_plain_words.md`:
-"shows you before anything runs"). The run, when he says so:
+**Run on 2026-10-08 (UTC) at Anthony's word** ("add a briefing for me while blind with a link to where i can
+find the final reviewable doc"): `run-v1/` beside this folder, 24 of 24 expectations met, lifecycle
+`mechanically_validated`; packet `pk_bbdaab359ec8a4b9` exported (`../export.json`). The command was:
 
     uv run hs controls run --plan docs/receipts/a1-semantic-controls/freeze-v1/plan.json --out <dir>
 
