@@ -388,10 +388,6 @@ def _manifest() -> SupplementManifest:
     return SupplementManifest.model_validate_json((COMMITTED / MANIFEST_FILE).read_text())
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "contract defect 1 (reported): supplement_problems compares doc['class_id'] to CLASS_ID, but "
-    "a case document has no class_id and CaseSource forbids one, so every member reports "
-    "\"class_id None != 'C1_correction_claim'\". Remove this xfail when the contract is fixed."))
 def test_supplement_problems_is_empty_on_the_committed_tree():
     assert supplement_problems(_manifest(), COMMITTED, suite_v1_root=SUITE_V1) == []
 
@@ -408,10 +404,6 @@ def test_validate_files_is_the_same_check():
     assert without_class_id_defect(G.validate_files(G.render())) == []
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "contract defect 2 (reported): supplement_problems checks traj.get('message') on the "
-    "trajectory document, a key the Trajectory model forbids, never the per-action 'message' "
-    "that reaches the packet as VisibleStep.message. An action message on both members passes."))
 def test_contract_flags_an_action_message():
     gs = G.groups()
     g = gs[0]
@@ -580,8 +572,6 @@ def test_script_generate_refuses_an_existing_directory(tmp_path):
     assert list((tmp_path / "s").iterdir()) == []
 
 
-@pytest.mark.xfail(strict=True, reason="contract defect 1 (reported): generate refuses every "
-                                       "valid supplement. Remove this xfail when it is fixed.")
 def test_script_generate_writes_the_committed_tree(tmp_path):
     r = subprocess.run([sys.executable, str(SCRIPT), "generate", "--out", str(tmp_path / "s")],
                        capture_output=True, text=True)

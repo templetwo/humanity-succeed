@@ -244,9 +244,6 @@ def test_committed_trees_are_untouched(e2e):
 # ---------------------------------------------------------------- refusals
 
 
-@pytest.mark.xfail(strict=True, reason="contract defect 1 (reported): the raw supplement_problems "
-                                       "refuses every valid supplement, so the plan is blocked. "
-                                       "Remove this xfail when the contract is fixed.")
 def test_plan_of_the_committed_tree_with_the_raw_contract(tmp_path):
     res = study.plan_supplement(COMMITTED, tmp_path / "plan", state_root=tmp_path / "state",
                                 repo_root=REPO)

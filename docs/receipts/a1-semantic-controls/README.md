@@ -27,13 +27,16 @@ temporary directories only; none of that output is kept here.
 
 `check` compares every file byte for byte with a fresh render; a stray file is drift.
 
-**Known contract defect (reported to the lead, not patched by the builder):**
-`contract.supplement_problems` compares each case document's `class_id` to
-`C1_correction_claim`, but a case document has no `class_id` field and `CaseSource` refuses one.
-Every member of every valid supplement is reported, so `generate` and `plan` refuse today. The
-committed tree was written with `generator.write_files(path, generator.render())` after checking
-that the contract's only problems were those 24 `class_id` lines. Strict xfail tests turn into
-failures once the contract is fixed; then `generate` and `plan` work as written.
+**Contract defect found by this lane, fixed by the lead (commit da73937):**
+`contract.supplement_problems` compared each case document's `class_id` to
+`C1_correction_claim`, but a case document has no `class_id` field and `CaseSource` refuses one,
+so every valid supplement was reported and `generate` and `plan` refused. The builder wrote the
+committed tree with `generator.write_files(path, generator.render())` after checking that the
+contract's only problems were those 24 lines, and pinned the defect with strict xfail tests. The
+lead changed the check to the case's `family_id` (and fixed a second defect the lane found: the
+per-action `message` check read the wrong level), merged the lane, and turned the xfails into
+live tests. `hs controls generate` now reproduces the committed tree byte for byte and
+`hs controls check` and `hs controls plan` succeed on it.
 
 ## Plan and run (not yet done)
 
