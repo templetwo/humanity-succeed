@@ -46,6 +46,9 @@ addopts = "-p no:cacheprovider"
 [tool.ruff]
 line-length = 110
 target-version = "py311"
+# Preserved red-team attack scripts are evidence of the 2026-10-07 cloud audit, not product code;
+# they are kept byte-for-byte and excluded from lint rather than edited (B72).
+extend-exclude = ["docs/audits/cloud/redteam-identity"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
