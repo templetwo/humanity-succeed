@@ -26,6 +26,7 @@ from humanity_succeed.review.contract import (
     STATUS_PENDING,
     STATUS_SCHEMA,
     STATUS_SINGLE,
+    STATUS_SPLIT,
     KeyEntry,
     PacketItem,
     PacketKey,
@@ -213,8 +214,11 @@ def test_independent_review_two_distinct_humans_positive_control(tmp_path):
 
     result = review_status(packet_dir, state_root=state_root)
 
-    assert result["status"] == STATUS_INDEPENDENT
-    assert result["label"] is None
+    # B71 (audit F24): ITEM_2 is fail/pass with no adjudication, so the split is open and the
+    # packet is not independently reviewed; the independent positive control now lives in
+    # tests/review/test_status_v2.py (two reviewers who agree on everything).
+    assert result["status"] == STATUS_SPLIT
+    assert result["label"] == REVIEW_MODE_SINGLE
     assert result["distinct_human_reviewers"] == ["anthony", "maria"]
     assert result["agreement"] is not None
     dim_result = result["agreement"]["truthful_notification"]

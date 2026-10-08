@@ -43,10 +43,10 @@ from humanity_succeed.review.contract import (
     PACKET_HTML,
     RATINGS_TEMPLATE,
     REVIEW_MODE_SINGLE,
-    STATUS_INDEPENDENT,
     STATUS_PARTIAL,
     STATUS_PENDING,
     STATUS_SINGLE,
+    STATUS_SPLIT,
     PacketItem,
     PacketManifest,
     Rating,
@@ -718,7 +718,8 @@ def test_three_reviewers_the_pair_with_the_largest_overlap_is_scored(tmp_path):
     recs.append(_record(item_id=i1, dimension="d", verdict="pass", reviewer_ref="omar"))
     append_records(state_root, recs)
     result = review_status(packet_dir, state_root=state_root)
-    assert result["status"] == STATUS_INDEPENDENT and result["label"] is None
+    # B71: anthony and maria disagree on every item, unadjudicated: split, not independent.
+    assert result["status"] == STATUS_SPLIT and result["label"] == REVIEW_MODE_SINGLE
     assert result["distinct_human_reviewers"] == ["anthony", "maria", "omar"]
     assert result["agreement"]["d"]["reviewers"] == ["anthony", "maria"]
     assert result["agreement"]["d"]["n_paired"] == 3
@@ -737,7 +738,8 @@ def test_two_rubric_dimensions_are_scored_separately(tmp_path):
         _record(item_id=i1, dimension="clarity", verdict="fail", reviewer_ref="maria"),
     ])
     result = review_status(packet_dir, state_root=state_root)
-    assert result["status"] == STATUS_INDEPENDENT
+    # B71: clarity is pass/fail, unadjudicated: split, not independent.
+    assert result["status"] == STATUS_SPLIT and result["label"] == REVIEW_MODE_SINGLE
     assert sorted(result["agreement"]) == ["clarity", "truthful_notification"]
     assert result["agreement"]["truthful_notification"]["raw_agreement"] == 1.0
     assert result["agreement"]["clarity"]["raw_agreement"] == 0.0

@@ -19,6 +19,12 @@ Reviewer identity (B61, ``review/identity.py``): a ``reviewer_ref`` with stray w
 that names an already-recorded reviewer under case/whitespace/Unicode normalisation without
 matching it exactly, is refused before anything is appended. The 2026-10-07 audit measured that
 ``"anthony"`` followed by ``"Anthony "`` reached ``independently_reviewed``; this closes that.
+
+Packet versions (DECISIONS B69, B70): a ``hs-review-packet/1`` packet is read with its
+``hs-review-key/1`` key, a ``hs-review-packet/2`` packet with its ``hs-review-key/2`` key. A packet of
+one version with a key of the other is a named refusal (never a raw validation error), and so is a
+malformed key. Nothing else changes for /2: verdicts stay pass/fail in the reviewer's own words, and
+the key's roles never reach the ledger.
 """
 
 from __future__ import annotations
@@ -33,10 +39,15 @@ from pydantic import ValidationError
 from ..canonical import StrictLoadError, load_document, sha256_bytes, strict_json_loads
 from .contract import (
     KEY_DIR,
+    KEY_SCHEMA,
+    KEY_SCHEMA_V2,
     PACKET_FILE,
+    PACKET_SCHEMA_V2,
     RECORD_SCHEMA,
     PacketKey,
+    PacketKeyV2,
     PacketManifest,
+    PacketManifestV2,
     RatingsFile,
     ReviewRecord,
 )
@@ -52,6 +63,31 @@ def _refused(problems: list[str]) -> dict[str, Any]:
 
 def _key_path(state_root: Path, packet_id: str) -> Path:
     return Path(state_root).joinpath(*KEY_DIR, f"{packet_id}.json")
+
+
+def _manifest_model(packet_doc: Any) -> type[PacketManifest] | type[PacketManifestV2]:
+    """The manifest model for a parsed packet document: /2 when it says so, otherwise /1 (whose
+    strict schema then names whatever is wrong, exactly as before packet/2 existed)."""
+    if isinstance(packet_doc, dict) and packet_doc.get("schema_id") == PACKET_SCHEMA_V2:
+        return PacketManifestV2
+    return PacketManifest
+
+
+def _key_model(manifest: PacketManifest | PacketManifestV2) -> type[PacketKey] | type[PacketKeyV2]:
+    return PacketKeyV2 if isinstance(manifest, PacketManifestV2) else PacketKey
+
+
+def key_version_problem(manifest: PacketManifest | PacketManifestV2, key_doc: Any) -> str | None:
+    """Why a parsed key document is the wrong VERSION for this packet, or None. Only a key that
+    declares the other known key schema is named here; anything else malformed is left to the key
+    model's strict validation."""
+    expected = KEY_SCHEMA_V2 if isinstance(manifest, PacketManifestV2) else KEY_SCHEMA
+    found = key_doc.get("schema_id") if isinstance(key_doc, dict) else None
+    if found in (KEY_SCHEMA, KEY_SCHEMA_V2) and found != expected:
+        return (f"key schema_id {found!r} does not match packet schema_id {manifest.schema_id!r} "
+                f"(which needs {expected!r}); a packet and its operator key are one version, and "
+                "mixed versions are refused")
+    return None
 
 
 def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -> dict[str, Any]:
@@ -74,7 +110,9 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
         return _refused([f"cannot read packet {packet_json_path}: {e.strerror or e}"])
     packet_sha256 = sha256_bytes(packet_bytes)
     try:
-        manifest = PacketManifest.model_validate(strict_json_loads(packet_bytes), strict=True)
+        packet_doc = strict_json_loads(packet_bytes)
+        manifest_model = _manifest_model(packet_doc)
+        manifest = manifest_model.model_validate(packet_doc, strict=True)
     except (StrictLoadError, ValidationError) as e:
         return _refused([f"invalid packet manifest {packet_json_path}: {e}"])
 
@@ -126,8 +164,15 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     except OSError as e:
         return _refused([f"missing operator key {key_path}: {e.strerror or e}"])
     try:
-        key = PacketKey.model_validate(strict_json_loads(key_bytes), strict=True)
-    except (StrictLoadError, ValidationError) as e:
+        key_doc = strict_json_loads(key_bytes)
+    except StrictLoadError as e:
+        return _refused([f"invalid operator key {key_path}: {e}"])
+    mismatch = key_version_problem(manifest, key_doc)
+    if mismatch:
+        return _refused([f"operator key {key_path}: {mismatch}"])
+    try:
+        key = _key_model(manifest).model_validate(key_doc, strict=True)
+    except ValidationError as e:
         return _refused([f"invalid operator key {key_path}: {e}"])
     if key.packet_id != manifest.packet_id:
         problems.append(
@@ -249,4 +294,4 @@ def import_ratings(packet_path: Path, ratings_path: Path, *, state_root: Path) -
     }
 
 
-__all__ = ["import_ratings"]
+__all__ = ["import_ratings", "key_version_problem"]
