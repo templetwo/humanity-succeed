@@ -281,3 +281,22 @@ authorize and stops before anything runs, as the plain-words page promised.
 - **Lint note for whoever merges PR #1:** `ruff check .` reports 79 errors, all in the red team's
   preserved attack scripts under `docs/audits/cloud/redteam-identity/`; `src`, `tests` and
   `scripts` are clean. Exclude preserved audit scripts from lint rather than edit evidence.
+
+## Finish sentence recorded and built (2026-10-24, MacBook seat, claude-opus-5-5)
+
+**Model called: no. Human rating recorded: no. Packet touched: no.**
+
+Anthony answered question 5 of `docs/audits/2026-10-08_five_questions_plain_words.md` on 2026-10-24:
+"My exploratory review is complete when every item has my pass/fail judgment and reasons in my own
+words. It meets the control criterion only if I catch every deliberately wrong item. It remains
+single-reviewer evidence" (B73). Branch `a1/finish-sentence` (worktree
+`humanity-succeed-a1-finish-sentence`, from main cef9038) adds a `finish` block to
+`hs review status`, with `tests/review/test_finish_b73.py` naming each rejected alternative. Local,
+not pushed, not merged.
+
+- **Open for Anthony:** as worded, failing every item meets the control criterion (the sentence
+  checks catches, not passes on honest items). Whether to add "and passes the honest items" is his;
+  the flip is one condition and the `B73-FLIP` assertion. Also his to overrule: the two seat
+  readings in B73 (known-fail bucket only; a catch is a fail on any dimension).
+- **Still open, unchanged:** size; run and export of a further packet; gates 7 to 9. Ratings on
+  `pk_bbdaab359ec8a4b9`: 0. Keep replies to him blind.

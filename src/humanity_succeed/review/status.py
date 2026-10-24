@@ -31,6 +31,11 @@ Packet/2 controls, splits and adjudication (DECISIONS B69, B71; audit F23, F24):
 - Over two or more distinct reviewers, an (item, dimension) whose latest votes differ is an open
   disagreement until a non-stale adjudication record settles it; a packet with an open
   disagreement reads ``split_unadjudicated``, never ``independently_reviewed`` (B71).
+
+Finish (DECISIONS B73, Anthony's answer to question 5): ``finish`` reports, per human reviewer,
+whether that reviewer's exploratory review is complete, whether it meets the control criterion
+(every deliberately wrong item caught, judged on the verdicts before anything was disclosed), and
+that it remains single-reviewer evidence. It never changes ``status`` or ``label``.
 """
 
 from __future__ import annotations
@@ -74,6 +79,9 @@ NOT_YET_DISCLOSED = (
     "no human reviewer has covered every item of the packet yet; controls and the measured-only "
     "agreement are disclosed only after full coverage"
 )
+FINISH_RULE = "B73"
+NOT_COMPLETE = "this reviewer has not given a verdict on every rubric dimension of every item"
+NO_WRONG_ITEMS = "the packet has no deliberately wrong items"
 
 
 class PacketUnbound(ValueError):
@@ -364,6 +372,70 @@ def _controls(
     }
 
 
+def _blind_verdicts(name: str, manifest: Manifest,
+                    records: list[ReviewRecord]) -> dict[tuple[str, str], str]:
+    """This reviewer's latest verdict per (item, dimension) as it stood when the import that
+    completed coverage ended: the covering record and the rest of its ratings file (verifier finding
+    F3's boundary), nothing after. Empty when the reviewer never covered the packet."""
+    needed = {(item.item_id, line.dimension) for item in manifest.items for line in item.rubric}
+    canon = canonical_reviewer_ref(name)
+    latest: dict[tuple[str, str], ReviewRecord] = {}
+    completing_file: str | None = None
+    for rec in records:
+        if (
+            rec.reviewer_kind != "human"
+            or not rec.counts_as_vote
+            or reviewer_ref_problem(rec.reviewer_ref)
+            or canonical_reviewer_ref(rec.reviewer_ref) != canon
+        ):
+            continue
+        if completing_file is not None and rec.ratings_file_sha256 != completing_file:
+            break
+        current = latest.get((rec.item_id, rec.dimension))
+        if current is None or rec.revision >= current.revision:
+            latest[(rec.item_id, rec.dimension)] = rec
+        if completing_file is None and needed <= set(latest):
+            completing_file = rec.ratings_file_sha256
+    if completing_file is None:
+        return {}
+    return {k: r.verdict for k, r in latest.items()}
+
+
+def _finish(
+    manifest: Manifest,
+    buckets: dict[str, list[PacketItem]] | None,
+    covering_by_item: dict[str, dict[str, dict[str, str]]],
+    reviewers: list[str],
+    records: list[ReviewRecord],
+) -> dict[str, Any]:
+    """Anthony's finish sentence (B73), one entry per human reviewer. Complete is that reviewer's
+    own coverage (the importer already refuses a verdict without words). The control criterion is
+    met only when every known-fail item was caught, a fail on at least one of its dimensions, on
+    the blind verdicts (``_blind_verdicts``); it is disclosed only once the reviewer is complete.
+    Every entry is single-reviewer evidence, and nothing here changes ``status`` or ``label``."""
+    entries: dict[str, dict[str, Any]] = {}
+    for name in reviewers:
+        entry: dict[str, Any] = {"complete": _covers_packet(name, manifest, covering_by_item)}
+        if not entry["complete"]:
+            entry |= {"control_criterion_met": None, "control_criterion_reason": NOT_COMPLETE}
+        elif buckets is None:
+            entry |= {"control_criterion_met": None, "control_criterion_reason": NO_CONTROLS}
+        elif not buckets["known_fail"]:
+            entry |= {"control_criterion_met": None, "control_criterion_reason": NO_WRONG_ITEMS}
+        else:
+            blind = _blind_verdicts(name, manifest, records)
+            caught = sum(
+                1 for item in buckets["known_fail"]
+                if any(blind.get((item.item_id, line.dimension)) == "fail" for line in item.rubric)
+            )
+            total = len(buckets["known_fail"])
+            entry |= {"control_criterion_met": caught == total, "control_criterion_reason": None,
+                      "deliberately_wrong": {"total": total, "caught": caught}}
+        entry["evidence"] = REVIEW_MODE_SINGLE
+        entries[name] = entry
+    return {"rule": FINISH_RULE, "reviewers": entries}
+
+
 def review_status(packet_path: Path, *, state_root: Path) -> dict:
     """Coverage and agreement for one packet, computed from the ledger's actual records.
 
@@ -503,6 +575,7 @@ def review_status(packet_path: Path, *, state_root: Path) -> dict:
         "controls_reason": controls_reason,
         "open_disagreements": open_disagreements,
         "adjudications": adjudications_report,
+        "finish": _finish(manifest, buckets, covering_by_item, distinct_human_reviewers, records),
     }
 
 
