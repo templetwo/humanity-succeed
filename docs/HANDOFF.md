@@ -300,3 +300,15 @@ not pushed, not merged.
   readings in B73 (known-fail bucket only; a catch is a fail on any dimension).
 - **Still open, unchanged:** size; run and export of a further packet; gates 7 to 9. Ratings on
   `pk_bbdaab359ec8a4b9`: 0. Keep replies to him blind.
+
+## Gates answered by multiple choice (2026-10-24 evening, MacBook seat, claude-opus-5-5)
+
+Anthony asked for the open gates as multiple choice and answered every one (B74 to B78): finish
+sentence kept as worded (catches only); a future re-freeze is bigger, its size proposed to him first;
+the audit's ASCII-reviewer and F4 rows recorded; DeepSeek receipts committed on
+`provider/deepseek-offline` at 801102d without the pilot's operator-state; the three local branches
+pushed; this branch merged into main and pushed; the Codex seat recorded as exposed (Stack 13566778).
+
+- **Still open:** the bigger size (a seat proposes, he approves, nothing generated before that);
+  ratings on `pk_bbdaab359ec8a4b9` (0) and on the pilot packet `pk_a1d0970f77e0bb40` (0). Keep
+  replies to him blind.

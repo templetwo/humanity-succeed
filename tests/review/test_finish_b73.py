@@ -23,6 +23,7 @@ Rulings these tests hold, and the alternative each one rejected:
 
 IF ANTHONY ADDS "and passes the honest items", the assertion to flip is the one marked
 ``B73-FLIP`` in ``test_failing_every_item_meets_the_criterion_as_worded``.
+Anthony kept the sentence as worded on 2026-10-24 (B74); the flip stays unmade.
 """
 
 from __future__ import annotations
