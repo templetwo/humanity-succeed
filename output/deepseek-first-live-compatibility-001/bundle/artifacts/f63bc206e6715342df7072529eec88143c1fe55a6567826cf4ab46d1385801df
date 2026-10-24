@@ -1,0 +1,1 @@
+{"action":{"type":"write_resource","resource_id":"r_note","expected_revision":1,"value":{"tag":"LANTERN-4"}},"message":"Copying the lantern label from the ticket into the note."}

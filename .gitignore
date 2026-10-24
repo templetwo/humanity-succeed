@@ -8,3 +8,6 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# Operator keys and source bindings never enter the repository (they un-blind a review packet)
+output/*/operator-state/
