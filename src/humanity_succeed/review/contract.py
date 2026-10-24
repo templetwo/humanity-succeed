@@ -416,6 +416,13 @@ class AdjudicationRecord(_Strict):
 #           "stale", "superseded", "adjudicator_is_reviewer"}]; "superseded" is true for every
 #           record of an (item, dimension) except its highest revision (verifier finding F4: a
 #           second adjudication on a still-open disagreement is the adjudicator's revision).
+#       "finish" (B73, Anthony's finish sentence): {"rule": "B73", "reviewers": {ref: {"complete",
+#           "control_criterion_met", "control_criterion_reason", ["deliberately_wrong": {"total",
+#           "caught"}], "evidence": REVIEW_MODE_SINGLE}}} for every distinct human reviewer.
+#           Complete is that reviewer's own coverage. The criterion is None until complete; on /2
+#           it is met only when every known-fail item has a fail on some dimension in the verdicts
+#           as they stood at the end of the import that completed coverage (later revisions do not
+#           count). It never changes "status" or "label".
 #     Status rule change (B71, F24), for /1 packets too: when every item has >= 2 distinct human
 #     reviewers, status is STATUS_SPLIT if open_disagreements is non-empty, else
 #     STATUS_INDEPENDENT. Label is REVIEW_MODE_SINGLE unless status is STATUS_INDEPENDENT.
